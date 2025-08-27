@@ -1,5 +1,6 @@
 datasets
 langchain-groq
 langgraph
+langsmith
 python-dotenv
 ragas

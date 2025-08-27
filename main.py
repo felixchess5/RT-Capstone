@@ -4,6 +4,17 @@ from typing import Dict, List
 from dotenv import load_dotenv
 from langgraph.graph import StateGraph
 
+try:
+    from langsmith import traceable
+    LANGSMITH_AVAILABLE = True
+except ImportError:
+    # Fallback decorator if LangSmith is not available
+    def traceable(func=None, **kwargs):
+        def decorator(f):
+            return f
+        return decorator(func) if func else decorator
+    LANGSMITH_AVAILABLE = False
+
 from nodes import (
     export_summary,
     orchestrator_node
@@ -22,6 +33,7 @@ def build_graph() -> StateGraph:
     return graph.compile()
 
 
+@traceable(name="run_pipeline_file")
 async def run_pipeline_file(graph, file_path: str, source_text: str) -> Dict:
     """Process a single assignment file through the pipeline."""
     with open(file_path, "r") as f:
@@ -63,6 +75,7 @@ async def run_pipeline_file(graph, file_path: str, source_text: str) -> Dict:
         }
 
 
+@traceable(name="process_assignments")
 async def process_assignments() -> List[Dict]:
     """Process all assignments in the assignments folder."""
     print("Processing assignments...")

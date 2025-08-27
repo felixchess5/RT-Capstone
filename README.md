@@ -12,6 +12,7 @@ An intelligent academic assignment grading system that uses LLM-based evaluation
 - **Grammar Analysis**: Writing quality assessment independent of content accuracy
 - **Automated Summarization**: Generates concise assignment summaries
 - **CSV Export**: Batch processing results exported to structured format
+- **LangSmith Integration**: Comprehensive tracing and monitoring of all LLM operations
 
 ## 📊 Grading Criteria
 
@@ -53,8 +54,14 @@ An intelligent academic assignment grading system that uses LLM-based evaluation
    # Copy the example environment file
    cp .env.example .env
    
-   # Edit .env file and add your Groq API key
+   # Edit .env file and add your API keys
+   # Required:
    # GROQ_API_KEY=your_actual_api_key_here
+   
+   # Optional (for LangSmith tracing):
+   # LANGCHAIN_TRACING_V2=true
+   # LANGCHAIN_API_KEY=your_langsmith_api_key
+   # LANGCHAIN_PROJECT=Assignment Grader
    ```
 
 5. **Configure paths** (Optional)
@@ -161,6 +168,25 @@ RT-Project-2/
    - Aggregate all processing results
    - Generate CSV file with structured data
    - Include metadata and all evaluation scores
+
+## 📊 LangSmith Integration
+
+The system includes comprehensive LangSmith tracing for monitoring and debugging:
+
+### Benefits
+- **Full Pipeline Visibility**: Track every LLM call and node execution
+- **Performance Monitoring**: Analyze latency and token usage across all operations
+- **Error Debugging**: Detailed traces for troubleshooting failed operations
+- **Cost Optimization**: Monitor API usage and optimize prompts
+- **Quality Assurance**: Compare different prompt versions and model outputs
+
+### Traced Operations
+- All grading criteria evaluations (Grammar, Plagiarism, Relevance, Grading, Summary)
+- Individual student assignment processing
+- Parallel orchestrator execution
+- Complete pipeline runs with metadata
+
+Enable tracing by setting `LANGCHAIN_TRACING_V2=true` in your `.env` file.
 
 ## 🔧 Configuration
 

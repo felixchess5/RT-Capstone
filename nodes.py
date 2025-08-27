@@ -5,11 +5,23 @@ import os
 import re
 from typing import Dict, List
 
+try:
+    from langsmith import traceable
+    LANGSMITH_AVAILABLE = True
+except ImportError:
+    # Fallback decorator if LangSmith is not available
+    def traceable(func=None, **kwargs):
+        def decorator(f):
+            return f
+        return decorator(func) if func else decorator
+    LANGSMITH_AVAILABLE = False
+
 from llms import groq_llm
 from paths import PLAGIARISM_REPORTS_FOLDER
 from prompts import PLAGIARISM_CHECK, GRAMMAR_CHECK, RELEVANCE_CHECK, GRADING_PROMPT, SUMMARY_PROMPT
 
 
+@traceable(name="grammar_check_node")
 def grammar_check_node(state: Dict) -> Dict:
     """Node for checking grammatical errors in assignment content."""
     content = state["content"]
@@ -17,6 +29,7 @@ def grammar_check_node(state: Dict) -> Dict:
     return state
 
 
+@traceable(name="plagiarism_check_node")
 def plagiarism_check_node(state: Dict) -> Dict:
     """Node for checking plagiarism in assignment content."""
     content = state["content"]
@@ -25,6 +38,7 @@ def plagiarism_check_node(state: Dict) -> Dict:
     return state
 
 
+@traceable(name="source_check_node")
 def source_check_node(state: Dict) -> Dict:
     """Node for checking content relevance against source material."""
     content = state["content"]
@@ -33,6 +47,7 @@ def source_check_node(state: Dict) -> Dict:
     return state
 
 
+@traceable(name="initial_grading_node")
 def initial_grading_node(state: Dict) -> Dict:
     """Node for initial grading of assignment content."""
     content = state["content"]
@@ -48,6 +63,7 @@ def initial_grading_node(state: Dict) -> Dict:
     return state
 
 
+@traceable(name="summary_node")
 def summary_node(state: Dict) -> Dict:
     """Node for generating assignment summary."""
     content = state["content"]
@@ -55,6 +71,7 @@ def summary_node(state: Dict) -> Dict:
     return state
 
 
+@traceable(name="orchestrator_node")
 async def orchestrator_node(state: Dict) -> Dict:
     """Orchestrator node that executes all processing nodes in parallel."""
     print("Starting parallel execution of all nodes...")
@@ -106,6 +123,7 @@ async def orchestrator_node(state: Dict) -> Dict:
         return state
 
 
+@traceable(name="grammar_check_fn")
 def grammar_check_fn(text: str) -> int:
     """Check grammatical errors in text using LLM."""
     if groq_llm is None:
@@ -125,6 +143,7 @@ def grammar_check_fn(text: str) -> int:
         return -1
 
 
+@traceable(name="plagiarism_check_fn")
 def plagiarism_check_fn(text: str, student_name: str) -> str:
     """Check for plagiarism using LLM and save report."""
     if groq_llm is None:
@@ -148,6 +167,7 @@ def plagiarism_check_fn(text: str, student_name: str) -> str:
         return f"Error generating report: {str(e)}"
 
 
+@traceable(name="relevance_check")
 def relevance_check(text: str, source: str) -> str:
     """Check content relevance against source material."""
     if groq_llm is None:
@@ -159,6 +179,7 @@ def relevance_check(text: str, source: str) -> str:
     return response.content if hasattr(response, "content") else str(response).strip()
 
 
+@traceable(name="grading_node")
 def grading_node(ragas_input: List[Dict]) -> Dict:
     """Grade assignment using LLM-based evaluation (0-10 scale)."""
     if groq_llm is None:
@@ -205,6 +226,7 @@ def grading_node(ragas_input: List[Dict]) -> Dict:
         }
 
 
+@traceable(name="summarize")
 def summarize(text: str) -> str:
     """Generate summary of assignment text."""
     if groq_llm is None:

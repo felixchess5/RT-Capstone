@@ -4,6 +4,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Configure LangSmith tracing if enabled
+if os.getenv('LANGCHAIN_TRACING_V2') == 'true':
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    os.environ["LANGCHAIN_PROJECT"] = os.getenv('LANGCHAIN_PROJECT', 'Assignment Grader')
+    if os.getenv('LANGCHAIN_API_KEY'):
+        os.environ["LANGCHAIN_API_KEY"] = os.getenv('LANGCHAIN_API_KEY')
+        print("✅ LangSmith tracing enabled")
+
 def create_groq_llm(model: str = "llama-3.1-8b-instant", temperature: float = 0.7) -> ChatGroq:
     """Create and configure Groq LLM instance."""
     api_key = os.getenv('GROQ_API_KEY')
