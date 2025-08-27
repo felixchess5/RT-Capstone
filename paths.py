@@ -1,0 +1,12 @@
+import os
+
+ASSIGNMENTS_FOLDER = 'Assignments'
+OUTPUT_FOLDER = './output'
+PLAGIARISM_REPORTS_FOLDER = './plagiarism_reports'
+GRAPH_OUTPUT_PATH = 'graph.png'
+SUMMARY_CSV_PATH = os.path.join(OUTPUT_FOLDER, 'summary.csv')
+
+REQUIRED_FOLDERS = [
+    OUTPUT_FOLDER,
+    PLAGIARISM_REPORTS_FOLDER
+]

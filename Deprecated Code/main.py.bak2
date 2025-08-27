@@ -1,0 +1,324 @@
+import requests
+from typing import Dict, Optional, Any
+import ragas
+from pydantic import BaseModel
+#from ragas import evaluate
+from datasets import Dataset
+import csv
+from langgraph.graph import StateGraph, END
+import os
+import json
+from langchain_groq import ChatGroq
+from dotenv import load_dotenv
+import re
+from paths import ASSIGNMENTS_FOLDER as assignment_folder
+import prompts
+load_dotenv()
+
+
+class AssignmentState(BaseModel):
+    context: Dict[str, Any]   # content, metadata, source_text
+    grammar_errors: Optional[int] = None
+    plagiarism_file: Optional[str] = None
+    relevance: Optional[str] = None
+    grade: Optional[Dict[str, float]] = None
+    summary: Optional[str] = None
+
+# Create LLM
+llm = ChatGroq(
+        model="llama-3.1-8b-instant",
+        temperature=0.7,
+    )
+
+def grammar_check_node(state: AssignmentState) -> dict:
+    return {"grammar_errors": grammar_check_fn(state.context["content"])}
+
+def plagiarism_check_node(state: AssignmentState) -> dict:
+    return {"plagiarism_file": plagiarism_check_fn(
+        state.context["content"], state.context["metadata"]["name"]
+    )}
+
+def source_check_node(state: AssignmentState) -> dict:
+    return {"relevance": relevance_check(
+        state.context["content"], state.context["source_text"]
+    )}
+
+def initial_grading_node(state: AssignmentState) -> dict:
+    ragas_input = [{
+        "question": "Evaluate this assignment",
+        "ground_truth": state.context["source_text"],
+        "answer": state.context["content"],
+        "context": [state.context["source_text"]],
+        "retrieved_contexts": [state.context["source_text"]]
+    }]
+    return {"grade": grading_node(ragas_input)}
+
+def summary_node(state: AssignmentState) -> dict:
+    return {"summary": summarize(state.context["content"])}
+
+def build_graph():
+    graph = StateGraph(AssignmentState)
+
+    graph.add_node("GrammarCheck", grammar_check_node)
+    graph.add_node("PlagiarismCheck", plagiarism_check_node)
+    graph.add_node("SourceCheck", source_check_node)
+    graph.add_node("InitialGrading", initial_grading_node)
+    graph.add_node("SummaryNode", summary_node)
+
+    # Entry
+    graph.set_entry_point("GrammarCheck")
+
+    # Fan-out
+    graph.add_edge("GrammarCheck", "PlagiarismCheck")
+    graph.add_edge("GrammarCheck", "SourceCheck")
+
+    # Fan-in
+    graph.add_edge("GrammarCheck", "InitialGrading")
+    graph.add_edge("PlagiarismCheck", "InitialGrading")
+    graph.add_edge("SourceCheck", "InitialGrading")
+
+    # Final
+    graph.add_edge("InitialGrading", "SummaryNode")
+
+    return graph.compile()
+
+# Grammar Check Node
+
+def grammar_check_fn(text: str) -> int:
+    print("Checking Grammar...")
+    prompt = f"Count grammatical errors in the following:\n{text}"
+    response = llm.invoke(prompt)
+    raw = response.content if hasattr(response, "content") else str(response).strip()
+
+    match = re.search(r"\d+", raw)
+    if match:
+        return int(match.group())
+    else:
+        print(f"[WARN] Could not parse grammar error count from response: {raw}")
+        return -1  # or raise an exception if preferred
+
+
+def plagiarism_check_fn(text: str, student_name: str) -> str:
+    print("Checking for plagiarism...")
+
+    prompt_template = prompts.PLAGIARISM_CHECK
+    prompt = prompt_template.replace("{text}", text)
+
+
+    try:
+        response = llm.invoke(prompt)
+        result = response.content if hasattr(response, "content") else str(response).strip()
+
+        file_path = f"./plagiarism_reports/{student_name}_report.json"
+        with open(file_path, "w") as f:
+            f.write(result)
+
+        return file_path
+    except Exception as e:
+        print(f"[ERROR] Groq-based plagiarism check failed for {student_name}: {e}")
+        return f"Error generating report: {str(e)}"
+
+# Source Checker Node
+def relevance_check(text: str, source: str) -> str:
+    print("Checking for relevance...")
+    prompt = f"Compare assignment to source. Is it relevant and factual?\nAssignment:\n{text}\nSource:\n{source}"
+    response = llm.invoke(prompt)
+    return response.content if hasattr(response, "content") else str(response).strip()
+
+
+# NOTE: Moved from RAGAS to GROQ due to openai licensing costs
+# Initial Grading Node (RAGAS)
+    # Scoring Criteria:
+    # - Factual Accuracy (0–1)
+    # - Coherence (0–1)
+    # - Grammar (0–1)
+    # - Relevance to Source (0–1)
+
+def grading_node(ragas_input: list[dict]) -> dict:
+    print("Grading...")
+
+    item = ragas_input[0]
+    answer = item["answer"]
+    source = item["ground_truth"]
+
+    prompt = f"""
+You are an academic evaluator. Grade the following student assignment based on four criteria:
+1. Factual Accuracy (0–1)
+2. Relevance to Source (0–1)
+3. Coherence (0–1)
+4. Grammar (0–1)
+
+Assignment:
+{answer}
+
+Source Material:
+{source}
+
+Return your response as a JSON object like:
+{{
+  "factuality": float,
+  "relevance": float,
+  "coherence": float,
+  "grammar": float
+}}
+Only return the JSON. Do not include any explanation or formatting.
+"""
+
+    try:
+        response = llm.invoke(prompt)
+        raw = response.content if hasattr(response, "content") else str(response).strip()
+
+        # Try direct JSON parsing
+        try:
+            scores = json.loads(raw)
+        except json.JSONDecodeError:
+            # Fallback: extract floats using regex
+            matches = re.findall(r'"(\w+)":\s*([0-9.]+)', raw)
+            scores = {k: float(v) for k, v in matches}
+
+        return {
+            "factuality": round(scores.get("factuality", 0), 4),
+            "relevance": round(scores.get("relevance", 0), 4),
+            "coherence": round(scores.get("coherence", 0), 4),
+            "grammar": round(scores.get("grammar", 0), 4)
+        }
+
+    except Exception as e:
+        print(f"[ERROR] Grading failed: {e}")
+        print(f"[DEBUG] Raw response: {raw if 'raw' in locals() else 'No response'}")
+        return {
+            "factuality": 0.0,
+            "relevance": 0.0,
+            "coherence": 0.0,
+            "grammar": 0.0
+        }
+
+
+# Summary + CSV Export Node
+
+def export_summary(assignments: list, output_path: str) -> str:
+    print("Exporting summary...")
+    with open(output_path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=[
+            "Student Name", "Date of Submission", "Class", "Subject", "Summary",
+            "Grammar Errors", "Plagiarism File", "Content Relevance", "Initial Grade"
+        ])
+        writer.writeheader()
+        for a in assignments:
+            writer.writerow(a)
+    return output_path
+
+
+# Generate summary
+def summarize(text: str) -> str:
+    print("Generating summary...")
+    response = llm.invoke(f"Summarize this assignment in 2–3 sentences:\n\n{text}")
+    return response.content if hasattr(response, "content") else str(response).strip()
+
+
+# Metadata extraction from assignment body. Content must be in the following format in the header of the assignment file:
+# Name: John Doe
+# Date: 2025-08-25
+# Class: 10
+# Subject: English
+
+def extract_metadata_from_content(file_path: str) -> dict:
+    print("Extracting metadata from content...")
+    with open(file_path, "r") as f:
+        lines = [line.strip() for line in f.readlines()[:10]]  # Read top 10 lines
+
+    meta = {"name": "Unknown", "date": "Unknown", "class": "Unknown", "subject": "Unknown"}
+    for line in lines:
+        if line.lower().startswith("name:"):
+            meta["name"] = line.split(":", 1)[1].strip()
+        elif line.lower().startswith("date:"):
+            meta["date"] = line.split(":", 1)[1].strip()
+        elif line.lower().startswith("class:"):
+            meta["class"] = line.split(":", 1)[1].strip()
+        elif line.lower().startswith("subject:"):
+            meta["subject"] = line.split(":", 1)[1].strip()
+
+    return meta
+
+# Build graph image
+def graph_visualiser(graph):
+    print("Generating graph...")
+    try:
+        image_data = graph.get_graph().draw_mermaid_png()
+        with open("graph.png", "wb") as f:
+            f.write(image_data)
+        print("✅ Graph saved as 'graph.png'. Open it to view the structure.")
+    except Exception as e:
+        print(f"Error generating graph: {e}")
+
+# Create directories if needed
+def ensure_directories():
+    os.makedirs("./output", exist_ok=True)
+    os.makedirs("./plagiarism_reports", exist_ok=True)
+
+
+# Folder Processing Entrypoint
+def process_assignments() -> list[dict]:
+    print("Processing assignments...")
+    ensure_directories()
+    if not assignment_folder or not os.path.isdir(assignment_folder):
+        raise ValueError("ASSIGNMENTS_FOLDER is not set or is invalid.")
+
+    source_text = """The Renaissance was a cultural movement..."""  # Load from env or file if needed
+    assignments = []
+
+    for file in os.listdir(assignment_folder):
+        if file.endswith(".txt"):
+            file_path = os.path.join(assignment_folder, file)
+            result = run_pipeline_file(file_path, source_text)
+            assignments.append(result)
+
+    csv_path = export_summary(assignments, "./output/summary.csv")
+    print(f"[INFO] Summary exported to {csv_path}")
+    return assignments
+
+def run_pipeline_file(file_path: str, source_text: str) -> dict:
+    with open(file_path, "r") as f:
+        content = f.read()
+    metadata = extract_metadata_from_content(file_path)
+
+    initial_state = AssignmentState(
+    context={
+        "content": content,
+        "metadata": metadata,
+        "source_text": source_text
+    }
+    )
+
+    try:
+        final_state = graph.invoke(initial_state)
+        return {
+            "Student Name": final_state["context"]["metadata"]["name"],
+            "Date of Submission": final_state["context"]["metadata"]["date"],
+            "Class": final_state["context"]["metadata"]["class"],
+            "Subject": final_state["context"]["metadata"]["subject"],
+            "Summary": final_state.get("summary", "N/A"),
+            "Grammar Errors": final_state.get("grammar_errors", "N/A"),
+            "Plagiarism File": final_state.get("plagiarism_file", "N/A"),
+            "Content Relevance": final_state.get("relevance", "N/A"),
+            "Initial Grade": final_state.get("grade", "N/A"),
+        }
+    except Exception as e:
+        print(f"[ERROR] Graph execution failed for {file_path}: {e}")
+        return {
+            "Student Name": metadata["name"],
+            "Date of Submission": metadata["date"],
+            "Class": metadata["class"],
+            "Subject": metadata["subject"],
+            "Summary": f"Error: {str(e)}",
+            "Grammar Errors": "N/A",
+            "Plagiarism File": "N/A",
+            "Content Relevance": "N/A",
+            "Initial Grade": "N/A"
+        }
+
+
+if __name__ == '__main__':
+    graph = build_graph()
+    graph_visualiser(graph)
+    process_assignments()
