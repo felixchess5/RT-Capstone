@@ -1,4 +1,4 @@
-# Assignment Grading System with Parallel Processing
+# Capstone - Assignment Grading System with Parallel Processing
 
 An intelligent academic assignment grading system that uses LLM-based evaluation with parallel processing for efficient analysis of student submissions.
 
@@ -34,8 +34,8 @@ An intelligent academic assignment grading system that uses LLM-based evaluation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/felixchess5/RT-Project-2.git
-   cd RT-Project-2
+   git clone https://github.com/felixchess5/RT-Capstone.git
+   cd RT-Capstone
    ```
 
 2. **Create virtual environment**
@@ -123,7 +123,7 @@ An intelligent academic assignment grading system that uses LLM-based evaluation
 ### File Structure
 
 ```
-RT-Project-2/
+RT-Capstone/
 ├── main.py              # Application entry point
 ├── nodes.py             # Processing nodes (grammar, plagiarism, etc.)
 ├── orchestrator_node    # Parallel execution orchestrator
