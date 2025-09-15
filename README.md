@@ -220,28 +220,29 @@ def create_groq_llm(model="llama-3.1-8b-instant", temperature=0.7):
     # Customize model and parameters
 ```
 
-## 🚀 Future Improvements
+## 📋 Feature Roadmap
 
-### Short Term Enhancements
+For a comprehensive list of planned features and enhancements, see our detailed [Feature List](FEATURES.md). This document tracks all current capabilities and future development plans organized by category:
 
-- [ ] **Batch Processing**: File-level parallelization for multiple assignments
-- [ ] **Enhanced Error Handling**: Retry mechanisms and graceful degradation
-- [ ] **Output Formats**: JSON, HTML, and PDF export options
-- [ ] **Progress Tracking**: Real-time processing status and progress bars
+- **Core Functionality**: Web interfaces, analytics, OCR/ICR, additional subjects
+- **AI/ML Infrastructure**: Multiple LLM providers, failback systems, model monitoring
+- **Security & Compliance**: OWASP guidelines, EVAL toolkit, audit logging
+- **System Reliability**: Health checks, circuit breakers, graceful degradation
+- **Performance & Scalability**: Caching, microservices, database optimization
 
-### Medium Term Goals
+### Quick Feature Highlights
 
+#### Immediate Priorities
 - [ ] **Multi-LLM Support**: Integration with OpenAI, Anthropic, and local models
-- [ ] **Web Interface**: Flask/FastAPI dashboard with file upload
-- [ ] **Advanced Plagiarism**: External database integration and citation validation
-- [ ] **Performance Optimization**: Caching and distributed processing
+- [ ] **Failback Systems**: Automatic switching when LLM services are down
+- [ ] **Web Interface**: Gradio/FastAPI dashboard with file upload
+- [ ] **Enhanced Testing**: Comprehensive test suite and quality assurance
 
-### Long Term Vision
-
-- [ ] **Machine Learning**: Historical pattern analysis and personalized feedback
-- [ ] **Enterprise Features**: Multi-tenant support and LMS integration
-- [ ] **Research Tools**: Citation analysis and knowledge graphs
-- [ ] **Cross-linguistic Support**: Multi-language assignment processing
+#### Coming Soon
+- [ ] **MCP Extensions**: PDF, Word, Markdown support with edge case handling
+- [ ] **Advanced Analytics**: Student performance tracking and institutional reporting
+- [ ] **Security Hardening**: OWASP compliance and security guardrails
+- [ ] **Human-in-the-Loop**: Teacher review and feedback integration
 
 ## 🤝 Contributing
 
