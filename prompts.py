@@ -23,9 +23,18 @@ PLAGIARISM_CHECK = """
 GRAMMAR_CHECK = """Count grammatical errors in the following:
 {text}"""
 
-RELEVANCE_CHECK = """Compare assignment to source. Is it relevant and factual?
+RELEVANCE_CHECK = """Analyze how well the assignment relates to the provided source material. Focus only on evaluation, not suggestions for improvement.
+
+Evaluate the following aspects:
+1. Does the assignment address the main topics from the source?
+2. Are the facts presented consistent with the source material?
+3. How closely does the assignment content align with the source?
+
+Provide only an analytical assessment without offering revisions or examples of improvements.
+
 Assignment:
 {text}
+
 Source:
 {source}"""
 

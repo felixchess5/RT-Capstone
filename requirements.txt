@@ -4,3 +4,5 @@ langgraph
 langsmith
 python-dotenv
 ragas
+mcp[cli]
+language-tool-python
