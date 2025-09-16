@@ -1,21 +1,40 @@
-# Capstone - Assignment Grading System with Parallel Processing
+# Capstone - Intelligent Assignment Grading System
 
-An intelligent academic assignment grading system that uses LLM-based evaluation with parallel processing for efficient analysis of student submissions.
+An advanced academic assignment grading system with subject-specific processing, multi-language support, and intelligent orchestration for comprehensive student evaluation.
 
-## 🌟 Features
+## 🌟 Core Features
 
-- **Parallel Processing**: Asynchronous orchestrator executes all grading nodes simultaneously
-- **LLM-Based Evaluation**: Uses Groq LLM for intelligent content analysis
-- **Multi-Criteria Grading**: Evaluates assignments on 4 key metrics (0-10 scale)
-- **Plagiarism Detection**: Automated plagiarism checking with detailed reports
-- **Source Relevance**: Compares assignments against reference material
-- **Grammar Analysis**: Writing quality assessment independent of content accuracy
-- **Automated Summarization**: Generates concise assignment summaries
-- **CSV Export**: Batch processing results exported to structured format
-- **LangSmith Integration**: Comprehensive tracing and monitoring of all LLM operations
+- **🎯 Subject-Specific Processing**: Specialized analyzers for Math, Spanish, English, Science, and History
+- **🤖 Intelligent Orchestration**: Automatic subject detection and routing to appropriate processors
+- **📐 Mathematical Analysis**: Equation solving, symbolic computation, and step-by-step verification
+- **🇪🇸 Spanish Language Assessment**: Grammar analysis, vocabulary evaluation, and cultural understanding
+- **🌍 Multi-Language Support**: 14+ languages with automatic detection and localized prompts
+- **📄 Multi-Format Processing**: PDF (text & scanned), DOCX, DOC, MD, TXT, and image formats
+- **🔍 OCR Integration**: Free Tesseract OCR for scanned documents with preprocessing
+- **⚡ Agentic Workflow**: LangGraph-powered intelligent processing pipeline
+- **📊 Subject-Specific Outputs**: Organized CSV and JSON files by academic subject
+- **🔧 MCP Integration**: 30+ tools for external system integration
+- **📈 Comprehensive Analytics**: Detailed grading with specialized criteria per subject
 
-## 📊 Grading Criteria
+## 📊 Subject-Specific Grading
 
+### 📐 Mathematics Assignments
+| Criterion | Scale | Description |
+|-----------|-------|-------------|
+| **Mathematical Accuracy** | 0-10 | Correctness of solutions and calculations |
+| **Problem Solving Approach** | 0-10 | Method and strategy used to solve problems |
+| **Notation Clarity** | 0-10 | Proper use of mathematical notation and formatting |
+| **Step-by-Step Work** | 0-10 | Clear demonstration of solution process |
+
+### 🇪🇸 Spanish Assignments
+| Criterion | Scale | Description |
+|-----------|-------|-------------|
+| **Grammar Accuracy** | 0-10 | Correct use of Spanish grammar rules |
+| **Vocabulary Usage** | 0-10 | Appropriateness and variety of vocabulary |
+| **Fluency & Communication** | 0-10 | Natural flow and expression in Spanish |
+| **Cultural Understanding** | 0-10 | Knowledge of Hispanic culture and context |
+
+### 📝 General Assignments
 | Criterion | Scale | Description |
 |-----------|-------|-------------|
 | **Factual Accuracy** | 0-10 | Content accuracy compared to source material |
@@ -28,7 +47,9 @@ An intelligent academic assignment grading system that uses LLM-based evaluation
 ### Prerequisites
 
 - Python 3.8+
-- Groq API key
+- Groq API key (required)
+- Gemini API key (optional, for redundancy)
+- Tesseract OCR (for scanned documents)
 
 ### Installation
 
@@ -47,127 +68,246 @@ An intelligent academic assignment grading system that uses LLM-based evaluation
 3. **Install dependencies**
    ```bash
    pip install -r requirements.txt
+
+   # Install additional dependencies for specialized processing
+   pip install sympy spacy langdetect
+
+   # Optional: Install Spanish language model for enhanced Spanish processing
+   python -m spacy download es_core_news_sm
    ```
 
-4. **Environment setup**
+4. **Install Tesseract OCR** (for scanned documents)
+   ```bash
+   # macOS
+   brew install tesseract
+
+   # Ubuntu/Debian
+   sudo apt-get install tesseract-ocr
+
+   # Windows: Download from https://github.com/UB-Mannheim/tesseract/wiki
+   ```
+
+5. **Environment setup**
    ```bash
    # Copy the example environment file
    cp .env.example .env
-   
+
    # Edit .env file and add your API keys
    # Required:
-   # GROQ_API_KEY=your_actual_api_key_here
-   
+   GROQ_API_KEY=your_groq_api_key_here
+
+   # Optional (for LLM redundancy):
+   GEMINI_API_KEY=your_gemini_api_key_here
+
    # Optional (for LangSmith tracing):
-   # LANGCHAIN_TRACING_V2=true
-   # LANGCHAIN_API_KEY=your_langsmith_api_key
-   # LANGCHAIN_PROJECT=Assignment Grader
+   LANGCHAIN_TRACING_V2=true
+   LANGCHAIN_API_KEY=your_langsmith_api_key
+   LANGCHAIN_PROJECT=Assignment Grader
    ```
 
-5. **Configure paths** (Optional)
+6. **Configure paths** (Optional)
    - Edit `paths.py` to customize file locations
    - Default folders will be created automatically
 
 ### Usage
 
 1. **Place assignment files**
-   - Add student assignment `.txt` files to the `Assignments/` folder
-   - Use this format for each file:
+   - Add assignment files to the `Assignments/` folder
+   - **Supported formats**: PDF, DOCX, DOC, MD, TXT, PNG, JPEG, TIFF, BMP
+   - Use this format for text files:
      ```
      Name: John Doe
      Date: 2025-08-25
-     Class: 10
-     Subject: English
-     
-     [Assignment content here...]
+     Class: Algebra II
+     Subject: Mathematics
+
+     Solve for x: 2x + 5 = 13
+     Step 1: Subtract 5 from both sides
+     2x = 8
+     Step 2: Divide by 2
+     x = 4
      ```
 
 2. **Run the grading system**
    ```bash
-   python main.py
+   # Enhanced agentic workflow (recommended)
+   python main_agentic.py
+
+   # Alternative: MCP server mode
+   python mcp_server.py
+
+   # Run tests
+   python test_specialized_processors.py
    ```
 
 3. **View results**
-   - Check the generated CSV file in `output/summary.csv` for all results
-   - Individual plagiarism reports in `plagiarism_reports/` folder
-   - Graph visualization saved as PNG
+   - **General summary**: `output/summary.csv`
+   - **Subject-specific files**:
+     - `output/math_assignments.csv` - Mathematics assignments with specialized fields
+     - `output/spanish_assignments.csv` - Spanish assignments with language metrics
+     - `output/english_assignments.csv` - English assignments with writing analysis
+   - **Detailed data**: JSON files for complete assignment information
+   - **Reports**: Individual plagiarism reports in `plagiarism_reports/` folder
+   - **Export summary**: `output/export_summary.txt` with processing statistics
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
 
-### System Overview
+### Intelligent Processing Pipeline
 
 ```
-┌─────────────────────┐
-│   Main Pipeline     │
-│                     │
-│  ┌───────────────┐  │
-│  │ Orchestrator  │──┼─── Executes nodes in parallel
-│  │   (Async)     │  │
-│  └───────────────┘  │
-│         │            │
-│  ┌─────────────────┐ │
-│  │ Parallel Nodes  │ │
-│  │ ┌─────┐ ┌─────┐ │ │
-│  │ │Gram.││Plag.│ │ │
-│  │ └─────┘ └─────┘ │ │
-│  │ ┌─────┐ ┌─────┐ │ │
-│  │ │Rel. ││Grad.│ │ │
-│  │ └─────┘ └─────┘ │ │
-│  │    ┌─────┐      │ │
-│  │    │Summ.│      │ │
-│  │    └─────┘      │ │
-│  └─────────────────┘ │
-└─────────────────────┘
+📁 Assignment Files → 🎯 Subject Classification → 🔬 Specialized Processing → 📊 Subject-Specific Outputs
+      ↓                        ↓                         ↓                        ↓
+  Multi-Format         Automatic Detection      Math/Spanish/English         Organized CSV/JSON
+   Processing           & Confidence            Specialized Analysis          Files by Subject
+      ↓                        ↓                         ↓                        ↓
+  OCR for Scanned      Intelligent Routing      Advanced Grading           Export Summary &
+    Documents           to Processors           Criteria per Subject        Statistics Report
 ```
 
-### File Structure
+### Core Components
+
+#### 🎯 Assignment Orchestrator (`assignment_orchestrator.py`)
+- **Subject Classification**: Automatically detects Math, Spanish, English, Science, History
+- **Complexity Assessment**: Elementary, Middle School, High School, College levels
+- **Intelligent Routing**: Directs to appropriate specialized processors
+- **Processing Optimization**: Selects best methodology per subject type
+
+#### 📐 Math Processor (`math_processor.py`)
+- **Equation Solving**: Symbolic computation using SymPy
+- **Problem Type Detection**: Algebra, Calculus, Geometry, Statistics, etc.
+- **Step-by-Step Analysis**: Evaluates solution methodology and presentation
+- **Mathematical Notation**: Assesses proper formatting and notation usage
+
+#### 🇪🇸 Spanish Processor (`spanish_processor.py`)
+- **Grammar Analysis**: Spanish-specific grammar rule checking
+- **Vocabulary Assessment**: Beginner/Intermediate/Advanced level detection
+- **Cultural References**: Identifies and evaluates Hispanic cultural knowledge
+- **Fluency Scoring**: Comprehensive language proficiency assessment
+
+#### 📊 Subject Output Manager (`subject_output_manager.py`)
+- **Automatic Classification**: Routes results to appropriate output files
+- **Specialized Fields**: Subject-specific CSV columns and data extraction
+- **Multiple Formats**: CSV for analysis, JSON for detailed data
+- **Export Statistics**: Comprehensive reporting and summaries
+
+#### ⚡ Agentic Workflow (`agentic_workflow.py`)
+- **LangGraph Integration**: State-based workflow orchestration
+- **Adaptive Processing**: Dynamic routing based on classification results
+- **Error Recovery**: Robust handling of processing failures
+- **Quality Validation**: Multi-stage validation and verification
+
+### Data Flow
+
+```
+🎯 Assignment Classification
+        ↓
+┌─────────────────────────────────────────┐
+│     Subject Detection & Routing         │
+├─────────────────────────────────────────┤
+│  📐 Math    🇪🇸 Spanish   📝 English    │
+│   ↓           ↓           ↓             │
+│ Equation   Grammar    Literature        │
+│ Solving    Analysis   Analysis          │
+│   ↓           ↓           ↓             │
+│ Step-by-   Vocabulary Writing           │
+│ Step       Assessment Quality           │
+│ Analysis      ↓           ↓             │
+│   ↓        Cultural   Citation          │
+│ Math       References Quality           │
+│ Notation      ↓           ↓             │
+│   ↓        Fluency    Thesis            │
+│ Problem    Scoring    Strength          │
+│ Types         ↓           ↓             │
+│   ↓           ↓           ↓             │
+└─────────────────────────────────────────┘
+        ↓
+📊 Subject-Specific Output Files
+   ↓
+📋 Export Summary & Statistics
+```
+
+## 📁 Project Structure
 
 ```
 RT-Capstone/
-├── main.py              # Application entry point
-├── nodes.py             # Processing nodes (grammar, plagiarism, etc.)
-├── orchestrator_node    # Parallel execution orchestrator
-├── llms.py              # LLM configuration and setup
-├── prompts.py           # Centralized prompt templates
-├── utils.py             # Utility functions and graph visualization
-├── paths.py             # File path configurations
-├── requirements.txt     # Python dependencies
-├── .env.example         # Environment variables template
-├── .gitignore          # Git ignore patterns
-├── Assignments/        # Student assignment files (.txt)
-├── plagiarism_reports/ # Generated plagiarism reports (.json)
-├── output/             # Generated CSV and other outputs
-└── README.md          # This documentation
+├── 🔧 Core System
+│   ├── main_agentic.py           # Enhanced agentic workflow entry point
+│   ├── agentic_workflow.py       # LangGraph-based intelligent workflow
+│   ├── assignment_orchestrator.py # Subject classification & routing
+│   ├── llms.py                   # Multi-LLM configuration (Groq + Gemini)
+│   └── paths.py                  # Comprehensive path configurations
+│
+├── 🎯 Specialized Processors
+│   ├── math_processor.py         # Mathematical analysis & equation solving
+│   ├── spanish_processor.py      # Spanish language assessment
+│   └── subject_output_manager.py # Subject-specific file generation
+│
+├── 🌍 Multi-Language & OCR
+│   ├── language_support.py       # 14+ language support system
+│   ├── ocr_processor.py          # Tesseract OCR integration
+│   └── file_processor.py         # Multi-format file processing
+│
+├── 🔧 Integration & Tools
+│   ├── mcp_server.py             # 30+ MCP tools for external integration
+│   ├── prompts.py                # Localized prompt templates
+│   └── utils.py                  # Utilities & visualization
+│
+├── 📁 Data Directories
+│   ├── Assignments/              # Input files (PDF, DOCX, TXT, images)
+│   ├── output/                   # Subject-specific CSV & JSON files
+│   └── plagiarism_reports/       # Detailed analysis reports
+│
+├── 🧪 Testing & Demo
+│   ├── test_specialized_processors.py # Comprehensive test suite
+│   ├── test_subject_outputs.py    # Output system testing
+│   └── demo_subject_outputs.py    # Quick demonstration
+│
+└── 📋 Configuration
+    ├── requirements.txt          # Python dependencies
+    ├── .env.example             # Environment variables template
+    ├── .gitignore              # Git ignore patterns
+    └── README.md               # This documentation
 ```
 
-### Code Flow
+## 🔄 Processing Workflow
 
-1. **Initialization** (`main.py`)
-   - Load environment variables and configuration
-   - Build LangGraph workflow with orchestrator node
-   - Generate graph visualization
+### Enhanced Agentic Processing Flow
 
-2. **File Processing** (`process_assignments()`)
-   - Scan assignments folder for `.txt` files
-   - Extract metadata from file headers
-   - Process each file through the orchestrator
+1. **Initialization** (`main_agentic.py`)
+   - Load environment variables and multi-LLM configuration
+   - Initialize specialized processors and orchestrator
+   - Build LangGraph workflow with intelligent routing
 
-3. **Parallel Execution** (`orchestrator_node()`)
-   - Create async tasks for all processing nodes
-   - Execute simultaneously using `asyncio.gather()`
-   - Merge results back into state dictionary
+2. **File Processing** (`file_processor.py`)
+   - **Multi-format support**: PDF, DOCX, DOC, MD, TXT, images
+   - **OCR processing**: Automatic detection and processing of scanned documents
+   - **Language detection**: Automatic language identification for 14+ languages
+   - **Metadata extraction**: Parse assignment headers and classify content
 
-4. **Individual Node Processing**
-   - **Grammar Check**: Count grammatical errors using LLM
-   - **Plagiarism Check**: Analyze content originality, save reports
-   - **Source Check**: Compare assignment to reference material
-   - **Grading**: Multi-criteria evaluation (0-10 scale)
-   - **Summarization**: Generate 2-3 sentence summaries
+3. **Intelligent Classification** (`assignment_orchestrator.py`)
+   - **Subject detection**: Automatic classification (Math, Spanish, English, etc.)
+   - **Complexity assessment**: Grade level and difficulty analysis
+   - **Confidence scoring**: Reliability of classification decisions
+   - **Processing route selection**: Choose optimal processor for content type
 
-5. **Export Results** (`export_summary()`)
-   - Aggregate all processing results
-   - Generate CSV file with structured data
-   - Include metadata and all evaluation scores
+4. **Specialized Processing**
+   - **📐 Math Assignments**: Equation solving, step-by-step analysis, notation assessment
+   - **🇪🇸 Spanish Assignments**: Grammar checking, vocabulary analysis, cultural evaluation
+   - **📝 General Assignments**: Standard grading criteria with multi-language support
+   - **Fallback processing**: Graceful degradation if specialized processing fails
+
+5. **Parallel Analysis** (Agentic Workflow)
+   - **Grammar Analysis**: Multi-language grammar checking with localized prompts
+   - **Plagiarism Detection**: Content originality analysis with detailed reports
+   - **Relevance Assessment**: Source material comparison and alignment evaluation
+   - **Specialized Grading**: Subject-specific criteria and advanced scoring
+   - **Summary Generation**: Intelligent summarization with language awareness
+
+6. **Subject-Specific Export** (`subject_output_manager.py`)
+   - **Automatic classification**: Route results to appropriate subject files
+   - **Specialized CSV files**: Math, Spanish, English with subject-specific columns
+   - **Detailed JSON exports**: Complete assignment data with full analysis
+   - **Export statistics**: Summary reports with processing metrics and averages
 
 ## 📊 LangSmith Integration
 
