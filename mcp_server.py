@@ -317,18 +317,18 @@ def summarize_assignment(text: str) -> Dict[str, Any]:
 
 @mcp.tool()
 async def process_assignment_parallel(
-    assignment_text: str, 
-    source_text: str, 
+    assignment_text: str,
+    source_text: str,
     student_name: str
 ) -> Dict[str, Any]:
     """
     Process an assignment through all analysis tools in parallel for maximum efficiency.
-    
+
     Args:
         assignment_text: The student assignment content
         source_text: The reference/source material
         student_name: Name of the student for report generation
-        
+
     Returns:
         Dictionary with results from all analysis tools
     """
@@ -337,23 +337,23 @@ async def process_assignment_parallel(
         async def async_grammar():
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(None, lambda: grammar_check(assignment_text))
-        
+
         async def async_plagiarism():
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(None, lambda: plagiarism_check(assignment_text, student_name))
-        
+
         async def async_relevance():
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(None, lambda: relevance_check(assignment_text, source_text))
-        
+
         async def async_grading():
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(None, lambda: grade_assignment(assignment_text, source_text))
-        
+
         async def async_summary():
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(None, lambda: summarize_assignment(assignment_text))
-        
+
         # Execute all tools in parallel
         results = await asyncio.gather(
             async_grammar(),
@@ -363,10 +363,10 @@ async def process_assignment_parallel(
             async_summary(),
             return_exceptions=True
         )
-        
+
         # Process results
         grammar_result, plagiarism_result, relevance_result, grading_result, summary_result = results
-        
+
         return {
             "student_name": student_name,
             "grammar_check": grammar_result if not isinstance(grammar_result, Exception) else {"error": str(grammar_result), "status": "error"},
@@ -376,10 +376,65 @@ async def process_assignment_parallel(
             "summary": summary_result if not isinstance(summary_result, Exception) else {"error": str(summary_result), "status": "error"},
             "processing_status": "completed"
         }
-        
+
     except Exception as e:
         return {
             "error": f"Parallel processing failed: {str(e)}",
+            "processing_status": "failed"
+        }
+
+
+@mcp.tool()
+async def process_assignment_agentic(
+    assignment_text: str,
+    source_text: str,
+    student_name: str,
+    metadata: Optional[Dict] = None
+) -> Dict[str, Any]:
+    """
+    Process an assignment using the advanced agentic AI workflow.
+
+    Args:
+        assignment_text: The student assignment content
+        source_text: The reference/source material
+        student_name: Name of the student
+        metadata: Optional metadata dictionary
+
+    Returns:
+        Dictionary with comprehensive results from agentic workflow
+    """
+    try:
+        # Import agentic workflow
+        from agentic_workflow import run_agentic_workflow
+
+        # Prepare metadata
+        if metadata is None:
+            metadata = {
+                "name": student_name,
+                "date": "Unknown",
+                "class": "Unknown",
+                "subject": "Unknown"
+            }
+
+        # Run the agentic workflow
+        result = await run_agentic_workflow(assignment_text, metadata, source_text)
+
+        return {
+            "workflow_type": "agentic",
+            "student_name": student_name,
+            "processing_status": "completed",
+            "results": result
+        }
+
+    except ImportError:
+        return {
+            "error": "Agentic workflow not available",
+            "processing_status": "failed",
+            "fallback_suggestion": "Use process_assignment_parallel instead"
+        }
+    except Exception as e:
+        return {
+            "error": f"Agentic workflow failed: {str(e)}",
             "processing_status": "failed"
         }
 
@@ -446,8 +501,9 @@ if __name__ == "__main__":
         print("Usage: python mcp_server.py dev  # Run in development mode")
         print("Available tools:")
         print("- grammar_check: Check grammatical errors")
-        print("- plagiarism_check: Detect potential plagiarism") 
+        print("- plagiarism_check: Detect potential plagiarism")
         print("- relevance_check: Analyze content relevance")
         print("- grade_assignment: Comprehensive grading")
         print("- summarize_assignment: Generate summary")
         print("- process_assignment_parallel: Run all tools in parallel")
+        print("- process_assignment_agentic: Use advanced agentic AI workflow")

@@ -21,6 +21,17 @@ This document tracks all features and functionality in the Capstone project.
   - Parallel processing of grading tasks
   - Visual graph generation
 
+### Agentic AI Workflow
+- **Status**: ✅ Implemented
+- **Description**: Full-fledged agentic AI workflow with intelligent nodes and edges
+- **Components**:
+  - State machine with 11 specialized agent nodes
+  - Conditional edge routing based on workflow state
+  - Quality assessment and error recovery mechanisms
+  - Intelligent processing requirement detection
+  - Comprehensive error handling and retry logic
+  - Enhanced result aggregation with metadata tracking
+
 ### LangSmith Tracing
 - **Status**: ✅ Implemented
 - **Description**: Advanced monitoring and tracing capabilities
@@ -40,17 +51,22 @@ This document tracks all features and functionality in the Capstone project.
 ## File Structure
 
 ### Core Files
-- `main.py` - Main application entry point
-- `nodes.py` - LangGraph node definitions
+- `main.py` - Main application entry point (traditional)
+- `main_agentic.py` - Enhanced main with agentic workflow support
+- `nodes.py` - LangGraph node definitions (traditional)
+- `agentic_workflow.py` - Full agentic AI workflow implementation
 - `llms.py` - LLM configuration and setup
 - `utils.py` - Utility functions and helpers
 - `prompts.py` - Prompt templates
 - `paths.py` - Path configuration
 
 ### MCP Integration
-- `mcp_server.py` - MCP server implementation
+- `mcp_server.py` - MCP server implementation with agentic workflow support
 - `main_mcp.py` - MCP application entry point
 - `test_mcp.py` - MCP testing suite
+
+### Testing
+- `test_agentic_workflow.py` - Comprehensive tests for agentic workflow
 
 ### Configuration
 - `requirements.txt` - Python dependencies
@@ -70,7 +86,7 @@ This document tracks all features and functionality in the Capstone project.
 - [ ] Integration with learning management systems
 - [ ] Advanced plagiarism detection algorithms
 - [ ] Real-time collaboration features
-- [ ] Reconfigure orchestrator to execute full agentic instead of async
+- [x] Reconfigure orchestrator to execute full agentic instead of async
 - [ ] Add human in the loop workflows
 - [ ] Email notification system
 
@@ -159,7 +175,13 @@ This document tracks all features and functionality in the Capstone project.
 - ❌ Deprecated/Removed
 
 ## Recent Changes
-- Added MCP server functionality
+- **Implemented Agentic AI Workflow**: Complete refactor from simple async execution to full-fledged agentic workflow
+- **Enhanced LangGraph Integration**: Added 11 specialized agent nodes with conditional routing
+- **State Machine Implementation**: Comprehensive workflow state management with error recovery
+- **MCP Server Enhancement**: Added agentic workflow support to MCP tools
+- **Comprehensive Testing**: Created extensive test suite for workflow validation
+- **Quality Assessment**: Intelligent processing requirement detection and validation
+- **Error Recovery**: Automatic retry mechanisms and graceful error handling
 - Improved console output formatting
 - Enhanced relevance check prompts
 - Updated dependency management
