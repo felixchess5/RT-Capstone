@@ -212,10 +212,11 @@ def plagiarism_detection_agent(state: WorkflowState) -> WorkflowState:
         report_path = os.path.join(PLAGIARISM_REPORTS_FOLDER, f"{student_name}_workflow_report.json")
 
         with open(report_path, "w") as f:
+            import time
             report_data = {
                 "student": student_name,
                 "analysis": analysis,
-                "timestamp": str(asyncio.get_event_loop().time()),
+                "timestamp": str(time.time()),
                 "workflow_version": "agentic_v1"
             }
             json.dump(report_data, f, indent=2)
@@ -373,11 +374,12 @@ def summary_generation_agent(state: WorkflowState) -> WorkflowState:
         summary = response.content if hasattr(response, "content") else str(response).strip()
 
         # Enhanced summary with metadata
+        import time
         state["summary_result"] = {
             "summary": summary,
             "word_count": len(state["content"].split()),
             "character_count": len(state["content"]),
-            "generated_at": str(asyncio.get_event_loop().time()),
+            "generated_at": str(time.time()),
             "status": "success"
         }
 
