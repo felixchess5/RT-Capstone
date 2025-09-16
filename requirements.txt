@@ -6,3 +6,10 @@ python-dotenv
 ragas
 mcp[cli]
 language-tool-python
+PyPDF2
+python-docx
+markdown
+pdfplumber
+python-magic
+chardet
+mammoth

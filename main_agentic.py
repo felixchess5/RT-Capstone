@@ -55,8 +55,266 @@ except ImportError:
 
 from paths import ASSIGNMENTS_FOLDER, SUMMARY_CSV_PATH
 from utils import ensure_directories, extract_metadata_from_content
+from file_processor import file_processor, FileRejectionReason
 
 load_dotenv()
+
+
+@traceable(name="process_assignment_agentic_enhanced")
+async def process_assignment_agentic_enhanced(file_path: str, source_text: str) -> Dict:
+    """Process assignment file with agentic workflow and enhanced file format support."""
+    # Step 1: Extract content using file processor
+    file_result = file_processor.extract_text_content(file_path)
+
+    if not file_result.success:
+        # File was rejected - return detailed rejection info
+        rejection_message = file_processor.get_rejection_message(
+            file_result.rejection_reason, file_path
+        ) if file_result.rejection_reason else file_result.error
+
+        return {
+            "Student Name": os.path.splitext(os.path.basename(file_path))[0],
+            "Date of Submission": "Unknown",
+            "Class": "Unknown",
+            "Subject": "Unknown",
+            "Summary": f"FILE REJECTED: {rejection_message}",
+            "Grammar Errors": "N/A",
+            "Plagiarism File": "N/A",
+            "Content Relevance": "N/A",
+            "Initial Grade": "N/A",
+            "Overall Score": "N/A",
+            "Letter Grade": "N/A",
+            "Workflow Version": "agentic_v1",
+            "Processing_Status": "rejected",
+            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "Rejection_Reason": file_result.rejection_reason.value if file_result.rejection_reason else "unknown"
+        }
+
+    # Step 2: Extract metadata
+    try:
+        metadata = extract_metadata_from_content(file_path, file_result.content)
+    except Exception as e:
+        metadata = {
+            "name": os.path.splitext(os.path.basename(file_path))[0],
+            "date": "Unknown",
+            "class": "Unknown",
+            "subject": "Unknown"
+        }
+
+    # Step 3: Process with agentic workflow
+    try:
+        result = await run_agentic_workflow(file_result.content, metadata, source_text)
+
+        return {
+            "Student Name": result.get("student_name", metadata["name"]),
+            "Date of Submission": result.get("date_of_submission", metadata["date"]),
+            "Class": result.get("class", metadata["class"]),
+            "Subject": result.get("subject", metadata["subject"]),
+            "Summary": result.get("summary", "N/A"),
+            "Grammar Errors": result.get("grammar_errors", "N/A"),
+            "Plagiarism File": result.get("plagiarism_file", "N/A"),
+            "Content Relevance": result.get("content_relevance", "N/A"),
+            "Initial Grade": result.get("initial_grade", "N/A"),
+            "Overall Score": result.get("overall_score", "N/A"),
+            "Letter Grade": result.get("letter_grade", "N/A"),
+            "Workflow Version": "agentic_v1",
+            "Processing_Status": "completed",
+            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "Rejection_Reason": None
+        }
+    except Exception as e:
+        print(f"[ERROR] Agentic processing failed for {file_path}: {e}")
+        return {
+            "Student Name": metadata["name"],
+            "Date of Submission": metadata["date"],
+            "Class": metadata["class"],
+            "Subject": metadata["subject"],
+            "Summary": f"PROCESSING ERROR: Agentic workflow failed - {str(e)}",
+            "Grammar Errors": "N/A",
+            "Plagiarism File": "N/A",
+            "Content Relevance": "N/A",
+            "Initial Grade": "N/A",
+            "Overall Score": "N/A",
+            "Letter Grade": "N/A",
+            "Workflow Version": "agentic_v1",
+            "Processing_Status": "error",
+            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "Rejection_Reason": None
+        }
+
+
+@traceable(name="process_assignment_with_mcp_enhanced")
+async def process_assignment_with_mcp_enhanced(file_path: str, source_text: str) -> Dict:
+    """Process assignment file with MCP tools and enhanced file format support."""
+    # Step 1: Extract content using file processor
+    file_result = file_processor.extract_text_content(file_path)
+
+    if not file_result.success:
+        # File was rejected - return detailed rejection info
+        rejection_message = file_processor.get_rejection_message(
+            file_result.rejection_reason, file_path
+        ) if file_result.rejection_reason else file_result.error
+
+        return {
+            "Student Name": os.path.splitext(os.path.basename(file_path))[0],
+            "Date of Submission": "Unknown",
+            "Class": "Unknown",
+            "Subject": "Unknown",
+            "Summary": f"FILE REJECTED: {rejection_message}",
+            "Grammar Errors": "N/A",
+            "Plagiarism File": "N/A",
+            "Content Relevance": "N/A",
+            "Initial Grade": "N/A",
+            "Overall Score": "N/A",
+            "Letter Grade": "N/A",
+            "Workflow Version": "mcp_v1",
+            "Processing_Status": "rejected",
+            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "Rejection_Reason": file_result.rejection_reason.value if file_result.rejection_reason else "unknown"
+        }
+
+    # Step 2: Extract metadata
+    try:
+        metadata = extract_metadata_from_content(file_path, file_result.content)
+    except Exception as e:
+        metadata = {
+            "name": os.path.splitext(os.path.basename(file_path))[0],
+            "date": "Unknown",
+            "class": "Unknown",
+            "subject": "Unknown"
+        }
+
+    # Step 3: Process with MCP tools
+    try:
+        result = await process_assignment_parallel(file_result.content, source_text, metadata["name"])
+
+        return {
+            "Student Name": metadata["name"],
+            "Date of Submission": metadata["date"],
+            "Class": metadata["class"],
+            "Subject": metadata["subject"],
+            "Summary": result.get("summary", {}).get("summary", "N/A"),
+            "Grammar Errors": result.get("grammar_check", {}).get("grammar_errors", "N/A"),
+            "Plagiarism File": result.get("plagiarism_check", {}).get("report_file", "N/A"),
+            "Content Relevance": result.get("relevance_check", {}).get("relevance_analysis", "N/A"),
+            "Initial Grade": result.get("grading", {}).get("grades", "N/A"),
+            "Overall Score": "N/A",
+            "Letter Grade": "N/A",
+            "Workflow Version": "mcp_v1",
+            "Processing_Status": "completed",
+            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "Rejection_Reason": None
+        }
+    except Exception as e:
+        print(f"[ERROR] MCP processing failed for {file_path}: {e}")
+        return {
+            "Student Name": metadata["name"],
+            "Date of Submission": metadata["date"],
+            "Class": metadata["class"],
+            "Subject": metadata["subject"],
+            "Summary": f"PROCESSING ERROR: MCP workflow failed - {str(e)}",
+            "Grammar Errors": "N/A",
+            "Plagiarism File": "N/A",
+            "Content Relevance": "N/A",
+            "Initial Grade": "N/A",
+            "Overall Score": "N/A",
+            "Letter Grade": "N/A",
+            "Workflow Version": "mcp_v1",
+            "Processing_Status": "error",
+            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "Rejection_Reason": None
+        }
+
+
+@traceable(name="process_assignment_traditional_enhanced")
+async def process_assignment_traditional_enhanced(file_path: str, source_text: str) -> Dict:
+    """Process assignment file with traditional processing and enhanced file format support."""
+    # Step 1: Extract content using file processor
+    file_result = file_processor.extract_text_content(file_path)
+
+    if not file_result.success:
+        # File was rejected - return detailed rejection info
+        rejection_message = file_processor.get_rejection_message(
+            file_result.rejection_reason, file_path
+        ) if file_result.rejection_reason else file_result.error
+
+        return {
+            "Student Name": os.path.splitext(os.path.basename(file_path))[0],
+            "Date of Submission": "Unknown",
+            "Class": "Unknown",
+            "Subject": "Unknown",
+            "Summary": f"FILE REJECTED: {rejection_message}",
+            "Grammar Errors": "N/A",
+            "Plagiarism File": "N/A",
+            "Content Relevance": "N/A",
+            "Initial Grade": "N/A",
+            "Overall Score": "N/A",
+            "Letter Grade": "N/A",
+            "Workflow Version": "traditional_v1",
+            "Processing_Status": "rejected",
+            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "Rejection_Reason": file_result.rejection_reason.value if file_result.rejection_reason else "unknown"
+        }
+
+    # Step 2: Extract metadata
+    try:
+        metadata = extract_metadata_from_content(file_path, file_result.content)
+    except Exception as e:
+        metadata = {
+            "name": os.path.splitext(os.path.basename(file_path))[0],
+            "date": "Unknown",
+            "class": "Unknown",
+            "subject": "Unknown"
+        }
+
+    # Step 3: Process with traditional workflow
+    try:
+        from nodes import orchestrator_node
+
+        initial_state = {
+            "content": file_result.content,
+            "metadata": metadata,
+            "source_text": source_text
+        }
+
+        final_state = await orchestrator_node(initial_state)
+
+        return {
+            "Student Name": final_state["metadata"]["name"],
+            "Date of Submission": final_state["metadata"]["date"],
+            "Class": final_state["metadata"]["class"],
+            "Subject": final_state["metadata"]["subject"],
+            "Summary": final_state["summary"],
+            "Grammar Errors": final_state["grammar_errors"],
+            "Plagiarism File": final_state["plagiarism_file"],
+            "Content Relevance": final_state["relevance"],
+            "Initial Grade": final_state["grade"],
+            "Overall Score": "N/A",
+            "Letter Grade": "N/A",
+            "Workflow Version": "traditional_v1",
+            "Processing_Status": "completed",
+            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "Rejection_Reason": None
+        }
+    except Exception as e:
+        print(f"[ERROR] Traditional processing failed for {file_path}: {e}")
+        return {
+            "Student Name": metadata["name"],
+            "Date of Submission": metadata["date"],
+            "Class": metadata["class"],
+            "Subject": metadata["subject"],
+            "Summary": f"PROCESSING ERROR: Traditional workflow failed - {str(e)}",
+            "Grammar Errors": "N/A",
+            "Plagiarism File": "N/A",
+            "Content Relevance": "N/A",
+            "Initial Grade": "N/A",
+            "Overall Score": "N/A",
+            "Letter Grade": "N/A",
+            "Workflow Version": "traditional_v1",
+            "Processing_Status": "error",
+            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "Rejection_Reason": None
+        }
 
 
 @traceable(name="process_assignment_agentic")
@@ -202,7 +460,7 @@ async def process_assignment_traditional(file_path: str, source_text: str) -> Di
 
 @traceable(name="process_assignments_batch")
 async def process_assignments_batch(processing_mode: str = "auto") -> List[Dict]:
-    """Process all assignments in the assignments folder."""
+    """Process all assignments in the assignments folder with enhanced file format support."""
     print(f"Processing assignments with {processing_mode} mode...")
     ensure_directories()
 
@@ -212,39 +470,69 @@ async def process_assignments_batch(processing_mode: str = "auto") -> List[Dict]
     source_text = """The Renaissance was a cultural movement that spanned roughly the 14th to the 17th century, beginning in Italy in the Late Middle Ages and later spreading to the rest of Europe. The term is also used more loosely to refer to the historical era, but since the changes of the Renaissance were not uniform across Europe, this is a general use of the term. As a cultural movement, it encompassed innovative flowering of Latin and vernacular literatures, beginning with the 14th-century resurgence of learning based on classical sources, which contemporaries credited to Petrarch, the development of linear perspective and other techniques of rendering a more natural reality in painting, and gradual but widespread educational reform."""
 
     assignments = []
+    processing_stats = {
+        "total_files": 0,
+        "processed": 0,
+        "rejected": 0,
+        "errors": 0
+    }
 
     # Determine processing function based on mode and availability
     if processing_mode == "agentic" and AGENTIC_AVAILABLE:
-        process_func = process_assignment_agentic
-        print("🤖 Using Agentic AI Workflow")
+        process_func = process_assignment_agentic_enhanced
+        print("🤖 Using Enhanced Agentic AI Workflow with Multi-Format Support")
     elif processing_mode == "mcp" and MCP_AVAILABLE:
-        process_func = process_assignment_with_mcp
-        print("🔧 Using MCP Tools")
+        process_func = process_assignment_with_mcp_enhanced
+        print("🔧 Using Enhanced MCP Tools with Multi-Format Support")
     elif processing_mode == "traditional":
-        process_func = process_assignment_traditional
-        print("📊 Using Traditional Processing")
+        process_func = process_assignment_traditional_enhanced
+        print("📊 Using Enhanced Traditional Processing with Multi-Format Support")
     elif processing_mode == "auto":
         # Auto-select the best available method
         if AGENTIC_AVAILABLE:
-            process_func = process_assignment_agentic
-            print("🤖 Auto-selected: Agentic AI Workflow")
+            process_func = process_assignment_agentic_enhanced
+            print("🤖 Auto-selected: Enhanced Agentic AI Workflow")
         elif MCP_AVAILABLE:
-            process_func = process_assignment_with_mcp
-            print("🔧 Auto-selected: MCP Tools")
+            process_func = process_assignment_with_mcp_enhanced
+            print("🔧 Auto-selected: Enhanced MCP Tools")
         else:
-            process_func = process_assignment_traditional
-            print("📊 Auto-selected: Traditional Processing")
+            process_func = process_assignment_traditional_enhanced
+            print("📊 Auto-selected: Enhanced Traditional Processing")
     else:
         # Fallback to traditional
-        process_func = process_assignment_traditional
-        print("📊 Falling back to Traditional Processing")
+        process_func = process_assignment_traditional_enhanced
+        print("📊 Falling back to Enhanced Traditional Processing")
+
+    # Get all files in assignments folder with supported extensions
+    supported_extensions = ['.txt', '.pdf', '.docx', '.doc', '.md', '.markdown']
 
     for file in os.listdir(ASSIGNMENTS_FOLDER):
-        if file.endswith(".txt"):
-            file_path = os.path.join(ASSIGNMENTS_FOLDER, file)
+        file_path = os.path.join(ASSIGNMENTS_FOLDER, file)
+
+        # Check if file has supported extension
+        _, ext = os.path.splitext(file.lower())
+        if ext in supported_extensions:
+            processing_stats["total_files"] += 1
             print(f"Processing: {file}")
             result = await process_func(file_path, source_text)
             assignments.append(result)
+
+            # Update stats based on result
+            if result.get("Processing_Status") == "rejected":
+                processing_stats["rejected"] += 1
+            elif result.get("Processing_Status") == "error":
+                processing_stats["errors"] += 1
+            else:
+                processing_stats["processed"] += 1
+        else:
+            print(f"Skipping unsupported file: {file}")
+
+    # Print processing statistics
+    print(f"\n📊 Processing Statistics:")
+    print(f"   Total files: {processing_stats['total_files']}")
+    print(f"   Successfully processed: {processing_stats['processed']}")
+    print(f"   Rejected files: {processing_stats['rejected']}")
+    print(f"   Error files: {processing_stats['errors']}")
 
     # Export results with enhanced CSV format
     csv_path = export_enhanced_summary(assignments, SUMMARY_CSV_PATH)
@@ -253,14 +541,15 @@ async def process_assignments_batch(processing_mode: str = "auto") -> List[Dict]
 
 
 def export_enhanced_summary(assignments: List[Dict], output_path: str) -> str:
-    """Export assignment summaries to CSV file with enhanced fields."""
+    """Export assignment summaries to CSV file with enhanced fields including rejection tracking."""
     print("Exporting enhanced summary...")
 
-    # Define enhanced fieldnames
+    # Define enhanced fieldnames with new tracking fields
     fieldnames = [
         "Student Name", "Date of Submission", "Class", "Subject", "Summary",
         "Grammar Errors", "Plagiarism File", "Content Relevance", "Initial Grade",
-        "Overall Score", "Letter Grade", "Workflow Version"
+        "Overall Score", "Letter Grade", "Workflow Version", "Processing_Status",
+        "File_Format", "Rejection_Reason"
     ]
 
     with open(output_path, "w", newline="") as f:

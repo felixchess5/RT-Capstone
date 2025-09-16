@@ -45,8 +45,22 @@ This document tracks all features and functionality in the Capstone project.
 - **Description**: Model Context Protocol server for external tool integration
 - **Components**:
   - Assignment grading tools
-  - File management capabilities
+  - Comprehensive file processing (PDF, DOCX, DOC, MD, TXT)
+  - File format validation and rejection tracking
   - Grammar checking functionality
+  - Batch processing capabilities
+  - Robust error handling and recovery
+
+### Multi-Format File Processing
+- **Status**: ✅ Implemented
+- **Description**: Comprehensive file processing system with robust error handling
+- **Components**:
+  - Support for PDF, DOCX, DOC, Markdown, and TXT files
+  - Intelligent file format detection (extension, MIME type, magic bytes)
+  - Content extraction with metadata preservation
+  - Detailed rejection tracking with human-readable error messages
+  - Enhanced CSV export with processing status fields
+  - Failback systems for corrupted or unsupported files
 
 ## File Structure
 
@@ -55,15 +69,21 @@ This document tracks all features and functionality in the Capstone project.
 - `main_agentic.py` - Enhanced main with agentic workflow support
 - `nodes.py` - LangGraph node definitions (traditional)
 - `agentic_workflow.py` - Full agentic AI workflow implementation
+- `file_processor.py` - Comprehensive multi-format file processing utility
 - `llms.py` - LLM configuration and setup
 - `utils.py` - Utility functions and helpers
 - `prompts.py` - Prompt templates
 - `paths.py` - Path configuration
 
 ### MCP Integration
-- `mcp_server.py` - MCP server implementation with agentic workflow support
+- `mcp_server.py` - MCP server implementation with enhanced file processing tools
 - `main_mcp.py` - MCP application entry point
 - `test_mcp.py` - MCP testing suite
+
+### File Processing
+- `file_processor.py` - Multi-format file processing with rejection tracking
+- Enhanced processing workflows with file format support
+- Robust error handling and content extraction
 
 ### Testing
 - `test_agentic_workflow.py` - Comprehensive tests for agentic workflow
@@ -81,7 +101,7 @@ This document tracks all features and functionality in the Capstone project.
 - [ ] Detailed analytics dashboard
 - [ ] Add ICR and OCR capabilities
 - [ ] Add additional subject classes (Eng, Math, Spanish)
-- [ ] Create MCP for PDF, Word, MD and a failback system for edge cases
+- [x] Create MCP for PDF, Word, MD and a failback system for edge cases
 - [ ] Multi-language support
 - [ ] Integration with learning management systems
 - [ ] Advanced plagiarism detection algorithms
@@ -169,12 +189,19 @@ This document tracks all features and functionality in the Capstone project.
 - [ ] Comparative analysis across classes/schools
 
 ## Feature Status Legend
-- ✅ Implemented and tested
+- ✅ Implemented and tested (used in Core Features section)
+- [x] Completed/Implemented (used in checkboxes)
+- [ ] Planned/Not yet implemented
 - 🚧 In development
-- 📋 Planned
 - ❌ Deprecated/Removed
 
 ## Recent Changes
+- **Multi-Format File Processing**: Implemented comprehensive file processing for PDF, DOCX, DOC, MD, and TXT formats
+- **Robust Error Handling**: Added detailed rejection tracking with human-readable error messages
+- **Enhanced MCP Tools**: Added 5 new file processing tools (process_file_content, validate_file_format, etc.)
+- **File Format Detection**: Intelligent detection using extension, MIME type, and magic byte analysis
+- **Processing Status Tracking**: Enhanced CSV export with Processing_Status, File_Format, and Rejection_Reason fields
+- **Failback Systems**: Comprehensive error recovery for corrupted, missing, or unsupported files
 - **Implemented Agentic AI Workflow**: Complete refactor from simple async execution to full-fledged agentic workflow
 - **Enhanced LangGraph Integration**: Added 11 specialized agent nodes with conditional routing
 - **State Machine Implementation**: Comprehensive workflow state management with error recovery
@@ -182,6 +209,3 @@ This document tracks all features and functionality in the Capstone project.
 - **Comprehensive Testing**: Created extensive test suite for workflow validation
 - **Quality Assessment**: Intelligent processing requirement detection and validation
 - **Error Recovery**: Automatic retry mechanisms and graceful error handling
-- Improved console output formatting
-- Enhanced relevance check prompts
-- Updated dependency management

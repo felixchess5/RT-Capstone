@@ -26,6 +26,7 @@ except ImportError:
 from llms import groq_llm
 from paths import PLAGIARISM_REPORTS_FOLDER
 from prompts import PLAGIARISM_CHECK, GRAMMAR_CHECK, RELEVANCE_CHECK, GRADING_PROMPT, SUMMARY_PROMPT
+from file_processor import file_processor, FileRejectionReason
 
 load_dotenv()
 
@@ -439,6 +440,301 @@ async def process_assignment_agentic(
         }
 
 
+@mcp.tool()
+def process_file_content(file_path: str) -> Dict[str, Any]:
+    """
+    Process various file formats (PDF, DOCX, DOC, MD, TXT) and extract content.
+
+    Args:
+        file_path: Path to the file to process
+
+    Returns:
+        Dictionary with extracted content or rejection details
+    """
+    try:
+        result = file_processor.extract_text_content(file_path)
+
+        return {
+            "success": result.success,
+            "content": result.content,
+            "metadata": result.metadata,
+            "error": result.error,
+            "rejection_reason": result.rejection_reason.value if result.rejection_reason else None,
+            "file_path": file_path,
+            "processing_method": "file_processor"
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "content": "",
+            "metadata": {},
+            "error": f"File processing failed: {str(e)}",
+            "rejection_reason": "processing_error",
+            "file_path": file_path,
+            "processing_method": "file_processor"
+        }
+
+
+@mcp.tool()
+def validate_file_format(file_path: str) -> Dict[str, Any]:
+    """
+    Validate file format and check if it's supported for processing.
+
+    Args:
+        file_path: Path to the file to validate
+
+    Returns:
+        Dictionary with validation results and format information
+    """
+    try:
+        # Detect file format
+        file_format, detection_info = file_processor.detect_file_format(file_path)
+
+        # Validate file
+        rejection_reason = file_processor.validate_file(file_path)
+
+        result = {
+            "file_path": file_path,
+            "detected_format": file_format.value,
+            "detection_info": detection_info,
+            "is_valid": rejection_reason is None,
+            "supported": file_format.value != "unknown"
+        }
+
+        if rejection_reason:
+            result.update({
+                "rejection_reason": rejection_reason.value,
+                "rejection_message": file_processor.get_rejection_message(rejection_reason, file_path)
+            })
+
+        return result
+
+    except Exception as e:
+        return {
+            "file_path": file_path,
+            "detected_format": "unknown",
+            "detection_info": f"Error during detection: {str(e)}",
+            "is_valid": False,
+            "supported": False,
+            "rejection_reason": "validation_error",
+            "rejection_message": f"File validation failed: {str(e)}"
+        }
+
+
+@mcp.tool()
+async def process_assignment_from_file(
+    file_path: str,
+    source_text: str,
+    workflow_type: str = "agentic"
+) -> Dict[str, Any]:
+    """
+    Process an assignment file through the complete grading workflow with robust error handling.
+
+    Args:
+        file_path: Path to the assignment file
+        source_text: Reference source material
+        workflow_type: Type of workflow to use ("agentic", "parallel", "traditional")
+
+    Returns:
+        Dictionary with processing results or detailed rejection information
+    """
+    try:
+        # Step 1: Process the file to extract content
+        file_result = file_processor.extract_text_content(file_path)
+
+        if not file_result.success:
+            # File was rejected - return detailed rejection info
+            return {
+                "processing_status": "rejected",
+                "file_path": file_path,
+                "rejection_reason": file_result.rejection_reason.value if file_result.rejection_reason else "unknown",
+                "rejection_message": file_processor.get_rejection_message(
+                    file_result.rejection_reason, file_path
+                ) if file_result.rejection_reason else file_result.error,
+                "error": file_result.error,
+                "file_metadata": file_result.metadata,
+                "workflow_type": workflow_type
+            }
+
+        # Step 2: Extract student metadata from content
+        from utils import extract_metadata_from_content
+
+        try:
+            metadata = extract_metadata_from_content(file_path, file_result.content)
+        except:
+            # Fallback metadata
+            import os
+            metadata = {
+                "name": os.path.splitext(os.path.basename(file_path))[0],
+                "date": "Unknown",
+                "class": "Unknown",
+                "subject": "Unknown"
+            }
+
+        # Step 3: Process through appropriate workflow
+        if workflow_type == "agentic":
+            try:
+                from agentic_workflow import run_agentic_workflow
+                workflow_result = await run_agentic_workflow(file_result.content, metadata, source_text)
+
+                return {
+                    "processing_status": "completed",
+                    "workflow_type": "agentic",
+                    "file_path": file_path,
+                    "file_metadata": file_result.metadata,
+                    "student_metadata": metadata,
+                    "results": workflow_result
+                }
+
+            except ImportError:
+                # Fallback to parallel processing
+                workflow_type = "parallel"
+            except Exception as e:
+                return {
+                    "processing_status": "failed",
+                    "workflow_type": "agentic",
+                    "file_path": file_path,
+                    "error": f"Agentic workflow failed: {str(e)}",
+                    "file_metadata": file_result.metadata,
+                    "student_metadata": metadata
+                }
+
+        if workflow_type == "parallel":
+            try:
+                parallel_result = await process_assignment_parallel(
+                    file_result.content, source_text, metadata["name"]
+                )
+
+                return {
+                    "processing_status": "completed",
+                    "workflow_type": "parallel",
+                    "file_path": file_path,
+                    "file_metadata": file_result.metadata,
+                    "student_metadata": metadata,
+                    "results": parallel_result
+                }
+
+            except Exception as e:
+                return {
+                    "processing_status": "failed",
+                    "workflow_type": "parallel",
+                    "file_path": file_path,
+                    "error": f"Parallel processing failed: {str(e)}",
+                    "file_metadata": file_result.metadata,
+                    "student_metadata": metadata
+                }
+
+        # Fallback: basic processing
+        return {
+            "processing_status": "completed",
+            "workflow_type": "basic",
+            "file_path": file_path,
+            "file_metadata": file_result.metadata,
+            "student_metadata": metadata,
+            "content": file_result.content,
+            "message": "Basic content extraction completed - advanced workflows unavailable"
+        }
+
+    except Exception as e:
+        return {
+            "processing_status": "error",
+            "file_path": file_path,
+            "error": f"Unexpected error during file processing: {str(e)}",
+            "workflow_type": workflow_type
+        }
+
+
+@mcp.tool()
+def get_supported_file_formats() -> Dict[str, Any]:
+    """
+    Get information about supported file formats and processing capabilities.
+
+    Returns:
+        Dictionary with supported formats and their descriptions
+    """
+    from file_processor import get_supported_formats
+
+    return {
+        "supported_formats": get_supported_formats(),
+        "max_file_size_mb": file_processor.MAX_FILE_SIZE // (1024 * 1024),
+        "min_content_length": file_processor.MIN_CONTENT_LENGTH,
+        "processing_capabilities": {
+            "pdf": "Multiple extraction methods (pdfplumber, PyPDF2)",
+            "docx": "Full document processing including tables",
+            "doc": "Legacy format support via mammoth",
+            "markdown": "Markdown to plain text conversion",
+            "text": "Multi-encoding support with auto-detection"
+        },
+        "rejection_reasons": [reason.value for reason in FileRejectionReason]
+    }
+
+
+@mcp.tool()
+async def batch_process_files(
+    file_paths: List[str],
+    source_text: str,
+    workflow_type: str = "agentic",
+    include_rejections: bool = True
+) -> Dict[str, Any]:
+    """
+    Process multiple assignment files in batch with comprehensive error handling.
+
+    Args:
+        file_paths: List of file paths to process
+        source_text: Reference source material
+        workflow_type: Type of workflow to use
+        include_rejections: Whether to include rejected files in output
+
+    Returns:
+        Dictionary with batch processing results
+    """
+    results = {
+        "processed_files": [],
+        "rejected_files": [],
+        "failed_files": [],
+        "summary": {
+            "total_files": len(file_paths),
+            "successful": 0,
+            "rejected": 0,
+            "failed": 0
+        }
+    }
+
+    for file_path in file_paths:
+        try:
+            result = await process_assignment_from_file(file_path, source_text, workflow_type)
+
+            if result["processing_status"] == "completed":
+                results["processed_files"].append(result)
+                results["summary"]["successful"] += 1
+            elif result["processing_status"] == "rejected":
+                if include_rejections:
+                    results["rejected_files"].append(result)
+                results["summary"]["rejected"] += 1
+            else:
+                results["failed_files"].append(result)
+                results["summary"]["failed"] += 1
+
+        except Exception as e:
+            error_result = {
+                "file_path": file_path,
+                "processing_status": "error",
+                "error": f"Batch processing error: {str(e)}"
+            }
+            results["failed_files"].append(error_result)
+            results["summary"]["failed"] += 1
+
+    # Add processing statistics
+    total = results["summary"]["total_files"]
+    if total > 0:
+        results["summary"]["success_rate"] = results["summary"]["successful"] / total
+        results["summary"]["rejection_rate"] = results["summary"]["rejected"] / total
+        results["summary"]["failure_rate"] = results["summary"]["failed"] / total
+
+    return results
+
+
 @mcp.resource("assignment://metadata/{file_path}")
 def get_assignment_metadata(file_path: str) -> str:
     """
@@ -497,13 +793,26 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "dev":
         mcp.run(transport="stdio")
     else:
-        print("Assignment Grading MCP Server")
+        print("Assignment Grading MCP Server - Enhanced File Processing")
         print("Usage: python mcp_server.py dev  # Run in development mode")
-        print("Available tools:")
+        print("")
+        print("Core Analysis Tools:")
         print("- grammar_check: Check grammatical errors")
         print("- plagiarism_check: Detect potential plagiarism")
         print("- relevance_check: Analyze content relevance")
         print("- grade_assignment: Comprehensive grading")
         print("- summarize_assignment: Generate summary")
+        print("")
+        print("Workflow Processing:")
         print("- process_assignment_parallel: Run all tools in parallel")
         print("- process_assignment_agentic: Use advanced agentic AI workflow")
+        print("")
+        print("File Processing Tools:")
+        print("- process_file_content: Extract content from PDF, DOCX, DOC, MD, TXT")
+        print("- validate_file_format: Check file format and validate")
+        print("- process_assignment_from_file: Complete file-to-grade workflow")
+        print("- batch_process_files: Process multiple files with error handling")
+        print("- get_supported_file_formats: Get format information")
+        print("")
+        print("Supported Formats: PDF, DOCX, DOC, MD, TXT")
+        print("Max File Size: 50MB | Robust error handling & rejection tracking")

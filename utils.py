@@ -10,21 +10,42 @@ def ensure_directories() -> None:
         os.makedirs(folder, exist_ok=True)
 
 
-def extract_metadata_from_content(file_path: str) -> Dict[str, str]:
+def extract_metadata_from_content(file_path: str, content: str = None) -> Dict[str, str]:
     """Extract metadata from assignment file header.
-    
+
     Expected format:
     Name: John Doe
     Date: 2025-08-25
     Class: 10
     Subject: English
+
+    Args:
+        file_path: Path to the file (for filename fallback)
+        content: Optional content string (if already extracted)
     """
     print("Extracting metadata from content...")
-    with open(file_path, "r") as f:
-        lines = [line.strip() for line in f.readlines()[:10]]
+
+    if content is None:
+        # Read from file if content not provided
+        try:
+            with open(file_path, "r") as f:
+                lines = [line.strip() for line in f.readlines()[:10]]
+        except Exception:
+            # If file reading fails, use filename as fallback
+            import os
+            filename = os.path.splitext(os.path.basename(file_path))[0]
+            return {
+                "name": filename,
+                "date": "Unknown",
+                "class": "Unknown",
+                "subject": "Unknown"
+            }
+    else:
+        # Extract from provided content
+        lines = [line.strip() for line in content.split('\n')[:10]]
 
     meta = {"name": "Unknown", "date": "Unknown", "class": "Unknown", "subject": "Unknown"}
-    
+
     for line in lines:
         if line.lower().startswith("name:"):
             meta["name"] = line.split(":", 1)[1].strip()
@@ -34,6 +55,13 @@ def extract_metadata_from_content(file_path: str) -> Dict[str, str]:
             meta["class"] = line.split(":", 1)[1].strip()
         elif line.lower().startswith("subject:"):
             meta["subject"] = line.split(":", 1)[1].strip()
+
+    # If name is still unknown, try to extract from filename
+    if meta["name"] == "Unknown" and file_path:
+        import os
+        filename = os.path.splitext(os.path.basename(file_path))[0]
+        # Clean up filename to extract potential student name
+        meta["name"] = filename.replace("_", " ").replace("-", " ").title()
 
     return meta
 
