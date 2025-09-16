@@ -27,6 +27,8 @@ from llms import groq_llm
 from paths import PLAGIARISM_REPORTS_FOLDER
 from prompts import PLAGIARISM_CHECK, GRAMMAR_CHECK, RELEVANCE_CHECK, GRADING_PROMPT, SUMMARY_PROMPT
 from file_processor import file_processor, FileRejectionReason
+from ocr_processor import ocr_processor, OCRMethod, ImageProcessingMethod
+from language_support import language_manager, detect_text_language, get_supported_languages
 
 load_dotenv()
 
@@ -787,6 +789,422 @@ def assignment_analysis_prompt(assignment_type: str = "general") -> str:
     return prompts.get(assignment_type, prompts["general"])
 
 
+@mcp.tool()
+def extract_text_from_scanned_pdf(file_path: str, enhanced: bool = True) -> Dict[str, Any]:
+    """
+    Extract text from scanned/image-based PDF files using OCR.
+
+    Args:
+        file_path: Path to the scanned PDF file
+        enhanced: Whether to use enhanced OCR methods for better accuracy
+
+    Returns:
+        Dictionary with extracted text, confidence, and metadata
+    """
+    try:
+        from ocr_processor import extract_text_from_scanned_pdf
+
+        if not os.path.exists(file_path):
+            return {
+                "success": False,
+                "error": "File does not exist",
+                "file_path": file_path
+            }
+
+        # Check if file is actually a PDF
+        if not file_path.lower().endswith('.pdf'):
+            return {
+                "success": False,
+                "error": "File is not a PDF",
+                "file_path": file_path
+            }
+
+        result = extract_text_from_scanned_pdf(file_path, enhanced)
+
+        return {
+            "success": result.success,
+            "text": result.text if result.success else "",
+            "confidence": result.confidence,
+            "error": result.error if not result.success else "",
+            "metadata": result.metadata,
+            "file_path": file_path,
+            "enhanced_mode": enhanced
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"OCR processing failed: {str(e)}",
+            "file_path": file_path
+        }
+
+
+@mcp.tool()
+def extract_text_from_image(image_path: str,
+                           enhanced: bool = True,
+                           ocr_method: str = "tesseract_enhanced",
+                           preprocessing: str = "adaptive_threshold") -> Dict[str, Any]:
+    """
+    Extract text from image files using OCR.
+
+    Args:
+        image_path: Path to the image file (PNG, JPEG, TIFF, BMP)
+        enhanced: Whether to try multiple OCR methods for best results
+        ocr_method: OCR method to use ("tesseract" or "tesseract_enhanced")
+        preprocessing: Image preprocessing method
+
+    Returns:
+        Dictionary with extracted text, confidence, and metadata
+    """
+    try:
+        from ocr_processor import extract_text_from_image_file, OCRMethod, ImageProcessingMethod
+
+        if not os.path.exists(image_path):
+            return {
+                "success": False,
+                "error": "Image file does not exist",
+                "file_path": image_path
+            }
+
+        # Check if file is an image
+        valid_extensions = ['.png', '.jpg', '.jpeg', '.tiff', '.tif', '.bmp']
+        if not any(image_path.lower().endswith(ext) for ext in valid_extensions):
+            return {
+                "success": False,
+                "error": "File is not a supported image format",
+                "file_path": image_path,
+                "supported_formats": valid_extensions
+            }
+
+        if enhanced:
+            result = extract_text_from_image_file(image_path, enhanced=True)
+        else:
+            # Use specific OCR method and preprocessing
+            ocr_method_enum = OCRMethod.TESSERACT_ENHANCED if ocr_method == "tesseract_enhanced" else OCRMethod.TESSERACT
+            preprocessing_enum = getattr(ImageProcessingMethod, preprocessing.upper(), ImageProcessingMethod.ADAPTIVE_THRESHOLD)
+
+            result = ocr_processor.extract_text_from_image(image_path, ocr_method_enum, preprocessing_enum)
+
+        return {
+            "success": result.success,
+            "text": result.text if result.success else "",
+            "confidence": result.confidence,
+            "error": result.error if not result.success else "",
+            "metadata": result.metadata,
+            "file_path": image_path,
+            "enhanced_mode": enhanced
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Image OCR processing failed: {str(e)}",
+            "file_path": image_path
+        }
+
+
+@mcp.tool()
+def check_if_pdf_is_scanned(pdf_path: str) -> Dict[str, Any]:
+    """
+    Check if a PDF file is scanned/image-based or contains searchable text.
+
+    Args:
+        pdf_path: Path to the PDF file
+
+    Returns:
+        Dictionary with scan status and analysis details
+    """
+    try:
+        from ocr_processor import is_scanned_pdf
+
+        if not os.path.exists(pdf_path):
+            return {
+                "error": "PDF file does not exist",
+                "file_path": pdf_path
+            }
+
+        if not pdf_path.lower().endswith('.pdf'):
+            return {
+                "error": "File is not a PDF",
+                "file_path": pdf_path
+            }
+
+        is_scanned = is_scanned_pdf(pdf_path)
+
+        return {
+            "file_path": pdf_path,
+            "is_scanned": is_scanned,
+            "requires_ocr": is_scanned,
+            "recommendation": "Use OCR extraction" if is_scanned else "Use standard text extraction"
+        }
+
+    except Exception as e:
+        return {
+            "error": f"PDF analysis failed: {str(e)}",
+            "file_path": pdf_path
+        }
+
+
+@mcp.tool()
+def get_ocr_capabilities() -> Dict[str, Any]:
+    """
+    Get information about available OCR capabilities and dependencies.
+
+    Returns:
+        Dictionary with OCR system status and capabilities
+    """
+    try:
+        capabilities = {
+            "tesseract_available": ocr_processor.tesseract_available,
+            "pdf2image_available": ocr_processor.pdf2image_available,
+            "opencv_available": True,  # Always available if OCR processor loads
+            "supported_image_formats": ["PNG", "JPEG", "TIFF", "BMP"],
+            "supported_pdf_types": ["Scanned PDFs", "Image-based PDFs"],
+            "ocr_methods": ["tesseract", "tesseract_enhanced"],
+            "preprocessing_methods": [
+                "none", "grayscale", "threshold", "adaptive_threshold",
+                "denoise", "morphological"
+            ],
+            "features": {
+                "multi_method_enhancement": True,
+                "confidence_scoring": True,
+                "automatic_preprocessing": True,
+                "batch_processing": True,
+                "scanned_pdf_detection": True
+            }
+        }
+
+        if ocr_processor.tesseract_available:
+            try:
+                import pytesseract
+                capabilities["tesseract_version"] = str(pytesseract.get_tesseract_version())
+            except:
+                capabilities["tesseract_version"] = "Unknown"
+
+        return capabilities
+
+    except Exception as e:
+        return {
+            "error": f"Failed to get OCR capabilities: {str(e)}",
+            "available": False
+        }
+
+
+@mcp.tool()
+def detect_language(text: str) -> Dict[str, Any]:
+    """
+    Detect the language of the provided text.
+
+    Args:
+        text: Text to analyze for language detection
+
+    Returns:
+        Dictionary with detected language, confidence, and metadata
+    """
+    try:
+        if not text or len(text.strip()) < 3:
+            return {
+                "error": "Text too short for reliable language detection",
+                "text_length": len(text.strip())
+            }
+
+        result = detect_text_language(text)
+
+        return {
+            "primary_language": result.primary_language,
+            "language_name": language_manager.get_language_config(result.primary_language).name,
+            "confidence": result.confidence,
+            "is_supported": result.is_supported,
+            "fallback_language": result.fallback_language,
+            "all_detected": result.all_detected,
+            "text_sample": text[:100] + "..." if len(text) > 100 else text
+        }
+
+    except Exception as e:
+        return {
+            "error": f"Language detection failed: {str(e)}",
+            "text_length": len(text) if text else 0
+        }
+
+
+@mcp.tool()
+def get_supported_languages_info() -> Dict[str, Any]:
+    """
+    Get information about all supported languages for assignment grading.
+
+    Returns:
+        Dictionary with supported languages and their capabilities
+    """
+    try:
+        languages = get_supported_languages()
+
+        return {
+            "total_languages": len(languages),
+            "languages": languages,
+            "features": {
+                "grammar_checking": "Available for all supported languages",
+                "plagiarism_detection": "Language-aware prompts available",
+                "relevance_analysis": "Localized evaluation criteria",
+                "content_grading": "Language-specific grading rubrics",
+                "ocr_support": "Multi-language OCR with Tesseract",
+                "automatic_detection": "Automatic language detection from content"
+            },
+            "default_language": "en",
+            "fallback_behavior": "Unsupported languages fallback to closest supported language"
+        }
+
+    except Exception as e:
+        return {
+            "error": f"Failed to get language information: {str(e)}",
+            "available": False
+        }
+
+
+@mcp.tool()
+def grade_assignment_multilingual(assignment_text: str,
+                                source_text: str,
+                                language_hint: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Grade assignment with automatic language detection and localized evaluation.
+
+    Args:
+        assignment_text: The student assignment text
+        source_text: Source material for comparison
+        language_hint: Optional language hint (e.g., 'en', 'es', 'fr')
+
+    Returns:
+        Dictionary with grading results and language information
+    """
+    try:
+        from llms import invoke_with_fallback, groq_llm, gemini_llm
+        from language_support import get_localized_prompt
+
+        # Detect language or use hint
+        if language_hint and language_hint in language_manager.supported_languages:
+            detected_language = language_hint
+            lang_confidence = 1.0
+        else:
+            lang_result = detect_text_language(assignment_text)
+            detected_language = lang_result.fallback_language
+            lang_confidence = lang_result.confidence
+
+        language_name = language_manager.get_language_config(detected_language).name
+
+        # Use localized grading prompt
+        prompt = get_localized_prompt("grading_prompt", detected_language,
+                                    answer=assignment_text, source=source_text)
+
+        response = invoke_with_fallback(prompt, groq_llm, gemini_llm)
+        raw_response = response.content if hasattr(response, "content") else str(response)
+
+        # Parse grading results
+        try:
+            import json
+            scores = json.loads(raw_response.strip())
+        except json.JSONDecodeError:
+            # Fallback parsing
+            import re
+            numbers = re.findall(r'\d+\.?\d*', raw_response)
+            if len(numbers) >= 4:
+                scores = {
+                    "factuality": float(numbers[0]),
+                    "relevance": float(numbers[1]),
+                    "coherence": float(numbers[2]),
+                    "grammar": float(numbers[3])
+                }
+            else:
+                scores = {"factuality": 5.0, "relevance": 5.0, "coherence": 5.0, "grammar": 5.0}
+
+        # Calculate overall score
+        overall_score = (scores["factuality"] + scores["relevance"] +
+                        scores["coherence"] + scores["grammar"]) / 4
+
+        # Determine letter grade
+        if overall_score >= 9: letter_grade = "A"
+        elif overall_score >= 8: letter_grade = "B"
+        elif overall_score >= 7: letter_grade = "C"
+        elif overall_score >= 6: letter_grade = "D"
+        else: letter_grade = "F"
+
+        return {
+            "individual_scores": scores,
+            "overall_score": round(overall_score, 2),
+            "letter_grade": letter_grade,
+            "language_info": {
+                "detected_language": detected_language,
+                "language_name": language_name,
+                "confidence": lang_confidence,
+                "language_hint_used": language_hint is not None
+            },
+            "evaluation_method": "multilingual_grading",
+            "raw_response": raw_response[:200] + "..." if len(raw_response) > 200 else raw_response
+        }
+
+    except Exception as e:
+        return {
+            "error": f"Multilingual grading failed: {str(e)}",
+            "assignment_length": len(assignment_text) if assignment_text else 0
+        }
+
+
+@mcp.tool()
+def grammar_check_multilingual(text: str, language_hint: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Check grammar with automatic language detection and language-appropriate analysis.
+
+    Args:
+        text: Text to check for grammar errors
+        language_hint: Optional language hint (e.g., 'en', 'es', 'fr')
+
+    Returns:
+        Dictionary with grammar analysis and language information
+    """
+    try:
+        from llms import invoke_with_fallback, groq_llm, gemini_llm
+        from language_support import get_localized_prompt
+
+        # Detect language or use hint
+        if language_hint and language_hint in language_manager.supported_languages:
+            detected_language = language_hint
+            lang_confidence = 1.0
+        else:
+            lang_result = detect_text_language(text)
+            detected_language = lang_result.fallback_language
+            lang_confidence = lang_result.confidence
+
+        language_name = language_manager.get_language_config(detected_language).name
+
+        # Use localized grammar check prompt
+        prompt = get_localized_prompt("grammar_check", detected_language, text=text)
+
+        response = invoke_with_fallback(prompt, groq_llm, gemini_llm)
+        raw_response = response.content if hasattr(response, "content") else str(response)
+
+        # Extract error count
+        import re
+        error_match = re.search(r'\d+', raw_response)
+        error_count = int(error_match.group()) if error_match else 0
+
+        return {
+            "error_count": error_count,
+            "language_info": {
+                "detected_language": detected_language,
+                "language_name": language_name,
+                "confidence": lang_confidence,
+                "language_hint_used": language_hint is not None
+            },
+            "analysis": raw_response,
+            "quality_impact": min(error_count * 0.1, 1.0),
+            "evaluation_method": "multilingual_grammar_check"
+        }
+
+    except Exception as e:
+        return {
+            "error": f"Multilingual grammar check failed: {str(e)}",
+            "text_length": len(text) if text else 0
+        }
+
+
 if __name__ == "__main__":
     # For development testing
     import sys
@@ -808,11 +1226,26 @@ if __name__ == "__main__":
         print("- process_assignment_agentic: Use advanced agentic AI workflow")
         print("")
         print("File Processing Tools:")
-        print("- process_file_content: Extract content from PDF, DOCX, DOC, MD, TXT")
+        print("- process_file_content: Extract content from PDF, DOCX, DOC, MD, TXT, Images")
         print("- validate_file_format: Check file format and validate")
         print("- process_assignment_from_file: Complete file-to-grade workflow")
         print("- batch_process_files: Process multiple files with error handling")
         print("- get_supported_file_formats: Get format information")
         print("")
-        print("Supported Formats: PDF, DOCX, DOC, MD, TXT")
+        print("OCR & Scanned Document Tools:")
+        print("- extract_text_from_scanned_pdf: OCR for scanned PDF files")
+        print("- extract_text_from_image: OCR for image files (PNG, JPEG, TIFF, BMP)")
+        print("- check_if_pdf_is_scanned: Detect if PDF needs OCR processing")
+        print("- get_ocr_capabilities: Check OCR system status and features")
+        print("")
+        print("Multi-Language Support Tools:")
+        print("- detect_language: Automatic language detection from text")
+        print("- get_supported_languages_info: List of supported languages and features")
+        print("- grade_assignment_multilingual: Language-aware assignment grading")
+        print("- grammar_check_multilingual: Multi-language grammar checking")
+        print("")
+        print("Supported Languages: English, Spanish, French, German, Italian, Portuguese, Dutch, Russian, Chinese, Japanese, Korean, Arabic, Hindi")
+        print("Supported Formats: PDF (text & scanned), DOCX, DOC, MD, TXT, PNG, JPEG, TIFF, BMP")
+        print("OCR Features: Free Tesseract OCR, Multi-language support, Enhanced preprocessing, Confidence scoring")
+        print("Language Features: Auto-detection, Localized prompts, Multi-language OCR, Fallback support")
         print("Max File Size: 50MB | Robust error handling & rejection tracking")

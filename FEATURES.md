@@ -51,16 +51,34 @@ This document tracks all features and functionality in the Capstone project.
   - Batch processing capabilities
   - Robust error handling and recovery
 
-### Multi-Format File Processing
+### Multi-Format File Processing with OCR/ICR
 - **Status**: ✅ Implemented
-- **Description**: Comprehensive file processing system with robust error handling
+- **Description**: Comprehensive file processing system with robust error handling and OCR capabilities
 - **Components**:
-  - Support for PDF, DOCX, DOC, Markdown, and TXT files
+  - Support for PDF, DOCX, DOC, Markdown, TXT, and image files (PNG, JPEG, TIFF, BMP)
   - Intelligent file format detection (extension, MIME type, magic bytes)
   - Content extraction with metadata preservation
+  - **Free OCR/ICR capabilities using Tesseract**
+  - Automatic scanned PDF detection and processing
+  - Enhanced image preprocessing for better OCR accuracy
+  - Confidence scoring for OCR results
   - Detailed rejection tracking with human-readable error messages
   - Enhanced CSV export with processing status fields
   - Failback systems for corrupted or unsupported files
+
+### Multi-Language Support System
+- **Status**: ✅ Implemented
+- **Description**: Comprehensive multi-language support for global educational environments
+- **Components**:
+  - **14 supported languages**: English, Spanish, French, German, Italian, Portuguese, Dutch, Russian, Chinese (Simplified & Traditional), Japanese, Korean, Arabic, Hindi
+  - **Automatic language detection** from assignment content
+  - **Localized prompts and evaluation criteria** for each language
+  - **Multi-language OCR support** with Tesseract language packs
+  - **Language-aware agentic workflow** processing
+  - **Intelligent fallback system** for unsupported languages
+  - **MCP tools** for multi-language assignment processing
+  - **Grammar checking** adapted for each language's rules
+  - **Cultural context awareness** in grading and evaluation
 
 ## File Structure
 
@@ -69,21 +87,24 @@ This document tracks all features and functionality in the Capstone project.
 - `main_agentic.py` - Enhanced main with agentic workflow support
 - `nodes.py` - LangGraph node definitions (traditional)
 - `agentic_workflow.py` - Full agentic AI workflow implementation
-- `file_processor.py` - Comprehensive multi-format file processing utility
-- `llms.py` - LLM configuration and setup
+- `file_processor.py` - Comprehensive multi-format file processing utility with OCR
+- `ocr_processor.py` - OCR and ICR processing module for scanned documents
+- `language_support.py` - Multi-language support and localization system
+- `llms.py` - LLM configuration and setup with redundancy
 - `utils.py` - Utility functions and helpers
 - `prompts.py` - Prompt templates
 - `paths.py` - Path configuration
 
 ### MCP Integration
-- `mcp_server.py` - MCP server implementation with enhanced file processing tools
+- `mcp_server.py` - MCP server implementation with enhanced file processing and OCR tools
 - `main_mcp.py` - MCP application entry point
 - `test_mcp.py` - MCP testing suite
 
-### File Processing
-- `file_processor.py` - Multi-format file processing with rejection tracking
-- Enhanced processing workflows with file format support
-- Robust error handling and content extraction
+### File Processing & OCR
+- `file_processor.py` - Multi-format file processing with OCR integration and rejection tracking
+- `ocr_processor.py` - Advanced OCR/ICR processing with Tesseract
+- Enhanced processing workflows with file format support and automatic OCR fallback
+- Robust error handling and content extraction from text and image-based documents
 
 ### Testing
 - `test_agentic_workflow.py` - Comprehensive tests for agentic workflow
@@ -99,10 +120,10 @@ This document tracks all features and functionality in the Capstone project.
 #### Core Functionality
 - [ ] Web interface for assignment submission (Gradio or FastAPI)
 - [ ] Detailed analytics dashboard
-- [ ] Add ICR and OCR capabilities
+- [x] Add ICR and OCR capabilities
+- [x] Multi-language support
 - [ ] Add additional subject classes (Eng, Math, Spanish)
 - [x] Create MCP for PDF, Word, MD and a failback system for edge cases
-- [ ] Multi-language support
 - [ ] Integration with learning management systems
 - [ ] Advanced plagiarism detection algorithms
 - [ ] Real-time collaboration features
@@ -196,9 +217,22 @@ This document tracks all features and functionality in the Capstone project.
 - ❌ Deprecated/Removed
 
 ## Recent Changes
+
+- **Multi-Language Support System**: Added comprehensive support for 14 languages with automatic detection and localized processing
+- **Language-Aware Workflow**: Enhanced agentic workflow with language detection and localized prompts for each processing step
+- **Multi-Language OCR**: Extended OCR capabilities to support multiple languages with Tesseract language packs
+- **Localized MCP Tools**: Added 4 new multi-language MCP tools for language-aware assignment processing
+- **Intelligent Language Fallback**: Smart fallback system for unsupported languages to closest supported alternative
+- **Free OCR/ICR Integration**: Added comprehensive OCR capabilities using Tesseract for scanned PDFs and images
+- **Image File Support**: Extended file processing to support PNG, JPEG, TIFF, and BMP image formats with text extraction
+- **Automatic Scanned PDF Detection**: Smart detection of image-based PDFs with automatic OCR fallback
+- **Advanced Image Preprocessing**: Multiple preprocessing methods (adaptive thresholding, denoising, morphological operations)
+- **OCR Confidence Scoring**: Real-time confidence assessment for OCR results
+- **Enhanced MCP OCR Tools**: Added 4 new OCR-specific MCP tools for scanned document processing
+- **LLM Redundancy System**: Implemented Gemini LLM as backup to Groq with automatic failover
 - **Multi-Format File Processing**: Implemented comprehensive file processing for PDF, DOCX, DOC, MD, and TXT formats
 - **Robust Error Handling**: Added detailed rejection tracking with human-readable error messages
-- **Enhanced MCP Tools**: Added 5 new file processing tools (process_file_content, validate_file_format, etc.)
+- **Enhanced MCP Tools**: Added 9 new file processing and OCR tools
 - **File Format Detection**: Intelligent detection using extension, MIME type, and magic byte analysis
 - **Processing Status Tracking**: Enhanced CSV export with Processing_Status, File_Format, and Rejection_Reason fields
 - **Failback Systems**: Comprehensive error recovery for corrupted, missing, or unsupported files
@@ -209,3 +243,4 @@ This document tracks all features and functionality in the Capstone project.
 - **Comprehensive Testing**: Created extensive test suite for workflow validation
 - **Quality Assessment**: Intelligent processing requirement detection and validation
 - **Error Recovery**: Automatic retry mechanisms and graceful error handling
+

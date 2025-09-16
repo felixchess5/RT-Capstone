@@ -19,6 +19,11 @@ class FileFormat(Enum):
     DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     DOC = "application/msword"
     MD = "text/markdown"
+    PNG = "image/png"
+    JPEG = "image/jpeg"
+    JPG = "image/jpeg"
+    TIFF = "image/tiff"
+    BMP = "image/bmp"
     UNKNOWN = "unknown"
 
 
@@ -70,7 +75,13 @@ class FileProcessor:
             '.docx': FileFormat.DOCX,
             '.doc': FileFormat.DOC,
             '.md': FileFormat.MD,
-            '.markdown': FileFormat.MD
+            '.markdown': FileFormat.MD,
+            '.png': FileFormat.PNG,
+            '.jpg': FileFormat.JPG,
+            '.jpeg': FileFormat.JPEG,
+            '.tiff': FileFormat.TIFF,
+            '.tif': FileFormat.TIFF,
+            '.bmp': FileFormat.BMP
         }
 
     def detect_file_format(self, file_path: str) -> Tuple[FileFormat, str]:
@@ -130,6 +141,16 @@ class FileProcessor:
             # PDF signature
             if header.startswith(b'%PDF'):
                 return FileFormat.PDF
+
+            # Image format signatures
+            if header.startswith(b'\x89PNG\r\n\x1a\n'):
+                return FileFormat.PNG
+            elif header.startswith(b'\xff\xd8\xff'):
+                return FileFormat.JPEG
+            elif header.startswith(b'II*\x00') or header.startswith(b'MM\x00*'):
+                return FileFormat.TIFF
+            elif header.startswith(b'BM'):
+                return FileFormat.BMP
 
             # DOCX/DOC signatures (ZIP-based for DOCX)
             if header.startswith(b'PK\x03\x04'):
@@ -232,6 +253,8 @@ class FileProcessor:
                 return self._extract_doc_file(file_path)
             elif file_format == FileFormat.MD:
                 return self._extract_markdown_file(file_path)
+            elif file_format in [FileFormat.PNG, FileFormat.JPEG, FileFormat.JPG, FileFormat.TIFF, FileFormat.BMP]:
+                return self._extract_image_file(file_path)
             else:
                 return FileProcessingResult(
                     success=False,
@@ -295,7 +318,7 @@ class FileProcessor:
             )
 
     def _extract_pdf_file(self, file_path: str) -> FileProcessingResult:
-        """Extract content from PDF file using multiple methods."""
+        """Extract content from PDF file using multiple methods including OCR for scanned PDFs."""
         content = ""
         metadata = {"file_format": "pdf"}
 
@@ -360,11 +383,59 @@ class FileProcessor:
         except Exception as e:
             logger.warning(f"PyPDF2 failed: {e}")
 
-        # If no content extracted
+        # Method 3: OCR for scanned PDFs (if no text content found)
+        if not content.strip():
+            logger.info(f"No text content found in PDF, attempting OCR: {file_path}")
+
+            try:
+                from ocr_processor import is_scanned_pdf, extract_text_from_scanned_pdf
+                from language_support import detect_text_language
+
+                # Check if PDF appears to be scanned
+                if is_scanned_pdf(file_path):
+                    logger.info(f"PDF appears to be scanned, applying OCR: {file_path}")
+
+                    # Try to detect language from any available text first
+                    detected_languages = None
+                    if content.strip():
+                        lang_result = detect_text_language(content)
+                        detected_languages = [lang_result.fallback_language] if lang_result.is_supported else None
+
+                    ocr_result = extract_text_from_scanned_pdf(file_path, enhanced=True, language_codes=detected_languages)
+
+                    if ocr_result.success and ocr_result.text.strip():
+                        # Merge OCR metadata with existing metadata
+                        metadata.update({
+                            "extraction_method": "OCR",
+                            "ocr_confidence": ocr_result.confidence,
+                            "char_count": len(ocr_result.text),
+                            "word_count": len(ocr_result.text.split())
+                        })
+                        metadata.update(ocr_result.metadata)
+
+                        return FileProcessingResult(
+                            success=True,
+                            content=ocr_result.text,
+                            metadata=metadata
+                        )
+                    else:
+                        logger.warning(f"OCR failed for {file_path}: {ocr_result.error}")
+                        metadata["ocr_attempted"] = True
+                        metadata["ocr_error"] = ocr_result.error
+
+            except ImportError:
+                logger.warning("OCR processor not available for scanned PDF processing")
+                metadata["ocr_available"] = False
+            except Exception as e:
+                logger.warning(f"OCR processing failed: {e}")
+                metadata["ocr_attempted"] = True
+                metadata["ocr_error"] = str(e)
+
+        # If still no content extracted
         if not content.strip():
             return FileProcessingResult(
                 success=False,
-                error="Unable to extract text content from PDF",
+                error="Unable to extract text content from PDF (tried text extraction and OCR)",
                 rejection_reason=FileRejectionReason.EMPTY_CONTENT,
                 metadata=metadata
             )
@@ -505,6 +576,61 @@ class FileProcessor:
                 rejection_reason=FileRejectionReason.ENCODING_ERROR
             )
 
+    def _extract_image_file(self, file_path: str) -> FileProcessingResult:
+        """Extract text content from image file using OCR."""
+        try:
+            from ocr_processor import extract_text_from_image_file
+
+            logger.info(f"Applying OCR to image file: {file_path}")
+
+            # Use enhanced OCR for best results with multi-language support
+            # Start with common languages for better detection
+            common_languages = ['en', 'es', 'fr', 'de', 'it']
+            ocr_result = extract_text_from_image_file(file_path, enhanced=True, language_codes=common_languages)
+
+            if ocr_result.success and ocr_result.text.strip():
+                metadata = {
+                    "file_format": "image",
+                    "extraction_method": "OCR",
+                    "ocr_confidence": ocr_result.confidence,
+                    "char_count": len(ocr_result.text),
+                    "word_count": len(ocr_result.text.split())
+                }
+                metadata.update(ocr_result.metadata)
+
+                return FileProcessingResult(
+                    success=True,
+                    content=ocr_result.text,
+                    metadata=metadata
+                )
+            else:
+                return FileProcessingResult(
+                    success=False,
+                    error=f"OCR failed to extract text from image: {ocr_result.error}",
+                    rejection_reason=FileRejectionReason.EMPTY_CONTENT,
+                    metadata={
+                        "file_format": "image",
+                        "extraction_method": "OCR",
+                        "ocr_attempted": True,
+                        "ocr_error": ocr_result.error
+                    }
+                )
+
+        except ImportError:
+            return FileProcessingResult(
+                success=False,
+                error="OCR processor not available for image processing",
+                rejection_reason=FileRejectionReason.UNSUPPORTED_FORMAT,
+                metadata={"file_format": "image", "ocr_available": False}
+            )
+        except Exception as e:
+            return FileProcessingResult(
+                success=False,
+                error=f"Image processing error: {str(e)}",
+                rejection_reason=FileRejectionReason.CORRUPTED_FILE,
+                metadata={"file_format": "image", "processing_error": str(e)}
+            )
+
     def get_rejection_message(self, rejection_reason: FileRejectionReason, file_path: str = "") -> str:
         """
         Generate human-readable rejection message.
@@ -574,10 +700,14 @@ def get_supported_formats() -> Dict[str, str]:
     """Get dictionary of supported file formats and their descriptions."""
     return {
         "TXT": "Plain text files (.txt)",
-        "PDF": "PDF documents (.pdf)",
+        "PDF": "PDF documents (.pdf) - includes OCR for scanned PDFs",
         "DOCX": "Microsoft Word documents (.docx)",
         "DOC": "Legacy Microsoft Word documents (.doc)",
-        "MD": "Markdown files (.md, .markdown)"
+        "MD": "Markdown files (.md, .markdown)",
+        "PNG": "PNG images (.png) - text extracted via OCR",
+        "JPEG": "JPEG images (.jpg, .jpeg) - text extracted via OCR",
+        "TIFF": "TIFF images (.tiff, .tif) - text extracted via OCR",
+        "BMP": "BMP images (.bmp) - text extracted via OCR"
     }
 
 

@@ -20,7 +20,8 @@ except ImportError:
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 
-from llms import groq_llm
+from llms import groq_llm, gemini_llm, invoke_with_fallback
+from language_support import detect_text_language, get_localized_prompt
 from prompts import GRAMMAR_CHECK, PLAGIARISM_CHECK, RELEVANCE_CHECK, GRADING_PROMPT, SUMMARY_PROMPT
 
 
@@ -152,11 +153,15 @@ def grammar_analysis_agent(state: WorkflowState) -> WorkflowState:
     print("📝 Analyzing grammar and language quality...")
 
     try:
-        if groq_llm is None:
-            raise Exception("LLM not available for grammar analysis")
+        # Detect language first
+        lang_result = detect_text_language(state["content"])
+        detected_language = lang_result.fallback_language
 
-        prompt = GRAMMAR_CHECK.format(text=state["content"])
-        response = groq_llm.invoke(prompt)
+        print(f"   Detected language: {detected_language} (confidence: {lang_result.confidence:.2f})")
+
+        # Use localized grammar check prompt
+        prompt = get_localized_prompt("grammar_check", detected_language, text=state["content"])
+        response = invoke_with_fallback(prompt, groq_llm, gemini_llm)
         raw_response = response.content if hasattr(response, "content") else str(response).strip()
 
         # Enhanced grammar analysis
@@ -168,6 +173,8 @@ def grammar_analysis_agent(state: WorkflowState) -> WorkflowState:
             "error_count": error_count,
             "raw_analysis": raw_response,
             "quality_impact": min(error_count * 0.1, 1.0),  # Impact on quality score
+            "detected_language": detected_language,
+            "language_confidence": lang_result.confidence,
             "status": "success"
         }
 
@@ -197,11 +204,12 @@ def plagiarism_detection_agent(state: WorkflowState) -> WorkflowState:
     print("🕵️ Detecting plagiarism and analyzing originality...")
 
     try:
-        if groq_llm is None:
-            raise Exception("LLM not available for plagiarism detection")
+        # Use the language detected from grammar analysis if available
+        detected_language = state.get("grammar_result", {}).get("detected_language", "en")
 
-        prompt = PLAGIARISM_CHECK.replace("{text}", state["content"])
-        response = groq_llm.invoke(prompt)
+        # Use localized plagiarism check prompt
+        prompt = get_localized_prompt("plagiarism_check", detected_language, text=state["content"])
+        response = invoke_with_fallback(prompt, groq_llm, gemini_llm)
         analysis = response.content if hasattr(response, "content") else str(response).strip()
 
         # Save detailed report
@@ -254,11 +262,12 @@ def relevance_analysis_agent(state: WorkflowState) -> WorkflowState:
     print("🎯 Analyzing content relevance to source material...")
 
     try:
-        if groq_llm is None:
-            raise Exception("LLM not available for relevance analysis")
+        # Use the language detected from grammar analysis if available
+        detected_language = state.get("grammar_result", {}).get("detected_language", "en")
 
-        prompt = RELEVANCE_CHECK.format(text=state["content"], source=state["source_text"])
-        response = groq_llm.invoke(prompt)
+        # Use localized relevance check prompt
+        prompt = get_localized_prompt("relevance_check", detected_language, text=state["content"], source=state["source_text"])
+        response = invoke_with_fallback(prompt, groq_llm, gemini_llm)
         analysis = response.content if hasattr(response, "content") else str(response).strip()
 
         # Extract relevance score if possible
@@ -304,11 +313,12 @@ def content_grading_agent(state: WorkflowState) -> WorkflowState:
     print("📊 Grading content on multiple criteria...")
 
     try:
-        if groq_llm is None:
-            raise Exception("LLM not available for grading")
+        # Use the language detected from grammar analysis if available
+        detected_language = state.get("grammar_result", {}).get("detected_language", "en")
 
-        prompt = GRADING_PROMPT.format(answer=state["content"], source=state.get("source_text", ""))
-        response = groq_llm.invoke(prompt)
+        # Use localized grading prompt
+        prompt = get_localized_prompt("grading_prompt", detected_language, answer=state["content"], source=state.get("source_text", ""))
+        response = invoke_with_fallback(prompt, groq_llm, gemini_llm)
         raw_response = response.content if hasattr(response, "content") else str(response).strip()
 
         # Parse grading results
@@ -366,11 +376,12 @@ def summary_generation_agent(state: WorkflowState) -> WorkflowState:
     print("📄 Generating comprehensive assignment summary...")
 
     try:
-        if groq_llm is None:
-            raise Exception("LLM not available for summarization")
+        # Use the language detected from grammar analysis if available
+        detected_language = state.get("grammar_result", {}).get("detected_language", "en")
 
-        prompt = SUMMARY_PROMPT.format(text=state["content"])
-        response = groq_llm.invoke(prompt)
+        # Use localized summary prompt
+        prompt = get_localized_prompt("summary_prompt", detected_language, text=state["content"])
+        response = invoke_with_fallback(prompt, groq_llm, gemini_llm)
         summary = response.content if hasattr(response, "content") else str(response).strip()
 
         # Enhanced summary with metadata
