@@ -19,6 +19,9 @@ except ImportError:
         return decorator(func) if func else decorator
     LANGSMITH_AVAILABLE = False
 
+# Import subject-specific output manager
+from subject_output_manager import create_subject_output_manager
+
 # Try to import agentic workflow
 try:
     from agentic_workflow import run_agentic_workflow, build_agentic_workflow
@@ -534,9 +537,21 @@ async def process_assignments_batch(processing_mode: str = "auto") -> List[Dict]
     print(f"   Rejected files: {processing_stats['rejected']}")
     print(f"   Error files: {processing_stats['errors']}")
 
-    # Export results with enhanced CSV format
+    # Export results with enhanced CSV format (general summary)
     csv_path = export_enhanced_summary(assignments, SUMMARY_CSV_PATH)
     print(f"[INFO] Enhanced summary exported to {csv_path}")
+
+    # Export subject-specific files
+    print(f"\n📂 Exporting subject-specific files...")
+    subject_output_manager = create_subject_output_manager(OUTPUT_FOLDER)
+    export_results = subject_output_manager.export_all_subjects(assignments)
+
+    print(f"\n📋 Subject-specific Export Results:")
+    for subject, files in export_results.items():
+        print(f"   📚 {subject.upper()}: {len(files)} files")
+        for file_path in files:
+            print(f"      - {os.path.basename(file_path)}")
+
     return assignments
 
 

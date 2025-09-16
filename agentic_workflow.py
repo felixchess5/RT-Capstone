@@ -23,6 +23,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from llms import groq_llm, gemini_llm, invoke_with_fallback
 from language_support import detect_text_language, get_localized_prompt
 from prompts import GRAMMAR_CHECK, PLAGIARISM_CHECK, RELEVANCE_CHECK, GRADING_PROMPT, SUMMARY_PROMPT
+from assignment_orchestrator import create_assignment_orchestrator, SubjectType
 
 
 class WorkflowState(TypedDict):
@@ -46,6 +47,11 @@ class WorkflowState(TypedDict):
     grading_result: Optional[Dict]
     summary_result: Optional[Dict]
 
+    # Subject-specific processing
+    assignment_classification: Optional[Dict]
+    specialized_processing_result: Optional[Dict]
+    requires_specialized_processing: bool
+
     # Workflow control
     current_step: str
     completed_steps: List[str]
@@ -61,6 +67,8 @@ class WorkflowStep(Enum):
     """Enumeration of workflow steps."""
     INITIALIZE = "initialize"
     QUALITY_CHECK = "quality_check"
+    SUBJECT_CLASSIFICATION = "subject_classification"
+    SPECIALIZED_PROCESSING = "specialized_processing"
     GRAMMAR_ANALYSIS = "grammar_analysis"
     PLAGIARISM_DETECTION = "plagiarism_detection"
     RELEVANCE_ANALYSIS = "relevance_analysis"
@@ -85,6 +93,7 @@ def initialize_workflow(state: WorkflowState) -> WorkflowState:
     state["requires_relevance_check"] = bool(state.get("source_text"))
     state["requires_grading"] = True
     state["requires_summary"] = content_length > 200
+    state["requires_specialized_processing"] = True  # Always try specialized processing
 
     # Initialize workflow control
     state["current_step"] = WorkflowStep.QUALITY_CHECK.value
@@ -101,11 +110,16 @@ def initialize_workflow(state: WorkflowState) -> WorkflowState:
     state["summary_result"] = None
     state["final_results"] = None
 
+    # Initialize subject-specific containers
+    state["assignment_classification"] = None
+    state["specialized_processing_result"] = None
+
     print(f"📋 Processing requirements: Grammar={state['requires_grammar_check']}, "
           f"Plagiarism={state['requires_plagiarism_check']}, "
           f"Relevance={state['requires_relevance_check']}, "
           f"Grading={state['requires_grading']}, "
-          f"Summary={state['requires_summary']}")
+          f"Summary={state['requires_summary']}, "
+          f"Specialized={state['requires_specialized_processing']}")
 
     return state
 
@@ -135,11 +149,109 @@ def quality_check_agent(state: WorkflowState) -> WorkflowState:
         quality_score += 0.2
 
     state["quality_score"] = quality_score
-    state["current_step"] = WorkflowStep.GRAMMAR_ANALYSIS.value
+    state["current_step"] = WorkflowStep.SUBJECT_CLASSIFICATION.value
     state["completed_steps"].append(WorkflowStep.QUALITY_CHECK.value)
 
     print(f"📊 Quality score: {quality_score:.2f} | Words: {word_count} | Length: {content_length}")
 
+    return state
+
+
+@traceable(name="subject_classification_agent")
+def subject_classification_agent(state: WorkflowState) -> WorkflowState:
+    """Classify assignment by subject and determine specialized processing approach."""
+    if not state["requires_specialized_processing"]:
+        state["current_step"] = WorkflowStep.GRAMMAR_ANALYSIS.value
+        return state
+
+    print("🎯 Classifying assignment subject and determining processing approach...")
+
+    try:
+        # Initialize orchestrator
+        orchestrator = create_assignment_orchestrator()
+
+        # Classify the assignment
+        classification = orchestrator.classify_assignment(state["content"], state["metadata"])
+
+        state["assignment_classification"] = {
+            "subject": classification.subject.value,
+            "complexity": classification.complexity.value,
+            "specific_type": classification.specific_type,
+            "confidence": classification.confidence,
+            "language": classification.language,
+            "tools_needed": classification.tools_needed,
+            "processing_approach": classification.processing_approach
+        }
+
+        print(f"   Subject: {classification.subject.value} ({classification.specific_type})")
+        print(f"   Complexity: {classification.complexity.value}")
+        print(f"   Confidence: {classification.confidence:.2f}")
+        print(f"   Processing approach: {classification.processing_approach}")
+
+        # Determine if we should use specialized processing
+        if classification.subject in [SubjectType.MATHEMATICS, SubjectType.SPANISH] and classification.confidence > 0.3:
+            state["current_step"] = WorkflowStep.SPECIALIZED_PROCESSING.value
+        else:
+            state["current_step"] = WorkflowStep.GRAMMAR_ANALYSIS.value
+
+    except Exception as e:
+        print(f"❌ Subject classification failed: {e}")
+        state["assignment_classification"] = {
+            "subject": "unknown",
+            "error": str(e),
+            "status": "error"
+        }
+        state["errors"].append(f"Subject classification: {str(e)}")
+        state["current_step"] = WorkflowStep.GRAMMAR_ANALYSIS.value
+
+    state["completed_steps"].append(WorkflowStep.SUBJECT_CLASSIFICATION.value)
+    return state
+
+
+@traceable(name="specialized_processing_agent")
+async def specialized_processing_agent(state: WorkflowState) -> WorkflowState:
+    """Process assignment using subject-specific specialized processors."""
+    print("🔬 Processing with specialized subject processor...")
+
+    try:
+        # Initialize orchestrator
+        orchestrator = create_assignment_orchestrator()
+
+        # Process with specialized processor
+        result = await orchestrator.process_assignment(
+            state["content"],
+            state.get("source_text"),
+            state["metadata"]
+        )
+
+        state["specialized_processing_result"] = result
+
+        print(f"   Processor used: {result['classification']['subject']}")
+        print(f"   Overall score: {result['overall_score']:.2f}")
+        print(f"   Specialized feedback items: {len(result['specialized_feedback'])}")
+
+        # Use specialized grading result as primary grading if available
+        if result["processing_results"] and "overall_score" in result["processing_results"]:
+            state["grading_result"] = {
+                "overall_score": result["overall_score"],
+                "specialized_scores": result["processing_results"],
+                "feedback": result["specialized_feedback"],
+                "processor_used": result["classification"]["subject"],
+                "status": "success_specialized"
+            }
+            # Skip regular grading since we have specialized results
+            state["requires_grading"] = False
+
+    except Exception as e:
+        print(f"❌ Specialized processing failed: {e}")
+        state["specialized_processing_result"] = {
+            "error": str(e),
+            "status": "error"
+        }
+        state["errors"].append(f"Specialized processing: {str(e)}")
+
+    state["current_step"] = WorkflowStep.GRAMMAR_ANALYSIS.value
+    state["completed_steps"].append(WorkflowStep.SPECIALIZED_PROCESSING.value)
     return state
 
 
@@ -558,6 +670,25 @@ def results_aggregation_agent(state: WorkflowState) -> WorkflowState:
     else:
         final_results["summary"] = "No summary generated"
 
+    # Add subject classification results
+    if state["assignment_classification"]:
+        final_results["assignment_classification"] = state["assignment_classification"]
+    else:
+        final_results["assignment_classification"] = "Not classified"
+
+    # Add specialized processing results
+    if state["specialized_processing_result"]:
+        final_results["specialized_processing"] = state["specialized_processing_result"]
+
+        # If we have specialized grading, override general grading
+        if state["grading_result"] and state["grading_result"].get("status") == "success_specialized":
+            final_results["overall_score"] = state["grading_result"]["overall_score"]
+            final_results["specialized_grades"] = state["grading_result"]["specialized_scores"]
+            final_results["specialized_feedback"] = state["grading_result"]["feedback"]
+            final_results["processor_used"] = state["grading_result"]["processor_used"]
+    else:
+        final_results["specialized_processing"] = "Not processed"
+
     state["final_results"] = final_results
     state["current_step"] = WorkflowStep.FINALIZE.value
     state["completed_steps"].append(WorkflowStep.RESULTS_AGGREGATION.value)
@@ -613,11 +744,15 @@ def get_letter_grade(score: float) -> str:
         return "F"
 
 
-def route_workflow(state: WorkflowState) -> Literal["grammar_analysis", "plagiarism_detection", "relevance_analysis", "content_grading", "summary_generation", "quality_validation", "error_recovery", "results_aggregation", "finalize", "__end__"]:
+def route_workflow(state: WorkflowState) -> Literal["subject_classification", "specialized_processing", "grammar_analysis", "plagiarism_detection", "relevance_analysis", "content_grading", "summary_generation", "quality_validation", "error_recovery", "results_aggregation", "finalize", "__end__"]:
     """Route workflow based on current step."""
     current_step = state["current_step"]
 
-    if current_step == WorkflowStep.GRAMMAR_ANALYSIS.value:
+    if current_step == WorkflowStep.SUBJECT_CLASSIFICATION.value:
+        return "subject_classification"
+    elif current_step == WorkflowStep.SPECIALIZED_PROCESSING.value:
+        return "specialized_processing"
+    elif current_step == WorkflowStep.GRAMMAR_ANALYSIS.value:
         return "grammar_analysis"
     elif current_step == WorkflowStep.PLAGIARISM_DETECTION.value:
         return "plagiarism_detection"
@@ -649,6 +784,8 @@ def build_agentic_workflow() -> StateGraph:
     # Add all agent nodes
     workflow.add_node("initialize", initialize_workflow)
     workflow.add_node("quality_check", quality_check_agent)
+    workflow.add_node("subject_classification", subject_classification_agent)
+    workflow.add_node("specialized_processing", specialized_processing_agent)
     workflow.add_node("grammar_analysis", grammar_analysis_agent)
     workflow.add_node("plagiarism_detection", plagiarism_detection_agent)
     workflow.add_node("relevance_analysis", relevance_analysis_agent)
@@ -665,6 +802,8 @@ def build_agentic_workflow() -> StateGraph:
     # Add edges
     workflow.add_edge("initialize", "quality_check")
     workflow.add_conditional_edges("quality_check", route_workflow)
+    workflow.add_conditional_edges("subject_classification", route_workflow)
+    workflow.add_conditional_edges("specialized_processing", route_workflow)
     workflow.add_conditional_edges("grammar_analysis", route_workflow)
     workflow.add_conditional_edges("plagiarism_detection", route_workflow)
     workflow.add_conditional_edges("relevance_analysis", route_workflow)

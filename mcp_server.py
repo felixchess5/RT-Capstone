@@ -29,6 +29,10 @@ from prompts import PLAGIARISM_CHECK, GRAMMAR_CHECK, RELEVANCE_CHECK, GRADING_PR
 from file_processor import file_processor, FileRejectionReason
 from ocr_processor import ocr_processor, OCRMethod, ImageProcessingMethod
 from language_support import language_manager, detect_text_language, get_supported_languages
+from math_processor import create_math_processor, MathProblemType
+from spanish_processor import create_spanish_processor, SpanishAssignmentType
+from assignment_orchestrator import create_assignment_orchestrator, SubjectType, AssignmentComplexity
+from subject_output_manager import create_subject_output_manager, OutputSubject
 
 load_dotenv()
 
@@ -1244,8 +1248,580 @@ if __name__ == "__main__":
         print("- grade_assignment_multilingual: Language-aware assignment grading")
         print("- grammar_check_multilingual: Multi-language grammar checking")
         print("")
+        print("Specialized Subject Processing Tools:")
+        print("- analyze_math_assignment: Complete mathematical analysis and grading")
+        print("- solve_equation: Individual equation solving with step-by-step solutions")
+        print("- analyze_spanish_assignment: Comprehensive Spanish language assessment")
+        print("- check_spanish_grammar: Targeted Spanish grammar checking")
+        print("- classify_assignment_intelligent: Automatic subject classification")
+        print("- process_assignment_intelligent: Intelligent routing to specialized processors")
+        print("- get_available_subject_processors: List all specialized capabilities")
+        print("")
+        print("Subject-Specific Output Tools:")
+        print("- export_subject_specific_results: Export all assignments to subject-specific files")
+        print("- export_math_assignments: Export only mathematics assignments")
+        print("- export_spanish_assignments: Export only Spanish assignments")
+        print("- export_english_assignments: Export only English assignments")
+        print("- get_subject_classification_info: Get subject classification without full processing")
+        print("")
+        print("Supported Subjects: Mathematics, Spanish, English, Science, History, General")
+        print("Math Features: Equation solving, Symbolic computation, Step-by-step analysis, Problem type detection")
+        print("Spanish Features: Grammar checking, Vocabulary analysis, Cultural references, Fluency assessment")
+        print("Output Formats: Subject-specific CSV and JSON files with specialized fields")
+        print("")
         print("Supported Languages: English, Spanish, French, German, Italian, Portuguese, Dutch, Russian, Chinese, Japanese, Korean, Arabic, Hindi")
         print("Supported Formats: PDF (text & scanned), DOCX, DOC, MD, TXT, PNG, JPEG, TIFF, BMP")
         print("OCR Features: Free Tesseract OCR, Multi-language support, Enhanced preprocessing, Confidence scoring")
         print("Language Features: Auto-detection, Localized prompts, Multi-language OCR, Fallback support")
         print("Max File Size: 50MB | Robust error handling & rejection tracking")
+
+
+# ==================== SPECIALIZED SUBJECT PROCESSORS ====================
+
+# Initialize specialized processors
+math_processor = create_math_processor()
+spanish_processor = create_spanish_processor()
+orchestrator = create_assignment_orchestrator()
+
+
+@mcp.tool()
+def analyze_math_assignment(assignment_text: str) -> Dict[str, Any]:
+    """
+    Analyze mathematical assignment with equation solving and specialized math grading.
+
+    Args:
+        assignment_text: The math assignment text to analyze
+
+    Returns:
+        Dictionary with mathematical analysis, solutions, and grading
+    """
+    try:
+        analysis = math_processor.analyze_math_assignment(assignment_text)
+        grading = math_processor.grade_math_assignment(assignment_text)
+
+        return {
+            "analysis": {
+                "problem_types": analysis["problem_types"],
+                "equations_found": analysis["equations_found"],
+                "completeness_score": analysis["completeness_score"],
+                "step_by_step_present": analysis["step_by_step_present"],
+                "mathematical_notation": analysis["mathematical_notation"]
+            },
+            "solutions": analysis["solutions"],
+            "grading": {
+                "mathematical_accuracy": grading["mathematical_accuracy"],
+                "problem_solving_approach": grading["problem_solving_approach"],
+                "notation_clarity": grading["notation_clarity"],
+                "step_by_step_work": grading["step_by_step_work"],
+                "overall_score": grading["overall_score"]
+            },
+            "feedback": grading["feedback"],
+            "subject": "mathematics",
+            "processing_type": "specialized_math"
+        }
+    except Exception as e:
+        return {
+            "error": f"Math analysis failed: {str(e)}",
+            "subject": "mathematics",
+            "processing_type": "error"
+        }
+
+
+@mcp.tool()
+def solve_equation(equation: str) -> Dict[str, Any]:
+    """
+    Solve a mathematical equation using symbolic computation.
+
+    Args:
+        equation: Mathematical equation to solve
+
+    Returns:
+        Dictionary with solution steps and result
+    """
+    try:
+        solution = math_processor.solve_equation(equation)
+
+        return {
+            "problem": solution.problem,
+            "solution": str(solution.solution),
+            "steps": solution.steps,
+            "problem_type": solution.problem_type.value,
+            "confidence": solution.confidence,
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Equation solving failed: {str(e)}",
+            "problem": equation,
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def identify_math_problem_type(text: str) -> Dict[str, Any]:
+    """
+    Identify the type of mathematical problem from text.
+
+    Args:
+        text: Text containing mathematical problem
+
+    Returns:
+        Dictionary with identified problem type and confidence
+    """
+    try:
+        problem_type = math_processor.identify_problem_type(text)
+        equations = math_processor.extract_equations(text)
+
+        return {
+            "problem_type": problem_type.value,
+            "equations_found": equations,
+            "equation_count": len(equations),
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Problem type identification failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def analyze_spanish_assignment(assignment_text: str, source_text: str = None) -> Dict[str, Any]:
+    """
+    Analyze Spanish language assignment with grammar, vocabulary, and cultural assessment.
+
+    Args:
+        assignment_text: The Spanish assignment text to analyze
+        source_text: Optional source text for comparison
+
+    Returns:
+        Dictionary with Spanish language analysis and grading
+    """
+    try:
+        analysis = spanish_processor.analyze_spanish_assignment(assignment_text)
+        grading = spanish_processor.grade_spanish_assignment(assignment_text, source_text)
+
+        return {
+            "analysis": {
+                "assignment_type": analysis.assignment_type.value,
+                "vocabulary_level": analysis.vocabulary_level,
+                "fluency_score": analysis.fluency_score,
+                "complexity_score": analysis.complexity_score,
+                "grammar_errors_count": len(analysis.grammar_errors),
+                "cultural_references_count": len(analysis.cultural_references),
+                "comprehension_questions_count": len(analysis.comprehension_questions)
+            },
+            "grammar_errors": analysis.grammar_errors,
+            "verb_conjugations": analysis.verb_conjugations,
+            "cultural_references": analysis.cultural_references,
+            "comprehension_questions": analysis.comprehension_questions,
+            "grading": {
+                "grammar_accuracy": grading["grammar_accuracy"],
+                "vocabulary_usage": grading["vocabulary_usage"],
+                "fluency_communication": grading["fluency_communication"],
+                "cultural_understanding": grading["cultural_understanding"],
+                "overall_score": grading["overall_score"]
+            },
+            "feedback": grading["feedback"],
+            "subject": "spanish",
+            "processing_type": "specialized_spanish"
+        }
+    except Exception as e:
+        return {
+            "error": f"Spanish analysis failed: {str(e)}",
+            "subject": "spanish",
+            "processing_type": "error"
+        }
+
+
+@mcp.tool()
+def check_spanish_grammar(text: str) -> Dict[str, Any]:
+    """
+    Check Spanish grammar and provide specific linguistic feedback.
+
+    Args:
+        text: Spanish text to check
+
+    Returns:
+        Dictionary with grammar errors and suggestions
+    """
+    try:
+        errors = spanish_processor.check_grammar(text)
+        vocab_level = spanish_processor.analyze_vocabulary_level(text)
+        fluency = spanish_processor.calculate_fluency_score(text)
+
+        return {
+            "grammar_errors": errors,
+            "error_count": len(errors),
+            "vocabulary_level": vocab_level,
+            "fluency_score": fluency,
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Spanish grammar check failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def analyze_spanish_vocabulary(text: str) -> Dict[str, Any]:
+    """
+    Analyze Spanish vocabulary usage and level.
+
+    Args:
+        text: Spanish text to analyze
+
+    Returns:
+        Dictionary with vocabulary analysis
+    """
+    try:
+        vocab_level = spanish_processor.analyze_vocabulary_level(text)
+        conjugations = spanish_processor.analyze_verb_conjugations(text)
+        cultural_refs = spanish_processor.extract_cultural_references(text)
+
+        return {
+            "vocabulary_level": vocab_level,
+            "verb_conjugations": conjugations,
+            "cultural_references": cultural_refs,
+            "conjugation_variety": len(conjugations),
+            "cultural_depth": len(cultural_refs),
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Spanish vocabulary analysis failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def classify_assignment_intelligent(assignment_text: str, metadata: Dict[str, Any] = None) -> Dict[str, Any]:
+    """
+    Intelligently classify assignment by subject, complexity, and determine appropriate processing approach.
+
+    Args:
+        assignment_text: The assignment text to classify
+        metadata: Optional metadata with hints (subject, class, etc.)
+
+    Returns:
+        Dictionary with classification results and processing recommendations
+    """
+    try:
+        if metadata is None:
+            metadata = {}
+
+        classification = orchestrator.classify_assignment(assignment_text, metadata)
+
+        return {
+            "classification": {
+                "subject": classification.subject.value,
+                "complexity": classification.complexity.value,
+                "specific_type": classification.specific_type,
+                "confidence": classification.confidence,
+                "language": classification.language,
+                "processing_approach": classification.processing_approach
+            },
+            "tools_needed": classification.tools_needed,
+            "recommended_processor": classification.subject.value,
+            "processing_suggestions": {
+                "use_math_processor": classification.subject == SubjectType.MATHEMATICS,
+                "use_spanish_processor": classification.subject == SubjectType.SPANISH,
+                "use_general_processor": classification.subject in [SubjectType.ENGLISH, SubjectType.GENERAL]
+            },
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Assignment classification failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+async def process_assignment_intelligent(assignment_text: str, source_text: str = None, metadata: Dict[str, Any] = None) -> Dict[str, Any]:
+    """
+    Intelligently process assignment using the most appropriate specialized processor.
+
+    Args:
+        assignment_text: The assignment text to process
+        source_text: Optional source text for comparison
+        metadata: Optional metadata with hints
+
+    Returns:
+        Dictionary with comprehensive processing results
+    """
+    try:
+        if metadata is None:
+            metadata = {}
+
+        result = await orchestrator.process_assignment(assignment_text, source_text, metadata)
+
+        return {
+            "classification": result["classification"],
+            "processing_results": result["processing_results"],
+            "overall_score": result["overall_score"],
+            "specialized_feedback": result["specialized_feedback"],
+            "recommended_next_steps": result["recommended_next_steps"],
+            "processor_used": result["classification"]["subject"],
+            "processing_approach": result["classification"]["processing_approach"],
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Intelligent processing failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def get_available_subject_processors() -> Dict[str, Any]:
+    """
+    Get information about available specialized subject processors and their capabilities.
+
+    Returns:
+        Dictionary with processor information and capabilities
+    """
+    try:
+        processors_info = orchestrator.get_available_processors()
+
+        return {
+            "available_subjects": processors_info["subjects"],
+            "math_capabilities": {
+                "problem_types": processors_info["math_problem_types"],
+                "features": [
+                    "Equation solving", "Symbolic computation", "Calculus operations",
+                    "Step-by-step solutions", "Problem type detection", "Mathematical notation analysis"
+                ]
+            },
+            "spanish_capabilities": {
+                "assignment_types": processors_info["spanish_assignment_types"],
+                "features": [
+                    "Grammar checking", "Vocabulary analysis", "Conjugation verification",
+                    "Cultural reference detection", "Fluency assessment", "Reading comprehension analysis"
+                ]
+            },
+            "complexity_levels": processors_info["complexity_levels"],
+            "available_tools": processors_info["available_tools"],
+            "orchestrator_features": [
+                "Automatic subject detection", "Complexity assessment", "Tool recommendation",
+                "Processing approach optimization", "Multi-language support"
+            ],
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Failed to get processor information: {str(e)}",
+            "status": "error"
+        }
+
+
+# ==================== SUBJECT-SPECIFIC OUTPUT TOOLS ====================
+
+# Initialize output manager
+output_manager = create_subject_output_manager()
+
+
+@mcp.tool()
+def export_subject_specific_results(assignments_data: List[Dict[str, Any]], output_folder: str = "./output") -> Dict[str, Any]:
+    """
+    Export assignment results to subject-specific CSV and JSON files.
+
+    Args:
+        assignments_data: List of assignment result dictionaries
+        output_folder: Optional output folder path (defaults to "./output")
+
+    Returns:
+        Dictionary with export results and file paths
+    """
+    try:
+        # Create output manager for specified folder
+        subject_manager = create_subject_output_manager(output_folder)
+
+        # Export all subjects
+        export_results = subject_manager.export_all_subjects(assignments_data)
+
+        # Count assignments by subject
+        subject_counts = {}
+        for assignment in assignments_data:
+            subject = subject_manager.determine_subject(assignment)
+            subject_counts[subject.value] = subject_counts.get(subject.value, 0) + 1
+
+        return {
+            "export_results": export_results,
+            "subject_counts": subject_counts,
+            "total_assignments": len(assignments_data),
+            "total_files_created": sum(len(files) for files in export_results.values()),
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Subject-specific export failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def export_math_assignments(assignments_data: List[Dict[str, Any]], output_folder: str = "./output") -> Dict[str, Any]:
+    """
+    Export only mathematics assignments to CSV and JSON files.
+
+    Args:
+        assignments_data: List of assignment result dictionaries
+        output_folder: Optional output folder path
+
+    Returns:
+        Dictionary with math assignment export results
+    """
+    try:
+        subject_manager = create_subject_output_manager(output_folder)
+
+        csv_path = subject_manager.export_subject_csv(assignments_data, OutputSubject.MATHEMATICS)
+        json_path = subject_manager.export_subject_json(assignments_data, OutputSubject.MATHEMATICS)
+
+        # Count math assignments
+        math_assignments = [
+            assignment for assignment in assignments_data
+            if subject_manager.determine_subject(assignment) == OutputSubject.MATHEMATICS
+        ]
+
+        return {
+            "csv_file": csv_path,
+            "json_file": json_path,
+            "math_assignments_count": len(math_assignments),
+            "files_created": [csv_path, json_path] if csv_path and json_path else [],
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Math assignments export failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def export_spanish_assignments(assignments_data: List[Dict[str, Any]], output_folder: str = "./output") -> Dict[str, Any]:
+    """
+    Export only Spanish assignments to CSV and JSON files.
+
+    Args:
+        assignments_data: List of assignment result dictionaries
+        output_folder: Optional output folder path
+
+    Returns:
+        Dictionary with Spanish assignment export results
+    """
+    try:
+        subject_manager = create_subject_output_manager(output_folder)
+
+        csv_path = subject_manager.export_subject_csv(assignments_data, OutputSubject.SPANISH)
+        json_path = subject_manager.export_subject_json(assignments_data, OutputSubject.SPANISH)
+
+        # Count Spanish assignments
+        spanish_assignments = [
+            assignment for assignment in assignments_data
+            if subject_manager.determine_subject(assignment) == OutputSubject.SPANISH
+        ]
+
+        return {
+            "csv_file": csv_path,
+            "json_file": json_path,
+            "spanish_assignments_count": len(spanish_assignments),
+            "files_created": [csv_path, json_path] if csv_path and json_path else [],
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Spanish assignments export failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def export_english_assignments(assignments_data: List[Dict[str, Any]], output_folder: str = "./output") -> Dict[str, Any]:
+    """
+    Export only English assignments to CSV and JSON files.
+
+    Args:
+        assignments_data: List of assignment result dictionaries
+        output_folder: Optional output folder path
+
+    Returns:
+        Dictionary with English assignment export results
+    """
+    try:
+        subject_manager = create_subject_output_manager(output_folder)
+
+        csv_path = subject_manager.export_subject_csv(assignments_data, OutputSubject.ENGLISH)
+        json_path = subject_manager.export_subject_json(assignments_data, OutputSubject.ENGLISH)
+
+        # Count English assignments
+        english_assignments = [
+            assignment for assignment in assignments_data
+            if subject_manager.determine_subject(assignment) == OutputSubject.ENGLISH
+        ]
+
+        return {
+            "csv_file": csv_path,
+            "json_file": json_path,
+            "english_assignments_count": len(english_assignments),
+            "files_created": [csv_path, json_path] if csv_path and json_path else [],
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"English assignments export failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def get_subject_classification_info(assignment_text: str, metadata: Dict[str, Any] = None) -> Dict[str, Any]:
+    """
+    Get subject classification information for an assignment without full processing.
+
+    Args:
+        assignment_text: The assignment text to classify
+        metadata: Optional metadata with hints
+
+    Returns:
+        Dictionary with classification information
+    """
+    try:
+        if metadata is None:
+            metadata = {}
+
+        subject_manager = create_subject_output_manager()
+        orchestrator = create_assignment_orchestrator()
+
+        # Classify the assignment
+        classification = orchestrator.classify_assignment(assignment_text, metadata)
+
+        # Determine output subject
+        mock_assignment = {
+            "assignment_classification": {
+                "subject": classification.subject.value
+            }
+        }
+        output_subject = subject_manager.determine_subject(mock_assignment)
+
+        return {
+            "classification": {
+                "subject": classification.subject.value,
+                "complexity": classification.complexity.value,
+                "specific_type": classification.specific_type,
+                "confidence": classification.confidence,
+                "language": classification.language
+            },
+            "output_subject": output_subject.value,
+            "recommended_files": {
+                "csv": f"{output_subject.value}_assignments.csv",
+                "json": f"{output_subject.value}_assignments.json"
+            },
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Subject classification failed: {str(e)}",
+            "status": "error"
+        }
