@@ -1,0 +1,48 @@
+Name: Michael Chen
+Date: 2025-01-17
+Class: Physics I
+Subject: Science
+
+Newton's Second Law Investigation
+
+Question: How does the acceleration of an object change when different forces are applied to it while keeping the mass constant?
+
+Hypothesis: Based on Newton's second law (F = ma), I predict that acceleration will be directly proportional to the applied force when mass remains constant.
+
+Materials:
+- Dynamics cart (mass = 0.5 kg)
+- String and pulley system
+- Masses (0.1 kg, 0.2 kg, 0.3 kg, 0.4 kg)
+- Motion sensor
+- Computer with data collection software
+- Meter stick
+
+Procedure:
+1. Set up the cart on a horizontal track with motion sensor
+2. Attach string to cart, run over pulley at end of track
+3. Start with 0.1 kg hanging mass to provide force
+4. Release cart and measure acceleration using motion sensor
+5. Record data for 5 trials with each mass
+6. Repeat with 0.2 kg, 0.3 kg, and 0.4 kg hanging masses
+7. Calculate average acceleration for each force
+
+Data Table:
+Force (N) | Trial 1 (m/s²) | Trial 2 (m/s²) | Trial 3 (m/s²) | Trial 4 (m/s²) | Trial 5 (m/s²) | Average (m/s²)
+0.98      | 1.92           | 1.96           | 1.94           | 1.98           | 1.95           | 1.95
+1.96      | 3.89           | 3.92           | 3.88           | 3.94           | 3.91           | 3.91
+2.94      | 5.85           | 5.88           | 5.82           | 5.90           | 5.87           | 5.86
+3.92      | 7.80           | 7.84           | 7.78           | 7.86           | 7.82           | 7.82
+
+Analysis:
+When I graph force vs. acceleration, I get a straight line with slope ≈ 2.0 m/s²/N. Since F = ma, the slope should equal 1/m. With our cart mass of 0.5 kg, the theoretical slope is 1/0.5 = 2.0 m/s²/N. This matches our experimental result perfectly!
+
+The relationship F = ma is clearly demonstrated. When force doubles from 0.98 N to 1.96 N, acceleration doubles from 1.95 m/s² to 3.91 m/s².
+
+Conclusion:
+The experimental data strongly supports Newton's second law. The linear relationship between force and acceleration confirms that F = ma when mass is constant. The slight variations in individual trials are likely due to friction and air resistance, but the overall trend is clear.
+
+Sources of Error:
+- Friction in pulley system
+- Air resistance
+- Measurement precision of motion sensor
+- String stretch during acceleration

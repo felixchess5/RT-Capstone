@@ -71,7 +71,11 @@ class SubjectOutputManager:
                 json_filename="science_assignments.json",
                 specialized_fields=[
                     "scientific_accuracy", "hypothesis_quality", "data_analysis",
-                    "experimental_design", "conclusion_validity"
+                    "experimental_design", "conclusion_validity", "subject_area",
+                    "assignment_type_science", "scientific_method_completeness",
+                    "units_measurements_count", "formulas_identified_count",
+                    "data_visualization_present", "scientific_vocabulary_score",
+                    "experimental_variables_identified", "safety_considerations_count"
                 ]
             ),
             OutputSubject.HISTORY: SubjectOutput(
@@ -80,7 +84,11 @@ class SubjectOutputManager:
                 json_filename="history_assignments.json",
                 specialized_fields=[
                     "historical_accuracy", "chronological_understanding", "source_analysis",
-                    "contextual_awareness", "argument_development"
+                    "contextual_awareness", "argument_development", "historical_period",
+                    "assignment_type_history", "region_focus", "dates_identified_count",
+                    "historical_figures_count", "events_mentioned_count", "sources_cited_count",
+                    "chronological_accuracy", "historical_context_score", "bias_awareness_score",
+                    "historical_vocabulary_score", "evidence_usage_score"
                 ]
             ),
             OutputSubject.GENERAL: SubjectOutput(
@@ -182,6 +190,61 @@ class SubjectOutputManager:
                             "grammar_errors_count": analysis.get("grammar_errors_count", 0),
                             "cultural_references_count": analysis.get("cultural_references_count", 0),
                             "assignment_type_spanish": analysis.get("assignment_type", "unknown")
+                        })
+
+                elif subject == OutputSubject.SCIENCE:
+                    # Science-specific data extraction
+                    if "grading" in processing_results:
+                        grading = processing_results["grading"]
+                        specialized_data.update({
+                            "scientific_accuracy": grading.get("scientific_accuracy", 0),
+                            "hypothesis_quality": grading.get("hypothesis_quality", 0),
+                            "data_analysis": grading.get("data_analysis", 0),
+                            "experimental_design": grading.get("experimental_design", 0),
+                            "conclusion_validity": grading.get("conclusion_validity", 0)
+                        })
+
+                    if "analysis" in processing_results:
+                        analysis = processing_results["analysis"]
+                        specialized_data.update({
+                            "subject_area": analysis.get("subject_area", "unknown"),
+                            "assignment_type_science": analysis.get("assignment_type", "unknown"),
+                            "scientific_method_completeness": analysis.get("scientific_method_elements", {}).get("completeness_percentage", 0),
+                            "units_measurements_count": analysis.get("units_and_measurements_count", 0),
+                            "formulas_identified_count": analysis.get("formulas_identified_count", 0),
+                            "data_visualization_present": analysis.get("data_visualization_present", False),
+                            "scientific_vocabulary_score": analysis.get("scientific_vocabulary_score", 0),
+                            "experimental_variables_identified": len(analysis.get("experimental_variables", {}).get("independent", [])) + len(analysis.get("experimental_variables", {}).get("dependent", [])),
+                            "safety_considerations_count": analysis.get("safety_considerations_count", 0)
+                        })
+
+                elif subject == OutputSubject.HISTORY:
+                    # History-specific data extraction
+                    if "grading" in processing_results:
+                        grading = processing_results["grading"]
+                        specialized_data.update({
+                            "historical_accuracy": grading.get("historical_accuracy", 0),
+                            "chronological_understanding": grading.get("chronological_understanding", 0),
+                            "source_analysis": grading.get("source_analysis", 0),
+                            "contextual_awareness": grading.get("contextual_awareness", 0),
+                            "argument_development": grading.get("argument_development", 0)
+                        })
+
+                    if "analysis" in processing_results:
+                        analysis = processing_results["analysis"]
+                        specialized_data.update({
+                            "historical_period": analysis.get("period", "unknown"),
+                            "assignment_type_history": analysis.get("assignment_type", "unknown"),
+                            "region_focus": analysis.get("region_focus", "unknown"),
+                            "dates_identified_count": analysis.get("dates_identified_count", 0),
+                            "historical_figures_count": analysis.get("historical_figures_count", 0),
+                            "events_mentioned_count": analysis.get("events_mentioned_count", 0),
+                            "sources_cited_count": analysis.get("sources_cited_count", 0),
+                            "chronological_accuracy": analysis.get("chronological_accuracy", 0),
+                            "historical_context_score": analysis.get("historical_context_score", 0),
+                            "bias_awareness_score": analysis.get("bias_awareness_score", 0),
+                            "historical_vocabulary_score": analysis.get("historical_vocabulary_score", 0),
+                            "evidence_usage_score": analysis.get("evidence_usage_score", 0)
                         })
 
         # Add specialized grading if available

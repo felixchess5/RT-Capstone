@@ -1,0 +1,37 @@
+{
+  "export_metadata": {
+    "subject": "history",
+    "export_date": "2025-09-17T17:37:01.208462",
+    "total_assignments": 1,
+    "average_score": 9.0
+  },
+  "assignments": [
+    {
+      "student_name": "Emily Rodriguez",
+      "subject": "History",
+      "overall_score": 9.0,
+      "specialized_processing": {
+        "classification": {
+          "subject": "history"
+        },
+        "processing_results": {
+          "grading": {
+            "historical_accuracy": 9.0,
+            "chronological_understanding": 8.5,
+            "source_analysis": 9.5,
+            "contextual_awareness": 8.5,
+            "argument_development": 9.0
+          },
+          "analysis": {
+            "period": "modern",
+            "assignment_type": "cause_and_effect",
+            "region_focus": "european_history",
+            "dates_identified_count": 12,
+            "historical_figures_count": 8,
+            "sources_cited_count": 3
+          }
+        }
+      }
+    }
+  ]
+}

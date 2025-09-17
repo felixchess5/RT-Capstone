@@ -4,10 +4,12 @@ An advanced academic assignment grading system with subject-specific processing,
 
 ## 🌟 Core Features
 
-- **🎯 Subject-Specific Processing**: Specialized analyzers for Math, Spanish, English, Science, and History
+- **🎯 Subject-Specific Processing**: Specialized analyzers for Math, Spanish, English, Science, and History with comprehensive analysis
 - **🤖 Intelligent Orchestration**: Automatic subject detection and routing to appropriate processors
 - **📐 Mathematical Analysis**: Equation solving, symbolic computation, and step-by-step verification
 - **🇪🇸 Spanish Language Assessment**: Grammar analysis, vocabulary evaluation, and cultural understanding
+- **🔬 Scientific Analysis**: Lab reports, experimental design, scientific method evaluation, and formula identification
+- **📚 Historical Assessment**: Chronological analysis, source evaluation, contextual understanding, and argument development
 - **🌍 Multi-Language Support**: 14+ languages with automatic detection and localized prompts
 - **📄 Multi-Format Processing**: PDF (text & scanned), DOCX, DOC, MD, TXT, and image formats
 - **🔍 OCR Integration**: Free Tesseract OCR for scanned documents with preprocessing
@@ -33,6 +35,24 @@ An advanced academic assignment grading system with subject-specific processing,
 | **Vocabulary Usage** | 0-10 | Appropriateness and variety of vocabulary |
 | **Fluency & Communication** | 0-10 | Natural flow and expression in Spanish |
 | **Cultural Understanding** | 0-10 | Knowledge of Hispanic culture and context |
+
+### 🔬 Science Assignments
+| Criterion | Scale | Description |
+|-----------|-------|-------------|
+| **Scientific Accuracy** | 0-10 | Correctness of facts, formulas, and concepts |
+| **Hypothesis Quality** | 0-10 | Clear, testable hypothesis formulation |
+| **Data Analysis** | 0-10 | Proper data presentation and interpretation |
+| **Experimental Design** | 0-10 | Quality of experimental methodology |
+| **Conclusion Validity** | 0-10 | Evidence-based conclusions and reasoning |
+
+### 📚 History Assignments
+| Criterion | Scale | Description |
+|-----------|-------|-------------|
+| **Historical Accuracy** | 0-10 | Correctness of facts, dates, and events |
+| **Chronological Understanding** | 0-10 | Proper sequence and timing awareness |
+| **Source Analysis** | 0-10 | Effective use and evaluation of sources |
+| **Contextual Awareness** | 0-10 | Understanding of historical context |
+| **Argument Development** | 0-10 | Well-structured historical arguments |
 
 ### 📝 General Assignments
 | Criterion | Scale | Description |
@@ -146,6 +166,8 @@ An advanced academic assignment grading system with subject-specific processing,
      - `output/math_assignments.csv` - Mathematics assignments with specialized fields
      - `output/spanish_assignments.csv` - Spanish assignments with language metrics
      - `output/english_assignments.csv` - English assignments with writing analysis
+     - `output/science_assignments.csv` - Science assignments with experimental analysis
+     - `output/history_assignments.csv` - History assignments with chronological analysis
    - **Detailed data**: JSON files for complete assignment information
    - **Reports**: Individual plagiarism reports in `plagiarism_reports/` folder
    - **Export summary**: `output/export_summary.txt` with processing statistics
@@ -184,6 +206,20 @@ An advanced academic assignment grading system with subject-specific processing,
 - **Cultural References**: Identifies and evaluates Hispanic cultural knowledge
 - **Fluency Scoring**: Comprehensive language proficiency assessment
 
+#### 🔬 Science Processor (`science_processor.py`)
+- **Subject Classification**: Physics, Chemistry, Biology, Earth Science identification
+- **Scientific Method Analysis**: Hypothesis, procedure, observations, conclusions evaluation
+- **Formula Recognition**: Mathematical and chemical equation identification
+- **Experimental Design**: Variables, controls, and methodology assessment
+- **Safety Evaluation**: Laboratory safety considerations and protocols
+
+#### 📚 History Processor (`history_processor.py`)
+- **Period Classification**: Ancient, Medieval, Modern, Contemporary identification
+- **Chronological Analysis**: Timeline accuracy and sequence evaluation
+- **Source Evaluation**: Primary and secondary source analysis
+- **Historical Context**: Understanding of time period and circumstances
+- **Argument Assessment**: Historical reasoning and evidence usage
+
 #### 📊 Subject Output Manager (`subject_output_manager.py`)
 - **Automatic Classification**: Routes results to appropriate output files
 - **Specialized Fields**: Subject-specific CSV columns and data extraction
@@ -204,21 +240,21 @@ An advanced academic assignment grading system with subject-specific processing,
 ┌─────────────────────────────────────────┐
 │     Subject Detection & Routing         │
 ├─────────────────────────────────────────┤
-│  📐 Math    🇪🇸 Spanish   📝 English    │
-│   ↓           ↓           ↓             │
-│ Equation   Grammar    Literature        │
-│ Solving    Analysis   Analysis          │
-│   ↓           ↓           ↓             │
-│ Step-by-   Vocabulary Writing           │
-│ Step       Assessment Quality           │
-│ Analysis      ↓           ↓             │
-│   ↓        Cultural   Citation          │
-│ Math       References Quality           │
-│ Notation      ↓           ↓             │
-│   ↓        Fluency    Thesis            │
-│ Problem    Scoring    Strength          │
-│ Types         ↓           ↓             │
-│   ↓           ↓           ↓             │
+│  📐 Math  🇪🇸 Spanish  📝 English  🔬 Science  📚 History  │
+│   ↓         ↓         ↓         ↓          ↓         │
+│ Equation  Grammar   Literature Scientific Historical │
+│ Solving   Analysis  Analysis   Method     Context    │
+│   ↓         ↓         ↓         ↓          ↓         │
+│ Step-by-  Vocabulary Writing   Lab       Chronology  │
+│ Step      Assessment Quality   Reports   Analysis    │
+│ Analysis    ↓         ↓         ↓          ↓         │
+│   ↓       Cultural  Citation  Formula   Source      │
+│ Math      References Quality  Recognition Evaluation │
+│ Notation    ↓         ↓         ↓          ↓         │
+│   ↓       Fluency   Thesis   Data       Argument    │
+│ Problem   Scoring   Strength  Analysis   Structure   │
+│ Types       ↓         ↓         ↓          ↓         │
+│   ↓         ↓         ↓         ↓          ↓         │
 └─────────────────────────────────────────┘
         ↓
 📊 Subject-Specific Output Files
@@ -240,6 +276,8 @@ RT-Capstone/
 ├── 🎯 Specialized Processors
 │   ├── math_processor.py         # Mathematical analysis & equation solving
 │   ├── spanish_processor.py      # Spanish language assessment
+│   ├── science_processor.py      # Scientific analysis & experimental design
+│   ├── history_processor.py      # Historical analysis & chronological assessment
 │   └── subject_output_manager.py # Subject-specific file generation
 │
 ├── 🌍 Multi-Language & OCR
@@ -260,6 +298,7 @@ RT-Capstone/
 ├── 🧪 Testing & Demo
 │   ├── test_specialized_processors.py # Comprehensive test suite
 │   ├── test_subject_outputs.py    # Output system testing
+│   ├── test_new_subjects.py       # Science & History processor tests
 │   └── demo_subject_outputs.py    # Quick demonstration
 │
 └── 📋 Configuration
@@ -293,6 +332,8 @@ RT-Capstone/
 4. **Specialized Processing**
    - **📐 Math Assignments**: Equation solving, step-by-step analysis, notation assessment
    - **🇪🇸 Spanish Assignments**: Grammar checking, vocabulary analysis, cultural evaluation
+   - **🔬 Science Assignments**: Scientific method evaluation, formula recognition, experimental design
+   - **📚 History Assignments**: Chronological analysis, source evaluation, historical context assessment
    - **📝 General Assignments**: Standard grading criteria with multi-language support
    - **Fallback processing**: Graceful degradation if specialized processing fails
 
@@ -305,7 +346,7 @@ RT-Capstone/
 
 6. **Subject-Specific Export** (`subject_output_manager.py`)
    - **Automatic classification**: Route results to appropriate subject files
-   - **Specialized CSV files**: Math, Spanish, English with subject-specific columns
+   - **Specialized CSV files**: Math, Spanish, English, Science, History with subject-specific columns
    - **Detailed JSON exports**: Complete assignment data with full analysis
    - **Export statistics**: Summary reports with processing metrics and averages
 

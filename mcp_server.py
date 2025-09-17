@@ -31,6 +31,8 @@ from ocr_processor import ocr_processor, OCRMethod, ImageProcessingMethod
 from language_support import language_manager, detect_text_language, get_supported_languages
 from math_processor import create_math_processor, MathProblemType
 from spanish_processor import create_spanish_processor, SpanishAssignmentType
+from science_processor import create_science_processor, ScienceSubject, ScienceAssignmentType
+from history_processor import create_history_processor, HistoryPeriod, HistoryAssignmentType
 from assignment_orchestrator import create_assignment_orchestrator, SubjectType, AssignmentComplexity
 from subject_output_manager import create_subject_output_manager, OutputSubject
 
@@ -1823,5 +1825,411 @@ def get_subject_classification_info(assignment_text: str, metadata: Dict[str, An
     except Exception as e:
         return {
             "error": f"Subject classification failed: {str(e)}",
+            "status": "error"
+        }
+
+
+# ============================================================================
+# SCIENCE ASSIGNMENT TOOLS
+# ============================================================================
+
+@mcp.tool()
+def analyze_science_assignment(assignment_text: str) -> Dict[str, Any]:
+    """
+    Analyze a science assignment for scientific method, vocabulary, and subject area.
+
+    Args:
+        assignment_text: The science assignment text to analyze
+
+    Returns:
+        Dictionary with comprehensive science assignment analysis
+    """
+    try:
+        science_processor = create_science_processor()
+        analysis = science_processor.analyze_science_assignment(assignment_text)
+
+        return {
+            "subject_area": analysis.subject_area.value,
+            "assignment_type": analysis.assignment_type.value,
+            "scientific_method_elements": analysis.scientific_method_elements,
+            "units_and_measurements": analysis.units_and_measurements,
+            "formulas_identified": analysis.formulas_identified,
+            "data_tables_present": analysis.data_tables_present,
+            "graphs_charts_present": analysis.graphs_charts_present,
+            "hypothesis_present": analysis.hypothesis_present,
+            "conclusion_present": analysis.conclusion_present,
+            "scientific_vocabulary_score": analysis.scientific_vocabulary_score,
+            "experimental_variables": analysis.experimental_variables,
+            "safety_considerations": analysis.safety_considerations,
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Science analysis failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+async def grade_science_assignment(assignment_text: str, source_text: str = None) -> Dict[str, Any]:
+    """
+    Grade a science assignment with specialized science criteria.
+
+    Args:
+        assignment_text: The science assignment text to grade
+        source_text: Optional source/reference material
+
+    Returns:
+        Dictionary with science-specific grading results
+    """
+    try:
+        science_processor = create_science_processor()
+        grading_result = await science_processor.grade_science_assignment(assignment_text, source_text)
+
+        return {
+            "grading_result": grading_result,
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Science grading failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def identify_science_subject(assignment_text: str) -> Dict[str, Any]:
+    """
+    Identify the specific science subject area (physics, chemistry, biology, etc.).
+
+    Args:
+        assignment_text: The assignment text to analyze
+
+    Returns:
+        Dictionary with science subject identification
+    """
+    try:
+        science_processor = create_science_processor()
+        subject_area = science_processor.identify_science_subject(assignment_text)
+
+        return {
+            "science_subject": subject_area.value,
+            "available_subjects": [subject.value for subject in ScienceSubject],
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Science subject identification failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def extract_scientific_formulas(assignment_text: str) -> Dict[str, Any]:
+    """
+    Extract scientific formulas and equations from assignment text.
+
+    Args:
+        assignment_text: The assignment text to analyze
+
+    Returns:
+        Dictionary with identified formulas and equations
+    """
+    try:
+        science_processor = create_science_processor()
+        formulas = science_processor.identify_formulas(assignment_text)
+        units = science_processor.extract_units_and_measurements(assignment_text)
+
+        return {
+            "formulas_identified": formulas,
+            "units_and_measurements": units,
+            "formula_count": len(formulas),
+            "unit_count": len(units),
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Formula extraction failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def check_scientific_method(assignment_text: str) -> Dict[str, Any]:
+    """
+    Check for presence of scientific method elements in the assignment.
+
+    Args:
+        assignment_text: The assignment text to check
+
+    Returns:
+        Dictionary with scientific method element analysis
+    """
+    try:
+        science_processor = create_science_processor()
+        method_elements = science_processor.analyze_scientific_method(assignment_text)
+        variables = science_processor.identify_experimental_variables(assignment_text)
+
+        elements_present = sum(method_elements.values())
+        total_elements = len(method_elements)
+
+        return {
+            "scientific_method_elements": method_elements,
+            "experimental_variables": variables,
+            "elements_present": elements_present,
+            "total_elements": total_elements,
+            "completeness_percentage": (elements_present / total_elements) * 100 if total_elements > 0 else 0,
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Scientific method check failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def export_science_assignments(assignments_data: List[Dict[str, Any]], output_folder: str = "./output") -> Dict[str, Any]:
+    """
+    Export only Science assignments to CSV and JSON files.
+
+    Args:
+        assignments_data: List of assignment result dictionaries
+        output_folder: Optional output folder path
+
+    Returns:
+        Dictionary with Science assignment export results
+    """
+    try:
+        subject_manager = create_subject_output_manager(output_folder)
+
+        csv_path = subject_manager.export_subject_csv(assignments_data, OutputSubject.SCIENCE)
+        json_path = subject_manager.export_subject_json(assignments_data, OutputSubject.SCIENCE)
+
+        # Count Science assignments
+        science_assignments = [
+            assignment for assignment in assignments_data
+            if subject_manager.determine_subject(assignment) == OutputSubject.SCIENCE
+        ]
+
+        return {
+            "csv_file": csv_path,
+            "json_file": json_path,
+            "science_assignments_count": len(science_assignments),
+            "files_created": [csv_path, json_path] if csv_path and json_path else [],
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Science assignments export failed: {str(e)}",
+            "status": "error"
+        }
+
+
+# ============================================================================
+# HISTORY ASSIGNMENT TOOLS
+# ============================================================================
+
+@mcp.tool()
+def analyze_history_assignment(assignment_text: str) -> Dict[str, Any]:
+    """
+    Analyze a history assignment for chronology, context, and historical accuracy.
+
+    Args:
+        assignment_text: The history assignment text to analyze
+
+    Returns:
+        Dictionary with comprehensive history assignment analysis
+    """
+    try:
+        history_processor = create_history_processor()
+        analysis = history_processor.analyze_history_assignment(assignment_text)
+
+        return {
+            "historical_period": analysis.period.value,
+            "assignment_type": analysis.assignment_type.value,
+            "region_focus": analysis.region_focus.value,
+            "dates_identified": analysis.dates_identified,
+            "historical_figures": analysis.historical_figures,
+            "events_mentioned": analysis.events_mentioned,
+            "sources_cited": analysis.sources_cited,
+            "chronological_accuracy": analysis.chronological_accuracy,
+            "historical_context_score": analysis.historical_context_score,
+            "argument_structure_score": analysis.argument_structure_score,
+            "evidence_usage_score": analysis.evidence_usage_score,
+            "bias_awareness_score": analysis.bias_awareness_score,
+            "historical_vocabulary_score": analysis.historical_vocabulary_score,
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"History analysis failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+async def grade_history_assignment(assignment_text: str, source_text: str = None) -> Dict[str, Any]:
+    """
+    Grade a history assignment with specialized history criteria.
+
+    Args:
+        assignment_text: The history assignment text to grade
+        source_text: Optional source/reference material
+
+    Returns:
+        Dictionary with history-specific grading results
+    """
+    try:
+        history_processor = create_history_processor()
+        grading_result = await history_processor.grade_history_assignment(assignment_text, source_text)
+
+        return {
+            "grading_result": grading_result,
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"History grading failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def identify_historical_period(assignment_text: str) -> Dict[str, Any]:
+    """
+    Identify the historical time period focus of the assignment.
+
+    Args:
+        assignment_text: The assignment text to analyze
+
+    Returns:
+        Dictionary with historical period identification
+    """
+    try:
+        history_processor = create_history_processor()
+        period = history_processor.identify_historical_period(assignment_text)
+        region = history_processor.identify_region_focus(assignment_text)
+
+        return {
+            "historical_period": period.value,
+            "region_focus": region.value,
+            "available_periods": [period.value for period in HistoryPeriod],
+            "available_regions": [region.value for region in RegionFocus],
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Historical period identification failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def extract_historical_elements(assignment_text: str) -> Dict[str, Any]:
+    """
+    Extract historical dates, figures, and events from assignment text.
+
+    Args:
+        assignment_text: The assignment text to analyze
+
+    Returns:
+        Dictionary with extracted historical elements
+    """
+    try:
+        history_processor = create_history_processor()
+        dates = history_processor.extract_dates(assignment_text)
+        figures = history_processor.extract_historical_figures(assignment_text)
+        events = history_processor.extract_historical_events(assignment_text)
+        sources = history_processor.extract_sources(assignment_text)
+
+        return {
+            "dates_identified": dates,
+            "historical_figures": figures,
+            "events_mentioned": events,
+            "sources_cited": sources,
+            "dates_count": len(dates),
+            "figures_count": len(figures),
+            "events_count": len(events),
+            "sources_count": len(sources),
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Historical element extraction failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def check_historical_accuracy(assignment_text: str) -> Dict[str, Any]:
+    """
+    Check historical accuracy and context awareness in the assignment.
+
+    Args:
+        assignment_text: The assignment text to check
+
+    Returns:
+        Dictionary with historical accuracy assessment
+    """
+    try:
+        history_processor = create_history_processor()
+        dates = history_processor.extract_dates(assignment_text)
+
+        chronological_accuracy = history_processor.assess_chronological_accuracy(assignment_text, dates)
+        context_score = history_processor.assess_historical_context(assignment_text,
+                                                                  history_processor.identify_historical_period(assignment_text))
+        bias_awareness = history_processor.assess_bias_awareness(assignment_text)
+        vocabulary_score = history_processor.assess_historical_vocabulary(assignment_text)
+
+        return {
+            "chronological_accuracy": chronological_accuracy,
+            "historical_context_score": context_score,
+            "bias_awareness_score": bias_awareness,
+            "historical_vocabulary_score": vocabulary_score,
+            "overall_accuracy_score": (chronological_accuracy + context_score + bias_awareness + vocabulary_score) / 4,
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"Historical accuracy check failed: {str(e)}",
+            "status": "error"
+        }
+
+
+@mcp.tool()
+def export_history_assignments(assignments_data: List[Dict[str, Any]], output_folder: str = "./output") -> Dict[str, Any]:
+    """
+    Export only History assignments to CSV and JSON files.
+
+    Args:
+        assignments_data: List of assignment result dictionaries
+        output_folder: Optional output folder path
+
+    Returns:
+        Dictionary with History assignment export results
+    """
+    try:
+        subject_manager = create_subject_output_manager(output_folder)
+
+        csv_path = subject_manager.export_subject_csv(assignments_data, OutputSubject.HISTORY)
+        json_path = subject_manager.export_subject_json(assignments_data, OutputSubject.HISTORY)
+
+        # Count History assignments
+        history_assignments = [
+            assignment for assignment in assignments_data
+            if subject_manager.determine_subject(assignment) == OutputSubject.HISTORY
+        ]
+
+        return {
+            "csv_file": csv_path,
+            "json_file": json_path,
+            "history_assignments_count": len(history_assignments),
+            "files_created": [csv_path, json_path] if csv_path and json_path else [],
+            "status": "success"
+        }
+    except Exception as e:
+        return {
+            "error": f"History assignments export failed: {str(e)}",
             "status": "error"
         }

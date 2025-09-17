@@ -1,0 +1,131 @@
+Name: Taylor Chen
+Date: 2025-01-17
+Class: Calculus I
+Subject: Mathematics
+
+Derivatives and Applications
+
+Problem 1: Basic Differentiation
+
+Find the derivative of f(x) = 3x⁴ - 2x³ + 5x² - 7x + 2
+
+Solution:
+Using the power rule: d/dx[xⁿ] = nxⁿ⁻¹
+
+f'(x) = d/dx[3x⁴] - d/dx[2x³] + d/dx[5x²] - d/dx[7x] + d/dx[2]
+f'(x) = 3(4x³) - 2(3x²) + 5(2x) - 7(1) + 0
+f'(x) = 12x³ - 6x² + 10x - 7
+
+Problem 2: Product Rule
+
+Find the derivative of g(x) = (2x + 1)(x² - 3x + 4)
+
+Solution:
+Using the product rule: d/dx[u·v] = u'v + uv'
+
+Let u = 2x + 1 and v = x² - 3x + 4
+u' = 2
+v' = 2x - 3
+
+g'(x) = u'v + uv'
+g'(x) = 2(x² - 3x + 4) + (2x + 1)(2x - 3)
+g'(x) = 2x² - 6x + 8 + (2x + 1)(2x - 3)
+g'(x) = 2x² - 6x + 8 + 4x² - 6x + 2x - 3
+g'(x) = 6x² - 10x + 5
+
+Problem 3: Chain Rule
+
+Find the derivative of h(x) = (3x² - 2x + 1)⁵
+
+Solution:
+Using the chain rule: d/dx[f(g(x))] = f'(g(x)) · g'(x)
+
+Let u = 3x² - 2x + 1, so h(x) = u⁵
+du/dx = 6x - 2
+dh/du = 5u⁴
+
+h'(x) = dh/du · du/dx
+h'(x) = 5u⁴ · (6x - 2)
+h'(x) = 5(3x² - 2x + 1)⁴ · (6x - 2)
+h'(x) = (30x - 10)(3x² - 2x + 1)⁴
+
+Problem 4: Quotient Rule
+
+Find the derivative of k(x) = (x² + 1)/(x - 2)
+
+Solution:
+Using the quotient rule: d/dx[u/v] = (u'v - uv')/v²
+
+Let u = x² + 1 and v = x - 2
+u' = 2x
+v' = 1
+
+k'(x) = (u'v - uv')/v²
+k'(x) = [2x(x - 2) - (x² + 1)(1)]/(x - 2)²
+k'(x) = [2x² - 4x - x² - 1]/(x - 2)²
+k'(x) = [x² - 4x - 1]/(x - 2)²
+
+Problem 5: Related Rates
+
+A spherical balloon is being inflated at a rate of 20 cubic inches per minute. How fast is the radius increasing when the radius is 5 inches?
+
+Solution:
+Given: dV/dt = 20 in³/min
+Find: dr/dt when r = 5 inches
+
+Step 1: Write the volume formula for a sphere
+V = (4/3)πr³
+
+Step 2: Differentiate both sides with respect to time
+dV/dt = d/dt[(4/3)πr³]
+dV/dt = (4/3)π · 3r² · dr/dt
+dV/dt = 4πr² · dr/dt
+
+Step 3: Solve for dr/dt
+dr/dt = dV/dt / (4πr²)
+
+Step 4: Substitute known values
+dr/dt = 20 / (4π(5)²)
+dr/dt = 20 / (4π · 25)
+dr/dt = 20 / (100π)
+dr/dt = 1/(5π) ≈ 0.0637 inches per minute
+
+Problem 6: Optimization
+
+A rectangular box with a square base and no top is to be made from 108 square feet of cardboard. Find the dimensions that give the maximum volume.
+
+Solution:
+Let x = side length of square base
+Let h = height of box
+
+Step 1: Set up constraints
+Surface area = x² + 4xh = 108
+Therefore: h = (108 - x²)/(4x)
+
+Step 2: Express volume as a function of x
+V = x²h = x² · (108 - x²)/(4x)
+V(x) = x(108 - x²)/4 = (108x - x³)/4
+
+Step 3: Find the derivative
+V'(x) = (108 - 3x²)/4
+
+Step 4: Set derivative equal to zero
+(108 - 3x²)/4 = 0
+108 - 3x² = 0
+3x² = 108
+x² = 36
+x = 6 feet (taking positive value)
+
+Step 5: Find corresponding height
+h = (108 - 36)/(4 · 6) = 72/24 = 3 feet
+
+Step 6: Verify this is a maximum using second derivative test
+V''(x) = -6x/4 = -3x/2
+V''(6) = -3(6)/2 = -9 < 0
+
+Since V''(6) < 0, this is indeed a maximum.
+
+The optimal dimensions are:
+Base: 6 feet × 6 feet
+Height: 3 feet
+Maximum volume: V = 6² × 3 = 108 cubic feet

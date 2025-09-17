@@ -11,6 +11,8 @@ import asyncio
 
 from math_processor import MathProcessor, MathProblemType, create_math_processor
 from spanish_processor import SpanishProcessor, SpanishAssignmentType, create_spanish_processor
+from science_processor import ScienceProcessor, ScienceAssignmentType, create_science_processor
+from history_processor import HistoryProcessor, HistoryAssignmentType, create_history_processor
 from language_support import detect_text_language
 
 class SubjectType(Enum):
@@ -48,6 +50,8 @@ class AssignmentOrchestrator:
     def __init__(self):
         self.math_processor = create_math_processor()
         self.spanish_processor = create_spanish_processor()
+        self.science_processor = create_science_processor()
+        self.history_processor = create_history_processor()
 
         # Subject identification patterns
         self.subject_patterns = {
@@ -232,20 +236,14 @@ class AssignmentOrchestrator:
                 return 'general'
 
         elif subject == SubjectType.SCIENCE:
-            if any(term in text_lower for term in ['experiment', 'lab', 'procedure']):
-                return 'laboratory'
-            elif any(term in text_lower for term in ['theory', 'concept', 'principle']):
-                return 'theoretical'
-            else:
-                return 'general'
+            # Use science processor to determine specific type
+            science_type = self.science_processor.identify_assignment_type(text)
+            return science_type.value
 
         elif subject == SubjectType.HISTORY:
-            if any(term in text_lower for term in ['timeline', 'chronology', 'sequence']):
-                return 'chronological'
-            elif any(term in text_lower for term in ['cause', 'effect', 'impact']):
-                return 'causal_analysis'
-            else:
-                return 'general'
+            # Use history processor to determine specific type
+            history_type = self.history_processor.identify_assignment_type(text)
+            return history_type.value
 
         return 'general'
 
@@ -279,6 +277,26 @@ class AssignmentOrchestrator:
                 return 'literary_analysis'
             else:
                 return 'language_arts'
+
+        elif subject == SubjectType.SCIENCE:
+            if specific_type in ['laboratory_report', 'experimental_design']:
+                return 'experimental_analysis'
+            elif specific_type == 'data_analysis':
+                return 'quantitative_analysis'
+            elif specific_type == 'theoretical_explanation':
+                return 'conceptual_analysis'
+            else:
+                return 'scientific_method'
+
+        elif subject == SubjectType.HISTORY:
+            if specific_type in ['chronological_analysis', 'timeline_creation']:
+                return 'temporal_analysis'
+            elif specific_type in ['cause_and_effect', 'historical_argument']:
+                return 'causal_analysis'
+            elif specific_type == 'source_analysis':
+                return 'primary_source_evaluation'
+            else:
+                return 'historical_investigation'
 
         return 'general_assessment'
 
@@ -317,6 +335,18 @@ class AssignmentOrchestrator:
                 result['processing_results'] = spanish_results
                 result['overall_score'] = spanish_results['overall_score']
                 result['specialized_feedback'] = spanish_results['feedback']
+
+            elif classification.subject == SubjectType.SCIENCE:
+                science_results = await self.science_processor.grade_science_assignment(text, source_text)
+                result['processing_results'] = science_results
+                result['overall_score'] = science_results['overall_score']
+                result['specialized_feedback'] = science_results['feedback']
+
+            elif classification.subject == SubjectType.HISTORY:
+                history_results = await self.history_processor.grade_history_assignment(text, source_text)
+                result['processing_results'] = history_results
+                result['overall_score'] = history_results['overall_score']
+                result['specialized_feedback'] = history_results['feedback']
 
             else:
                 # Fall back to general processing
@@ -362,6 +392,22 @@ class AssignmentOrchestrator:
             elif classification.specific_type == 'vocabulary':
                 steps.append("Expand vocabulary with reading practice")
 
+        elif classification.subject == SubjectType.SCIENCE:
+            if classification.specific_type == 'laboratory_report':
+                steps.append("Include proper experimental procedure and data analysis")
+            elif classification.specific_type == 'hypothesis_testing':
+                steps.append("Ensure hypothesis is testable and clearly stated")
+            elif classification.specific_type == 'data_analysis':
+                steps.append("Use appropriate graphs and statistical analysis")
+
+        elif classification.subject == SubjectType.HISTORY:
+            if classification.specific_type == 'chronological_analysis':
+                steps.append("Include specific dates and proper chronological order")
+            elif classification.specific_type == 'source_analysis':
+                steps.append("Evaluate source reliability and historical context")
+            elif classification.specific_type == 'cause_and_effect':
+                steps.append("Clearly explain causal relationships between events")
+
         if classification.complexity == AssignmentComplexity.ELEMENTARY:
             steps.append("Build foundational skills before advancing")
         elif classification.complexity == AssignmentComplexity.COLLEGE:
@@ -378,6 +424,8 @@ class AssignmentOrchestrator:
             'subjects': [subject.value for subject in SubjectType],
             'math_problem_types': [ptype.value for ptype in MathProblemType],
             'spanish_assignment_types': [atype.value for atype in SpanishAssignmentType],
+            'science_assignment_types': [atype.value for atype in ScienceAssignmentType],
+            'history_assignment_types': [atype.value for atype in HistoryAssignmentType],
             'complexity_levels': [level.value for level in AssignmentComplexity],
             'available_tools': {
                 subject.value: tools for subject, tools in self.subject_tools.items()

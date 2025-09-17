@@ -1,5 +1,9 @@
 datasets
 langchain-groq
+langchain-openai
+langchain-anthropic
+langchain-google-genai
+langchain-community
 langgraph
 langsmith
 python-dotenv
@@ -13,3 +17,5 @@ pdfplumber
 python-magic
 chardet
 mammoth
+pyyaml
+google-generativeai

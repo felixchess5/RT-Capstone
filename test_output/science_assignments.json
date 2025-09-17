@@ -1,0 +1,36 @@
+{
+  "export_metadata": {
+    "subject": "science",
+    "export_date": "2025-09-17T17:37:01.207950",
+    "total_assignments": 1,
+    "average_score": 8.5
+  },
+  "assignments": [
+    {
+      "student_name": "Sarah Johnson",
+      "subject": "Science",
+      "overall_score": 8.5,
+      "specialized_processing": {
+        "classification": {
+          "subject": "science"
+        },
+        "processing_results": {
+          "grading": {
+            "scientific_accuracy": 8.0,
+            "hypothesis_quality": 9.0,
+            "data_analysis": 8.5,
+            "experimental_design": 8.0,
+            "conclusion_validity": 9.0
+          },
+          "analysis": {
+            "subject_area": "chemistry",
+            "assignment_type": "laboratory_report",
+            "units_and_measurements_count": 15,
+            "formulas_identified_count": 3,
+            "scientific_vocabulary_score": 8.2
+          }
+        }
+      }
+    }
+  ]
+}

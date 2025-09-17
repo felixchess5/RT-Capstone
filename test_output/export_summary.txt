@@ -1,0 +1,20 @@
+📊 SUBJECT-SPECIFIC EXPORT SUMMARY
+==================================================
+Export Date: 2025-09-17 17:37:01
+
+Total Assignments Processed: 2
+
+📚 SCIENCE
+   Assignments: 1
+   Files Created:
+     - science_assignments.csv
+     - science_assignments.json
+   Average Score: 8.50
+
+📚 HISTORY
+   Assignments: 1
+   Files Created:
+     - history_assignments.csv
+     - history_assignments.json
+   Average Score: 9.00
+
