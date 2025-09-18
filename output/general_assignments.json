@@ -1,0 +1,88 @@
+{
+  "export_metadata": {
+    "subject": "general",
+    "export_date": "2025-09-18T14:17:05.085779",
+    "total_assignments": 4,
+    "average_score": 0.0
+  },
+  "assignments": [
+    {
+      "Student Name": "Emily Rodriguez",
+      "Date of Submission": "2025-01-17",
+      "Class": "World History AP",
+      "Subject": "History",
+      "Summary": "Here is a 2-3 sentence summary of the English assignment on the French Revolution:\n\nThe French Revolution, which took place from 1789 to 1799, was a pivotal event in modern European history that transformed France from an absolute monarchy to a republic and had lasting global effects. The revolution was caused by a combination of economic crisis, social inequality, and the influence of Enlightenment ideas, which led to the establishment of the First French Republic and the Declaration of the Rights of Man and of the Citizen. The revolution's effects included the abolition of feudalism, the rise of Napoleon Bonaparte, and the spread of democratic ideals worldwide, shaping modern democracy and human rights.",
+      "Grammar Errors": 1,
+      "Plagiarism File": "./plagiarism_reports/Emily Rodriguez_workflow_report.json",
+      "Content Relevance": "**Evaluation of the assignment's relation to the source material:**\n\n1. **Does the assignment address the main topics from the source?**\nThe assignment addresses the main topics from the provided source material, but it only tangentially relates to it. The source material discusses the Renaissance, a cultural movement that occurred from the 14th to the 17th century, whereas the assignment is about the French Revolution, which took place from 1789 to 1799. The two events are separated by over a century.\n\n2. **Are the facts presented consistent with the source material?**\nThe assignment does not reference the source material on the Renaissance. The information presented in the assignment comes from a different set of sources, primarily historians Simon Schama and R.R. Palmer. The facts presented in the assignment are consistent with these sources but not with the source material provided.\n\n3. **How closely does the assignment content align with the source?**\nThe assignment content does not align with the source material at all. The source material discusses the Renaissance, while the assignment explores the French Revolution. The two topics are unrelated, and the assignment's content is based on different historical events, periods, and themes.",
+      "Initial Grade": {
+        "factuality": 8.5,
+        "relevance": 9,
+        "coherence": 9.5,
+        "grammar": 9
+      },
+      "Overall Score": 9.0,
+      "Letter Grade": "A+",
+      "Workflow Version": "agentic_v1",
+      "Processing_Status": "completed",
+      "File_Format": "text",
+      "Rejection_Reason": null
+    },
+    {
+      "Student Name": "Alex Rivera",
+      "Date of Submission": "2025-01-17",
+      "Class": "Algebra II",
+      "Subject": "Mathematics",
+      "Summary": "Here's a 2-3 sentence summary of the English assignment:\n\nAlex Rivera's Algebra II assignment focuses on quadratic functions and their applications. The assignment includes solving quadratic equations through factoring and the quadratic formula, graphing quadratic functions, and applying quadratic functions to real-world problems, such as projectile motion and systems with quadratics. The assignment demonstrates Alex's understanding of quadratic functions and their various applications in mathematics.",
+      "Grammar Errors": 1,
+      "Plagiarism File": "./plagiarism_reports/Alex Rivera_workflow_report.json",
+      "Content Relevance": "1. Does the assignment address the main topics from the source?\n   The assignment is about quadratic functions and their applications, which is unrelated to the Renaissance source material. The assignment covers solving quadratic equations, graphing quadratic functions, word problems involving quadratic equations, and solving systems with quadratic equations. None of these topics are mentioned in the source material.\n\n2. Are the facts presented consistent with the source material?\n   No inconsistencies are found between the assignment and the source material, but this is because there is no overlap between the two topics.\n\n3. How closely does the assignment content align with the source?\n   The assignment content does not align with the source material at all. The source material is about the Renaissance cultural movement, while the assignment is about quadratic functions and their applications in mathematics.",
+      "Initial Grade": "Grading failed",
+      "Overall Score": 4.721212121212121,
+      "Letter Grade": "N/A",
+      "Workflow Version": "agentic_v1",
+      "Processing_Status": "completed",
+      "File_Format": "text",
+      "Rejection_Reason": null
+    },
+    {
+      "Student Name": "Sofia García",
+      "Date of Submission": "2025-01-17",
+      "Class": "Spanish III",
+      "Subject": "Spanish",
+      "Summary": "N/A",
+      "Grammar Errors": "N/A",
+      "Plagiarism File": "N/A",
+      "Content Relevance": "N/A",
+      "Initial Grade": "N/A",
+      "Overall Score": "N/A",
+      "Letter Grade": "N/A",
+      "Workflow Version": "agentic_v1",
+      "Processing_Status": "completed",
+      "File_Format": "text",
+      "Rejection_Reason": null
+    },
+    {
+      "Student Name": "Jessica Miller",
+      "Date of Submission": "2025-01-17",
+      "Class": "English Literature AP",
+      "Subject": "English",
+      "Summary": "Here is a 2-3 sentence summary of the English assignment:\n\nIn the essay \"Symbolism in 'The Great Gatsby',\" Jessica Miller analyzes the symbolic language used by F. Scott Fitzgerald in his novel to critique the American Dream and the moral decay of 1920s society. Miller explores four primary symbols: the green light, the eyes of Doctor T.J. Eckleburg, the Valley of Ashes, and Gatsby's parties, and how they collectively reveal a society where materialism and class division have led to spiritual emptiness. Through these symbols, Fitzgerald critiques the American Dream and the illusion of equal opportunity, making the novel a powerful commentary on American identity and society.",
+      "Grammar Errors": 7,
+      "Plagiarism File": "./plagiarism_reports/Jessica Miller_workflow_report.json",
+      "Content Relevance": "Based on the provided analysis of \"The Great Gatsby\" and the source material about the Renaissance, here's the evaluation of how well the English assignment relates to the source material:\n\n1. **Does the assignment address the main topics from the source?**\n\nNo, the assignment does not address the main topics from the source material. The source material discusses the Renaissance as a cultural movement that spanned the 14th to 17th century, its impact on literature and art, and educational reforms. The assignment, on the other hand, focuses on the literary analysis of \"The Great Gatsby\" and its symbolism, which are unrelated to the source material.\n\n2. **Are the facts presented consistent with the source material?**\n\nNo, the facts presented in the assignment are not consistent with the source material. The assignment discusses the novel's themes, symbols, and critique of American society in the 1920s, which are not related to the Renaissance or its cultural movement.\n\n3. **How closely does the assignment content align with the source?**\n\nThe assignment content does not align with the source material at all. The two are unrelated in terms of topic, themes, and historical context. The assignment is focused on a 20th-century novel, while the source material discusses a 14th to 17th-century cultural movement.",
+      "Initial Grade": {
+        "factuality": 9.2,
+        "relevance": 9.8,
+        "coherence": 9.5,
+        "grammar": 8.9
+      },
+      "Overall Score": 9.35,
+      "Letter Grade": "A+",
+      "Workflow Version": "agentic_v1",
+      "Processing_Status": "completed",
+      "File_Format": "text",
+      "Rejection_Reason": null
+    }
+  ]
+}

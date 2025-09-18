@@ -151,13 +151,13 @@ An advanced academic assignment grading system with subject-specific processing,
 2. **Run the grading system**
    ```bash
    # Enhanced agentic workflow (recommended)
-   python main_agentic.py
+   python src/main_agentic.py
 
    # Alternative: MCP server mode
-   python mcp_server.py
+   python src/main_agentic.py mcp
 
    # Run tests
-   python test_specialized_processors.py
+   python tests/test_specialized_processors.py
    ```
 
 3. **View results**
@@ -188,19 +188,19 @@ An advanced academic assignment grading system with subject-specific processing,
 
 ### Core Components
 
-#### 🎯 Assignment Orchestrator (`assignment_orchestrator.py`)
+#### 🎯 Assignment Orchestrator (`src/core/assignment_orchestrator.py`)
 - **Subject Classification**: Automatically detects Math, Spanish, English, Science, History
 - **Complexity Assessment**: Elementary, Middle School, High School, College levels
 - **Intelligent Routing**: Directs to appropriate specialized processors
 - **Processing Optimization**: Selects best methodology per subject type
 
-#### 📐 Math Processor (`math_processor.py`)
+#### 📐 Math Processor (`src/processors/math_processor.py`)
 - **Equation Solving**: Symbolic computation using SymPy
 - **Problem Type Detection**: Algebra, Calculus, Geometry, Statistics, etc.
 - **Step-by-Step Analysis**: Evaluates solution methodology and presentation
 - **Mathematical Notation**: Assesses proper formatting and notation usage
 
-#### 🇪🇸 Spanish Processor (`spanish_processor.py`)
+#### 🇪🇸 Spanish Processor (`src/processors/spanish_processor.py`)
 - **Grammar Analysis**: Spanish-specific grammar rule checking
 - **Vocabulary Assessment**: Beginner/Intermediate/Advanced level detection
 - **Cultural References**: Identifies and evaluates Hispanic cultural knowledge

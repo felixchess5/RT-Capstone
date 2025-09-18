@@ -20,10 +20,10 @@ except ImportError:
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 
-from llms import groq_llm, gemini_llm, invoke_with_fallback
-from language_support import detect_text_language, get_localized_prompt
-from prompts import GRAMMAR_CHECK, PLAGIARISM_CHECK, RELEVANCE_CHECK, GRADING_PROMPT, SUMMARY_PROMPT
-from assignment_orchestrator import create_assignment_orchestrator, SubjectType
+from core.llms import groq_llm, gemini_llm, invoke_with_fallback
+from support.language_support import detect_text_language, get_localized_prompt
+from support.prompts import GRAMMAR_CHECK, PLAGIARISM_CHECK, RELEVANCE_CHECK, GRADING_PROMPT, SUMMARY_PROMPT
+from core.assignment_orchestrator import create_assignment_orchestrator, SubjectType
 
 
 class WorkflowState(TypedDict):
@@ -224,6 +224,10 @@ async def specialized_processing_agent(state: WorkflowState) -> WorkflowState:
             state["metadata"]
         )
 
+        # Convert any analysis objects to dicts for serialization
+        if "processing_results" in result and hasattr(result["processing_results"], 'to_dict'):
+            result["processing_results"] = result["processing_results"].to_dict()
+
         state["specialized_processing_result"] = result
 
         print(f"   Processor used: {result['classification']['subject']}")
@@ -325,7 +329,7 @@ def plagiarism_detection_agent(state: WorkflowState) -> WorkflowState:
         analysis = response.content if hasattr(response, "content") else str(response).strip()
 
         # Save detailed report
-        from paths import PLAGIARISM_REPORTS_FOLDER
+        from core.paths import PLAGIARISM_REPORTS_FOLDER
         import os
         student_name = state["metadata"]["name"]
         os.makedirs(PLAGIARISM_REPORTS_FOLDER, exist_ok=True)

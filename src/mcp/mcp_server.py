@@ -23,18 +23,18 @@ try:
 except ImportError:
     LANGUAGE_TOOL_AVAILABLE = False
 
-from llms import groq_llm
-from paths import PLAGIARISM_REPORTS_FOLDER
-from prompts import PLAGIARISM_CHECK, GRAMMAR_CHECK, RELEVANCE_CHECK, GRADING_PROMPT, SUMMARY_PROMPT
-from file_processor import file_processor, FileRejectionReason
-from ocr_processor import ocr_processor, OCRMethod, ImageProcessingMethod
-from language_support import language_manager, detect_text_language, get_supported_languages
-from math_processor import create_math_processor, MathProblemType
-from spanish_processor import create_spanish_processor, SpanishAssignmentType
-from science_processor import create_science_processor, ScienceSubject, ScienceAssignmentType
-from history_processor import create_history_processor, HistoryPeriod, HistoryAssignmentType
-from assignment_orchestrator import create_assignment_orchestrator, SubjectType, AssignmentComplexity
-from subject_output_manager import create_subject_output_manager, OutputSubject
+from core.llms import groq_llm
+from core.paths import PLAGIARISM_REPORTS_FOLDER
+from support.prompts import PLAGIARISM_CHECK, GRAMMAR_CHECK, RELEVANCE_CHECK, GRADING_PROMPT, SUMMARY_PROMPT
+from support.file_processor import file_processor, FileRejectionReason
+from support.ocr_processor import ocr_processor, OCRMethod, ImageProcessingMethod
+from support.language_support import language_manager, detect_text_language, get_supported_languages
+from processors.math_processor import create_math_processor, MathProblemType
+from processors.spanish_processor import create_spanish_processor, SpanishAssignmentType
+from processors.science_processor import create_science_processor, ScienceSubject, ScienceAssignmentType
+from processors.history_processor import create_history_processor, HistoryPeriod, HistoryAssignmentType
+from core.assignment_orchestrator import create_assignment_orchestrator, SubjectType, AssignmentComplexity
+from core.subject_output_manager import create_subject_output_manager, OutputSubject
 
 load_dotenv()
 

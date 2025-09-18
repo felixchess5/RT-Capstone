@@ -20,11 +20,11 @@ except ImportError:
     LANGSMITH_AVAILABLE = False
 
 # Import subject-specific output manager
-from subject_output_manager import create_subject_output_manager
+from core.subject_output_manager import create_subject_output_manager
 
 # Try to import agentic workflow
 try:
-    from agentic_workflow import run_agentic_workflow, build_agentic_workflow
+    from workflows.agentic_workflow import run_agentic_workflow, build_agentic_workflow
     AGENTIC_AVAILABLE = True
     print("✅ Agentic workflow loaded successfully")
 except ImportError as e:
@@ -33,7 +33,7 @@ except ImportError as e:
 
 # Try to import MCP tools
 try:
-    from mcp_server import (
+    from mcp.mcp_server import (
         grammar_check,
         plagiarism_check,
         relevance_check,
@@ -47,7 +47,7 @@ except ImportError:
     MCP_AVAILABLE = False
     print("⚠️ MCP tools not available, falling back to traditional processing")
     # Import traditional nodes as fallback
-    from nodes import (
+    from workflows.nodes import (
         export_summary,
         grammar_check_fn,
         plagiarism_check_fn,
@@ -56,9 +56,9 @@ except ImportError:
         summarize
     )
 
-from paths import ASSIGNMENTS_FOLDER, SUMMARY_CSV_PATH
-from utils import ensure_directories, extract_metadata_from_content
-from file_processor import file_processor, FileRejectionReason
+from core.paths import ASSIGNMENTS_FOLDER, SUMMARY_CSV_PATH
+from support.utils import ensure_directories, extract_metadata_from_content
+from support.file_processor import file_processor, FileRejectionReason
 
 load_dotenv()
 
@@ -272,7 +272,7 @@ async def process_assignment_traditional_enhanced(file_path: str, source_text: s
 
     # Step 3: Process with traditional workflow
     try:
-        from nodes import orchestrator_node
+        from workflows.nodes import orchestrator_node
 
         initial_state = {
             "content": file_result.content,
@@ -414,7 +414,7 @@ async def process_assignment_with_mcp(file_path: str, source_text: str) -> Dict:
 @traceable(name="process_assignment_traditional")
 async def process_assignment_traditional(file_path: str, source_text: str) -> Dict:
     """Process a single assignment using traditional nodes."""
-    from nodes import orchestrator_node
+    from workflows.nodes import orchestrator_node
 
     with open(file_path, "r") as f:
         content = f.read()
@@ -543,6 +543,7 @@ async def process_assignments_batch(processing_mode: str = "auto") -> List[Dict]
 
     # Export subject-specific files
     print(f"\n📂 Exporting subject-specific files...")
+    from core.paths import OUTPUT_FOLDER
     subject_output_manager = create_subject_output_manager(OUTPUT_FOLDER)
     export_results = subject_output_manager.export_all_subjects(assignments)
 
@@ -583,7 +584,7 @@ async def run_mcp_server():
         print("[ERROR] MCP is not available. Please install with: pip install 'mcp[cli]'")
         return
 
-    from mcp_server import mcp
+    from mcp.mcp_server import mcp
     print("🚀 Starting MCP server...")
     print("Available tools: grammar_check, plagiarism_check, relevance_check, grade_assignment, summarize_assignment, process_assignment_parallel")
     mcp.run(transport="stdio")
@@ -602,7 +603,7 @@ async def run_workflow_demo():
 
     # Generate workflow visualization if possible
     try:
-        from utils import graph_visualizer
+        from support.utils import graph_visualizer
         graph_visualizer(workflow, "agentic_workflow_demo")
         print("📊 Workflow visualization generated")
     except Exception as e:

@@ -1,7 +1,7 @@
 import os
 from typing import Dict
 
-from paths import REQUIRED_FOLDERS
+from core.paths import REQUIRED_FOLDERS
 
 
 def ensure_directories() -> None:
@@ -70,7 +70,7 @@ def graph_visualizer(graph) -> None:
     """Generate and save graph visualization as PNG with async node details."""
     print("Generating graph...")
     try:
-        from paths import GRAPH_OUTPUT_PATH
+        from core.paths import GRAPH_OUTPUT_PATH
         
         # Generate the main graph visualization
         image_data = graph.get_graph().draw_mermaid_png()

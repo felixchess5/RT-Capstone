@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import asyncio
 from datetime import datetime
 
-from llms import llm_manager
+from core.llms import llm_manager
 
 class HistoryPeriod(Enum):
     """Historical time periods."""

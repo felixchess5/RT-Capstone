@@ -16,9 +16,9 @@ except ImportError:
         return decorator(func) if func else decorator
     LANGSMITH_AVAILABLE = False
 
-from llms import groq_llm
-from paths import PLAGIARISM_REPORTS_FOLDER
-from prompts import PLAGIARISM_CHECK, GRAMMAR_CHECK, RELEVANCE_CHECK, GRADING_PROMPT, SUMMARY_PROMPT
+from core.llms import groq_llm
+from core.paths import PLAGIARISM_REPORTS_FOLDER
+from support.prompts import PLAGIARISM_CHECK, GRAMMAR_CHECK, RELEVANCE_CHECK, GRADING_PROMPT, SUMMARY_PROMPT
 
 
 @traceable(name="grammar_check_node")

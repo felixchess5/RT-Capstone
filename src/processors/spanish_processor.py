@@ -45,6 +45,20 @@ class SpanishAnalysis:
         self.fluency_score = 0.0
         self.complexity_score = 0.0
 
+    def to_dict(self):
+        """Convert analysis to dictionary for serialization."""
+        return {
+            "assignment_type": self.assignment_type.value if hasattr(self.assignment_type, 'value') else str(self.assignment_type),
+            "grammar_errors": self.grammar_errors,
+            "vocabulary_level": self.vocabulary_level,
+            "verb_conjugations": self.verb_conjugations,
+            "cultural_references": self.cultural_references,
+            "comprehension_questions": self.comprehension_questions,
+            "translation_accuracy": self.translation_accuracy,
+            "fluency_score": self.fluency_score,
+            "complexity_score": self.complexity_score
+        }
+
 class SpanishProcessor:
     """Comprehensive Spanish assignment processor."""
 

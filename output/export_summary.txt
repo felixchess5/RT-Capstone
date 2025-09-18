@@ -1,0 +1,12 @@
+📊 SUBJECT-SPECIFIC EXPORT SUMMARY
+==================================================
+Export Date: 2025-09-18 14:17:05
+
+Total Assignments Processed: 4
+
+📚 GENERAL
+   Assignments: 4
+   Files Created:
+     - general_assignments.csv
+     - general_assignments.json
+

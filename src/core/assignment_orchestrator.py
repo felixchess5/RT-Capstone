@@ -9,11 +9,11 @@ from enum import Enum
 from dataclasses import dataclass
 import asyncio
 
-from math_processor import MathProcessor, MathProblemType, create_math_processor
-from spanish_processor import SpanishProcessor, SpanishAssignmentType, create_spanish_processor
-from science_processor import ScienceProcessor, ScienceAssignmentType, create_science_processor
-from history_processor import HistoryProcessor, HistoryAssignmentType, create_history_processor
-from language_support import detect_text_language
+from processors.math_processor import MathProcessor, MathProblemType, create_math_processor
+from processors.spanish_processor import SpanishProcessor, SpanishAssignmentType, create_spanish_processor
+from processors.science_processor import ScienceProcessor, ScienceAssignmentType, create_science_processor
+from processors.history_processor import HistoryProcessor, HistoryAssignmentType, create_history_processor
+from support.language_support import detect_text_language
 
 class SubjectType(Enum):
     """Main subject categories."""

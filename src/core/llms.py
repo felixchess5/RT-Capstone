@@ -177,7 +177,7 @@ class GeminiWrapper:
 class MultiLLMManager:
     """Comprehensive LLM management system with failover and monitoring."""
 
-    def __init__(self, config_path: str = "llm_config.yaml"):
+    def __init__(self, config_path: str = "config/llm_config.yaml"):
         self.config = self._load_config(config_path)
         self.provider_health: Dict[str, ProviderHealth] = {}
         self.circuit_breakers: Dict[str, CircuitBreaker] = {}
@@ -322,6 +322,15 @@ class MultiLLMManager:
 
         self.circuit_breakers[provider_name].record_success()
 
+    def _is_rate_limit_error(self, error: Exception) -> bool:
+        """Check if the error is a rate limiting error that should trigger failover."""
+        error_str = str(error).lower()
+        rate_limit_indicators = [
+            "rate limit", "rate_limit", "ratelimit", "429", "too many requests",
+            "quota exceeded", "api quota", "rate exceeded", "throttled"
+        ]
+        return any(indicator in error_str for indicator in rate_limit_indicators)
+
     def _record_failure(self, provider_name: str):
         """Record failed request for monitoring."""
         health = self.provider_health[provider_name]
@@ -406,6 +415,11 @@ class MultiLLMManager:
                 except Exception as e:
                     last_error = e
                     logger.warning(f"✗ {provider_name} attempt {retry + 1} failed: {e}")
+
+                    # Check if this is a rate limiting error that should trigger immediate failover
+                    if self._is_rate_limit_error(e):
+                        logger.info(f"Rate limit detected for {provider_name}, failing over to next provider")
+                        break  # Break out of retry loop for this provider
 
                     if retry < retry_attempts - 1:  # Don't sleep on last retry
                         time.sleep(retry_delay)

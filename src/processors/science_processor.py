@@ -11,7 +11,7 @@ from enum import Enum
 from dataclasses import dataclass
 import asyncio
 
-from llms import llm_manager
+from core.llms import llm_manager
 
 class ScienceSubject(Enum):
     """Science subject types."""
