@@ -19,3 +19,5 @@ chardet
 mammoth
 pyyaml
 google-generativeai
+gradio
+pandas
