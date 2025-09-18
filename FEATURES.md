@@ -80,36 +80,84 @@ This document tracks all features and functionality in the Capstone project.
   - **Grammar checking** adapted for each language's rules
   - **Cultural context awareness** in grading and evaluation
 
+### Multi-LLM Provider System
+- **Status**: ✅ Implemented
+- **Description**: Enterprise-grade LLM redundancy system with configurable priority and automatic failover
+- **Components**:
+  - **5 LLM providers**: Groq, OpenAI, Anthropic, Gemini, Local models
+  - **YAML-based configuration** with customizable priority ordering
+  - **Circuit breaker patterns** for service reliability (thresholds: 5 failures, 60s reset)
+  - **Automatic failover** with rate limit detection and immediate switching
+  - **Health monitoring** with success rates and request tracking
+  - **Specialized routing** for different use cases (math, language analysis, creative writing, code analysis)
+  - **Performance tracking** with response time monitoring
+  - **Comprehensive error handling** with retry logic and exponential backoff
+
+### Subject-Specific Processing System
+- **Status**: ✅ Implemented
+- **Description**: Specialized processors for different academic subjects with domain-specific analysis
+- **Components**:
+  - **Mathematics Processor**: Equation solving, step-by-step analysis, mathematical notation evaluation
+  - **Spanish Processor**: Grammar checking, cultural references, vocabulary assessment, fluency scoring
+  - **Science Processor**: 6 science subjects (Physics, Chemistry, Biology, Earth Science, Environmental Science, General Science)
+  - **History Processor**: 9 historical periods, chronological analysis, source evaluation, bias detection
+  - **English Processor**: Writing analysis, literary devices, argumentation assessment
+  - **Subject-specific MCP tools**: 12+ specialized tools for each subject domain
+  - **Dynamic output files**: Subject-specific CSV/JSON exports with specialized metrics
+  - **Intelligent orchestration**: Automatic routing to appropriate specialized processor
+
+### Enhanced Summarization System
+- **Status**: ✅ Implemented
+- **Description**: Intelligent summarization with subject-aware context and robust cleanup
+- **Components**:
+  - **Dynamic subject integration**: Subject-aware summary generation based on assignment classification
+  - **Multi-language support**: Localized summary prompts for 14+ languages
+  - **Robust post-processing**: Regex-based cleanup to remove unwanted LLM preambles
+  - **Directive prompt engineering**: Explicit instructions to prevent generic "English assignment" labeling
+  - **Quality assurance**: Ensures summaries correctly reflect actual subject (Math, History, Science, etc.)
+
 ## File Structure
 
-### Core Files
+### Core System (`src/core/`)
 - `main.py` - Main application entry point (traditional)
 - `main_agentic.py` - Enhanced main with agentic workflow support
-- `nodes.py` - LangGraph node definitions (traditional)
-- `agentic_workflow.py` - Full agentic AI workflow implementation
-- `file_processor.py` - Comprehensive multi-format file processing utility with OCR
-- `ocr_processor.py` - OCR and ICR processing module for scanned documents
+- `llms.py` - Multi-LLM provider system with redundancy and failover
+- `assignment_orchestrator.py` - Intelligent routing to specialized processors
+- `subject_output_manager.py` - Subject-specific file exports and data management
+- `paths.py` - Path configuration and constants
+
+### Workflow System (`src/workflows/`)
+- `agentic_workflow.py` - Full agentic AI workflow implementation with 11 specialized nodes
+- `nodes.py` - LangGraph node definitions (traditional, legacy)
+
+### Subject Processors (`src/processors/`)
+- `math_processor.py` - Mathematics-specific analysis and grading
+- `spanish_processor.py` - Spanish language assessment and cultural analysis
+- `science_processor.py` - Science subjects (Physics, Chemistry, Biology, etc.)
+- `history_processor.py` - Historical analysis across 9 time periods
+- `english_processor.py` - Writing analysis and literary assessment
+
+### Support Systems (`src/support/`)
+- `file_processor.py` - Multi-format file processing with OCR integration
+- `ocr_processor.py` - Advanced OCR/ICR processing with Tesseract
 - `language_support.py` - Multi-language support and localization system
-- `llms.py` - LLM configuration and setup with redundancy
 - `utils.py` - Utility functions and helpers
 - `prompts.py` - Prompt templates
-- `paths.py` - Path configuration
 
-### MCP Integration
-- `mcp_server.py` - MCP server implementation with enhanced file processing and OCR tools
+### MCP Integration (`src/mcp/`)
+- `mcp_server.py` - MCP server with 25+ specialized tools
 - `main_mcp.py` - MCP application entry point
 - `test_mcp.py` - MCP testing suite
 
-### File Processing & OCR
-- `file_processor.py` - Multi-format file processing with OCR integration and rejection tracking
-- `ocr_processor.py` - Advanced OCR/ICR processing with Tesseract
-- Enhanced processing workflows with file format support and automatic OCR fallback
-- Robust error handling and content extraction from text and image-based documents
+### Testing Suite (`tests/`)
+- `test_agentic_workflow.py` - Comprehensive workflow tests
+- `test_multi_llm.py` - Multi-LLM system validation
+- `test_new_subjects.py` - Science and History processor tests
+- `test_specialized_processors.py` - Math and Spanish processor tests
+- `test_subject_outputs.py` - Subject-specific output validation
 
-### Testing
-- `test_agentic_workflow.py` - Comprehensive tests for agentic workflow
-
-### Configuration
+### Configuration (`config/`)
+- `llm_config.yaml` - Multi-LLM provider configuration with priority ordering
 - `requirements.txt` - Python dependencies
 - `.env.example` - Environment variables template
 
@@ -122,7 +170,7 @@ This document tracks all features and functionality in the Capstone project.
 - [ ] Detailed analytics dashboard
 - [x] Add ICR and OCR capabilities
 - [x] Multi-language support
-- [ ] Add additional subject classes (Eng, Math, Spanish)
+- [x] Add additional subject classes (Math, Spanish, Science, History)
 - [x] Create MCP for PDF, Word, MD and a failback system for edge cases
 - [ ] Integration with learning management systems
 - [ ] Advanced plagiarism detection algorithms
@@ -132,12 +180,12 @@ This document tracks all features and functionality in the Capstone project.
 - [ ] Email notification system
 
 #### AI/ML Infrastructure
-- [ ] Add additional LLM providers (OpenAI, Anthropic, Cohere, local models)
-- [ ] Setup failback systems for when LLM services are down
-- [ ] Implement LLM load balancing and routing
-- [ ] Add model performance monitoring and automatic switching
-- [ ] Create offline mode with local model fallbacks
-- [ ] Implement retry logic with exponential backoff
+- [x] Add additional LLM providers (OpenAI, Anthropic, Groq, Gemini, local models)
+- [x] Setup failback systems for when LLM services are down
+- [x] Implement LLM load balancing and routing
+- [x] Add model performance monitoring and automatic switching
+- [x] Create offline mode with local model fallbacks
+- [x] Implement retry logic with exponential backoff
 - [ ] Fine-tune models for specific subject domains
 - [ ] Implement ensemble grading methods
 - [ ] Add confidence scoring for grades
@@ -218,6 +266,22 @@ This document tracks all features and functionality in the Capstone project.
 
 ## Recent Changes
 
+### Latest Updates (Latest Session)
+- **Multi-LLM Provider System**: Implemented enterprise-grade redundancy with 5 LLM providers (Groq, OpenAI, Anthropic, Gemini, Local)
+- **YAML Configuration**: Added `config/llm_config.yaml` for customizable provider priority and specialized routing
+- **Circuit Breaker Patterns**: Implemented service reliability with automatic failover and health monitoring
+- **Rate Limit Detection**: Enhanced failover logic with immediate switching on rate limit errors
+- **Subject-Specific Processing**: Added Science and History processors with domain-specific analysis capabilities
+- **Science Processor**: 6 science subjects, scientific method evaluation, formula recognition, safety considerations
+- **History Processor**: 9 historical periods, chronological analysis, source evaluation, bias detection
+- **Enhanced MCP Tools**: Added 12+ subject-specific MCP tools for specialized processing
+- **Subject-Specific Outputs**: Dynamic CSV/JSON exports with specialized metrics per subject
+- **File Organization**: Restructured entire codebase into organized directories (core/, processors/, workflows/, support/, mcp/, tests/)
+- **Enhanced Summarization**: Fixed subject-aware summaries with robust post-processing and cleanup
+- **Assignment Examples**: Created 10 comprehensive assignment examples across all subjects
+- **Comprehensive Testing**: Added 5 specialized test suites for all system components
+
+### Previous Major Features
 - **Multi-Language Support System**: Added comprehensive support for 14 languages with automatic detection and localized processing
 - **Language-Aware Workflow**: Enhanced agentic workflow with language detection and localized prompts for each processing step
 - **Multi-Language OCR**: Extended OCR capabilities to support multiple languages with Tesseract language packs
@@ -229,10 +293,8 @@ This document tracks all features and functionality in the Capstone project.
 - **Advanced Image Preprocessing**: Multiple preprocessing methods (adaptive thresholding, denoising, morphological operations)
 - **OCR Confidence Scoring**: Real-time confidence assessment for OCR results
 - **Enhanced MCP OCR Tools**: Added 4 new OCR-specific MCP tools for scanned document processing
-- **LLM Redundancy System**: Implemented Gemini LLM as backup to Groq with automatic failover
 - **Multi-Format File Processing**: Implemented comprehensive file processing for PDF, DOCX, DOC, MD, and TXT formats
 - **Robust Error Handling**: Added detailed rejection tracking with human-readable error messages
-- **Enhanced MCP Tools**: Added 9 new file processing and OCR tools
 - **File Format Detection**: Intelligent detection using extension, MIME type, and magic byte analysis
 - **Processing Status Tracking**: Enhanced CSV export with Processing_Status, File_Format, and Rejection_Reason fields
 - **Failback Systems**: Comprehensive error recovery for corrupted, missing, or unsupported files

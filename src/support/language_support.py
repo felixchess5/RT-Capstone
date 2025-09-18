@@ -128,7 +128,7 @@ Return your response as a JSON object like:
   "grammar": float
 }}
 Only return the JSON. Do not include any explanation or formatting.""",
-                "summary_prompt": "Summarize this English assignment in 2–3 sentences:\n\n{text}"
+                "summary_prompt": "IMPORTANT: Write ONLY a 2-3 sentence summary. Do NOT write any introduction, preamble, or phrases like 'Here is a summary' or 'This assignment'. Start your response immediately with the actual content summary.\n\nText to summarize:\n{text}"
             },
             "es": {
                 "grammar_check": "Cuenta los errores gramaticales en el siguiente texto en español:\n{text}",
@@ -172,7 +172,7 @@ Devuelve tu respuesta como un objeto JSON así:
   "grammar": float
 }}
 Solo devuelve el JSON. No incluyas explicación o formato.""",
-                "summary_prompt": "Resume esta tarea en español en 2–3 oraciones:\n\n{text}"
+                "summary_prompt": "IMPORTANTE: Escribe SOLO un resumen de 2-3 oraciones. NO escribas introducción, preámbulo o frases como 'Aquí está el resumen'. Comienza inmediatamente con el contenido del resumen.\n\nTexto a resumir:\n{text}"
             },
             "fr": {
                 "grammar_check": "Comptez les erreurs grammaticales dans le texte français suivant:\n{text}",
@@ -216,7 +216,7 @@ Retournez votre réponse comme un objet JSON ainsi:
   "grammar": float
 }}
 Ne retournez que le JSON. N'incluez aucune explication ou formatage.""",
-                "summary_prompt": "Résumez ce devoir français en 2–3 phrases:\n\n{text}"
+                "summary_prompt": "IMPORTANT: Écrivez SEULEMENT un résumé de 2-3 phrases. N'écrivez PAS d'introduction, de préambule ou de phrases comme 'Voici le résumé'. Commencez immédiatement par le contenu du résumé.\n\nTexte à résumer:\n{text}"
             }
         }
 

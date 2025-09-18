@@ -495,10 +495,36 @@ def summary_generation_agent(state: WorkflowState) -> WorkflowState:
         # Use the language detected from grammar analysis if available
         detected_language = state.get("grammar_result", {}).get("detected_language", "en")
 
-        # Use localized summary prompt
-        prompt = get_localized_prompt("summary_prompt", detected_language, text=state["content"])
+        # Get the subject from assignment classification
+        subject = "assignment"  # default fallback
+        if "assignment_classification" in state and "subject" in state["assignment_classification"]:
+            subject = state["assignment_classification"]["subject"]
+
+        # Use localized summary prompt with dynamic subject
+        prompt = get_localized_prompt("summary_prompt", detected_language, text=state["content"], subject=subject)
         response = invoke_with_fallback(prompt, groq_llm, gemini_llm)
         summary = response.content if hasattr(response, "content") else str(response).strip()
+
+        # Clean up unwanted preambles that LLM might add despite our instructions
+        import re
+
+        # Use regex to match and remove various preamble patterns
+        preamble_patterns = [
+            r"^Here\s+is\s+a\s+2-3\s+sentence\s+summary\s+of\s+the\s+English\s+assignment[^:]*:",
+            r"^Here's\s+a\s+2-3\s+sentence\s+summary\s+of\s+the\s+English\s+assignment[^:]*:",
+            r"^Here\s+is\s+a\s+summary\s+of\s+the\s+English\s+assignment[^:]*:",
+            r"^Here's\s+a\s+summary\s+of\s+the\s+English\s+assignment[^:]*:",
+            r"^Here\s+is\s+a\s+2-3\s+sentence\s+summary\s+of\s+the\s+[^:]*assignment[^:]*:",
+            r"^Here's\s+a\s+2-3\s+sentence\s+summary\s+of\s+the\s+[^:]*assignment[^:]*:",
+            r"^Summary\s+of\s+the\s+English\s+assignment[^:]*:",
+        ]
+
+        for pattern in preamble_patterns:
+            match = re.search(pattern, summary, re.IGNORECASE)
+            if match:
+                # Remove the matched preamble and any following newlines/spaces
+                summary = summary[match.end():].lstrip("\n ").strip()
+                break
 
         # Enhanced summary with metadata
         import time
