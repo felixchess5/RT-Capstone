@@ -3,7 +3,8 @@ Multi-LLM Provider System with Configurable Priority and Automatic Failover
 
 This module provides a comprehensive LLM management system that supports multiple
 providers (Groq, OpenAI, Anthropic, Gemini, Local) with configurable priority
-ordering, automatic failover, circuit breaker patterns, and specialized routing.
+ordering, automatic failover, circuit breaker patterns, specialized routing,
+and enterprise-grade security protection.
 """
 
 import os
@@ -14,6 +15,15 @@ from typing import Dict, List, Optional, Any, Union
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+
+# Security imports
+try:
+    from security.security_manager import SecurityManager, SecurityConfig
+    from security.secure_llm_wrapper import SecureLLMWrapper, SecureLLMFactory
+    SECURITY_AVAILABLE = True
+except ImportError:
+    SECURITY_AVAILABLE = False
+    logging.warning("Security modules not available - LLMs will run without security protection")
 
 # LangChain imports with error handling
 try:
@@ -175,13 +185,32 @@ class GeminiWrapper:
 
 
 class MultiLLMManager:
-    """Comprehensive LLM management system with failover and monitoring."""
+    """Comprehensive LLM management system with failover, monitoring, and enterprise security."""
 
-    def __init__(self, config_path: str = "config/llm_config.yaml"):
+    def __init__(self, config_path: str = "config/llm_config.yaml", enable_security: bool = True):
         self.config = self._load_config(config_path)
         self.provider_health: Dict[str, ProviderHealth] = {}
         self.circuit_breakers: Dict[str, CircuitBreaker] = {}
         self.providers: Dict[str, Any] = {}
+        self.enable_security = enable_security and SECURITY_AVAILABLE
+
+        # Initialize security manager if available
+        self.security_manager = None
+        if self.enable_security:
+            security_config = SecurityConfig(
+                enable_prompt_injection_protection=True,
+                enable_content_filtering=True,
+                enable_rate_limiting=True,
+                enable_input_validation=True,
+                enable_output_sanitization=True,
+                enable_audit_logging=True,
+                max_input_length=100000,
+                max_requests_per_minute=60
+            )
+            self.security_manager = SecurityManager(security_config)
+            logger.info("✓ Enterprise security protection enabled")
+        else:
+            logger.warning("⚠️  Running without security protection")
 
         # Initialize health tracking and circuit breakers
         for provider_name in self.config.get('providers', {}):
@@ -461,6 +490,58 @@ class MultiLLMManager:
             self.circuit_breakers[provider_name] = CircuitBreaker()
             logger.info(f"Health status reset for {provider_name}")
 
+    def get_secure_llm(self, provider_name: Optional[str] = None) -> Optional[Any]:
+        """Get a secure LLM instance with enterprise protection."""
+        if provider_name:
+            # Get specific provider
+            if provider_name in self.providers:
+                provider = self.providers[provider_name]
+                if SECURITY_AVAILABLE and self.security_manager:
+                    return SecureLLMWrapper(provider, self.security_manager)
+                else:
+                    logger.warning(f"Security not available for {provider_name}, returning raw provider")
+                    return provider
+            else:
+                logger.error(f"Provider {provider_name} not found")
+                return None
+        else:
+            # Get first available provider with security
+            priority_order = self.get_priority_order()
+            for name in priority_order:
+                if name in self.providers:
+                    provider = self.providers[name]
+                    logger.info(f"Using {name} LLM with enterprise security")
+                    if SECURITY_AVAILABLE and self.security_manager:
+                        return SecureLLMWrapper(provider, self.security_manager)
+                    else:
+                        logger.warning(f"Security not available, returning raw {name} provider")
+                        return provider
+
+            logger.error("No LLM providers available")
+            return None
+
+    def get_all_secure_llms(self) -> Dict[str, Any]:
+        """Get all available LLM providers wrapped with security."""
+        secure_providers = {}
+
+        for provider_name, provider in self.providers.items():
+            if SECURITY_AVAILABLE and self.security_manager:
+                secure_providers[provider_name] = SecureLLMWrapper(provider, self.security_manager)
+                logger.info(f"Secured {provider_name} LLM provider")
+            else:
+                secure_providers[provider_name] = provider
+                logger.warning(f"Security not available for {provider_name}")
+
+        return secure_providers
+
+    def create_secure_wrapper(self, provider: Any) -> Any:
+        """Create a secure wrapper for any LLM provider."""
+        if SECURITY_AVAILABLE and self.security_manager:
+            return SecureLLMWrapper(provider, self.security_manager)
+        else:
+            logger.warning("Security not available, returning raw provider")
+            return provider
+
 
 # Initialize the global multi-LLM manager
 try:
@@ -473,14 +554,20 @@ except Exception as e:
 
 # Backward compatibility functions
 def get_available_llm():
-    """Get the first available LLM (backward compatibility)."""
+    """Get the first available LLM with security wrapper (backward compatibility)."""
     if llm_manager and llm_manager.providers:
         priority_order = llm_manager.get_priority_order()
         for provider_name in priority_order:
             if provider_name in llm_manager.providers:
                 provider = llm_manager.providers[provider_name]
-                logger.info(f"Using {provider_name} LLM")
-                return provider
+                logger.info(f"Using {provider_name} LLM with security wrapper")
+
+                # Return secure wrapper if security is available
+                if SECURITY_AVAILABLE and llm_manager.security_manager:
+                    return SecureLLMWrapper(provider, llm_manager.security_manager)
+                else:
+                    logger.warning("Security not available, returning raw LLM provider")
+                    return provider
 
     logger.error("No LLM providers available")
     return None
@@ -501,9 +588,14 @@ def invoke_with_fallback(prompt: str, primary_llm=None, fallback_llm=None):
 
 # Legacy LLM creation functions (for backward compatibility)
 def create_groq_llm(model: str = "llama-3.1-8b-instant", temperature: float = 0.7):
-    """Create Groq LLM instance (backward compatibility)."""
+    """Create Groq LLM instance with security wrapper (backward compatibility)."""
     if llm_manager and 'groq' in llm_manager.providers:
-        return llm_manager.providers['groq']
+        provider = llm_manager.providers['groq']
+        # Return secure wrapper if security is available
+        if SECURITY_AVAILABLE and llm_manager.security_manager:
+            return SecureLLMWrapper(provider, llm_manager.security_manager)
+        else:
+            return provider
 
     if not GROQ_AVAILABLE:
         raise ImportError("Groq provider not available")
@@ -512,24 +604,43 @@ def create_groq_llm(model: str = "llama-3.1-8b-instant", temperature: float = 0.
     if not api_key:
         raise ValueError("GROQ_API_KEY environment variable required")
 
-    return ChatGroq(model=model, temperature=temperature, api_key=api_key)
+    provider = ChatGroq(model=model, temperature=temperature, api_key=api_key)
+
+    # Wrap with security if available
+    if SECURITY_AVAILABLE:
+        security_manager = SecurityManager()
+        return SecureLLMWrapper(provider, security_manager)
+    else:
+        return provider
 
 
 def create_gemini_llm(model: str = "gemini-1.5-pro", temperature: float = 0.7):
-    """Create Gemini LLM instance (backward compatibility)."""
+    """Create Gemini LLM instance with security wrapper (backward compatibility)."""
     if llm_manager and 'gemini' in llm_manager.providers:
-        return llm_manager.providers['gemini']
+        provider = llm_manager.providers['gemini']
+        # Return secure wrapper if security is available
+        if SECURITY_AVAILABLE and llm_manager.security_manager:
+            return SecureLLMWrapper(provider, llm_manager.security_manager)
+        else:
+            return provider
 
     api_key = os.getenv('GEMINI_API_KEY')
     if not api_key:
         raise ValueError("GEMINI_API_KEY environment variable required")
 
     if GEMINI_AVAILABLE:
-        return ChatGoogleGenerativeAI(model=model, temperature=temperature, google_api_key=api_key)
+        provider = ChatGoogleGenerativeAI(model=model, temperature=temperature, google_api_key=api_key)
     elif GOOGLE_AI_AVAILABLE:
-        return GeminiWrapper(model=model, temperature=temperature)
+        provider = GeminiWrapper(model=model, temperature=temperature)
     else:
         raise ValueError("No Gemini integration available")
+
+    # Wrap with security if available
+    if SECURITY_AVAILABLE:
+        security_manager = SecurityManager()
+        return SecureLLMWrapper(provider, security_manager)
+    else:
+        return provider
 
 
 # Initialize legacy variables for backward compatibility

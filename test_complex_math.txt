@@ -1,0 +1,29 @@
+Calculus Assignment: Advanced Derivatives
+
+Problem 1: Find the derivative of f(x) = x³ · ln(x) using the product rule.
+
+Solution:
+Let u = x³ and v = ln(x)
+u' = 3x² and v' = 1/x
+
+Using the product rule: (uv)' = u'v + uv'
+f'(x) = 3x² · ln(x) + x³ · (1/x)
+f'(x) = 3x² ln(x) + x²
+f'(x) = x²(3ln(x) + 1)
+
+Problem 2: Evaluate the definite integral ∫₀¹ xe^x dx using integration by parts.
+
+Solution:
+Let u = x, dv = e^x dx
+Then du = dx, v = e^x
+
+Using integration by parts: ∫u dv = uv - ∫v du
+∫₀¹ xe^x dx = [xe^x]₀¹ - ∫₀¹ e^x dx
+= [xe^x]₀¹ - [e^x]₀¹
+= (1·e¹ - 0·e⁰) - (e¹ - e⁰)
+= e - (e - 1)
+= 1
+
+Problem 3: Find the limit lim(x→0) (sin(x) - x)/x³ using L'Hôpital's rule.
+
+This is a complex multivariable calculus problem requiring advanced techniques.
