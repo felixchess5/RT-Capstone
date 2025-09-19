@@ -4,6 +4,7 @@ An advanced academic assignment grading system with subject-specific processing,
 
 ## 🌟 Core Features
 
+- **🌐 Web Interface**: Modern Gradio-based web UI with drag & drop, real-time processing, and batch support
 - **🎯 Subject-Specific Processing**: Specialized analyzers for Math, Spanish, English, Science, and History with comprehensive analysis
 - **🤖 Intelligent Orchestration**: Automatic subject detection and routing to appropriate processors
 - **📐 Mathematical Analysis**: Equation solving, symbolic computation, and step-by-step verification
@@ -130,6 +131,21 @@ An advanced academic assignment grading system with subject-specific processing,
    - Default folders will be created automatically
 
 ### Usage
+
+#### 🌐 Web Interface (Recommended)
+
+1. **Launch the Gradio web interface**
+   ```bash
+   python launch_gradio.py
+   ```
+   - Opens automatically at `http://localhost:7860`
+   - Drag & drop assignment files
+   - Real-time processing with progress updates
+   - Download results as ZIP files
+   - Batch processing support
+   - System status monitoring
+
+#### 📁 Command Line Interface
 
 1. **Place assignment files**
    - Add assignment files to the `Assignments/` folder
@@ -266,6 +282,11 @@ An advanced academic assignment grading system with subject-specific processing,
 
 ```
 RT-Capstone/
+├── 🌐 Web Interface
+│   ├── launch_gradio.py          # Gradio web interface launcher
+│   ├── src/gradio_app.py         # Complete web interface implementation
+│   └── GRADIO_README.md          # Web interface documentation
+│
 ├── 🔧 Core System
 │   ├── main_agentic.py           # Enhanced agentic workflow entry point
 │   ├── agentic_workflow.py       # LangGraph-based intelligent workflow
@@ -435,7 +456,7 @@ For a comprehensive list of planned features and enhancements, see our detailed 
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ---
 

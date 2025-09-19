@@ -93,29 +93,37 @@ class AssignmentOrchestrator:
             ]
         }
 
-        # Complexity indicators
+        # Complexity indicators - improved with more sophisticated patterns
         self.complexity_patterns = {
             AssignmentComplexity.ELEMENTARY: [
-                r'\b(?:add|subtract|multiply|divide|basic|simple)\b',
-                r'\b(?:color|count|name|identify)\b',
-                r'\b(?:grade\s*[1-5]|elementary|primary)\b'
+                r'\b(?:grade\s*[1-5]|elementary|primary)\b',
+                r'\b(?:simple\s*(?:addition|subtraction|multiplication|division))\b',
+                r'\b(?:count|color|name|identify|basic\s*facts)\b',
+                r'\b(?:single\s*digit|two\s*digit)\s*(?:addition|subtraction)\b'
             ],
             AssignmentComplexity.MIDDLE_SCHOOL: [
-                r'\b(?:fraction|decimal|percentage|ratio)\b',
                 r'\b(?:grade\s*[6-8]|middle\s*school)\b',
-                r'\b(?:explain|describe|compare)\b'
+                r'\b(?:fraction|decimal|percentage|ratio|proportion)\b',
+                r'\b(?:explain|describe|compare|contrast)\b',
+                r'\b(?:basic\s*(?:algebra|geometry))\b',
+                r'\b(?:order\s*of\s*operations|integers)\b'
             ],
             AssignmentComplexity.HIGH_SCHOOL: [
-                r'\b(?:algebra|geometry|trigonometry)\b',
                 r'\b(?:grade\s*(?:9|10|11|12)|high\s*school|secondary)\b',
-                r'\b(?:analyze|evaluate|synthesize)\b',
-                r'\b(?:AP|advanced\s*placement)\b'
+                r'\b(?:algebra\s*(?:I|II|1|2)|geometry|trigonometry)\b',
+                r'\b(?:analyze|evaluate|synthesize|interpret)\b',
+                r'\b(?:AP|advanced\s*placement)\b',
+                r'\b(?:quadratic|polynomial|exponential|logarithm)\b',
+                r'\b(?:sine|cosine|tangent|theorem|proof)\b'
             ],
             AssignmentComplexity.COLLEGE: [
-                r'\b(?:calculus|differential|linear\s*algebra)\b',
                 r'\b(?:university|college|undergraduate|graduate)\b',
-                r'\b(?:research|thesis|dissertation)\b',
-                r'\b(?:critical\s*analysis|theoretical)\b'
+                r'\b(?:calculus|differential|integral|linear\s*algebra)\b',
+                r'\b(?:research|thesis|dissertation|hypothesis)\b',
+                r'\b(?:critical\s*analysis|theoretical|methodology)\b',
+                r'\b(?:derivative|limit|series|convergence)\b',
+                r'\b(?:partial\s*differential|multivariable|vector)\b',
+                r'\b(?:statistical\s*analysis|regression|probability\s*distribution)\b'
             ]
         }
 
@@ -180,17 +188,8 @@ class AssignmentOrchestrator:
         primary_subject = best_subject[0] if best_subject[1] > 0 else SubjectType.GENERAL
         confidence = min(best_subject[1] / 10.0, 1.0) if best_subject[1] > 0 else 0.1
 
-        # Determine complexity
-        complexity_scores = {}
-        for complexity, patterns in self.complexity_patterns.items():
-            score = 0
-            for pattern in patterns:
-                matches = len(re.findall(pattern, text_lower))
-                score += matches
-            complexity_scores[complexity] = score
-
-        best_complexity = max(complexity_scores.items(), key=lambda x: x[1]) if complexity_scores else (AssignmentComplexity.UNKNOWN, 0)
-        assignment_complexity = best_complexity[0] if best_complexity[1] > 0 else AssignmentComplexity.UNKNOWN
+        # Determine complexity using improved algorithm
+        assignment_complexity = self._determine_complexity_advanced(text_lower, metadata, primary_subject)
 
         # Determine specific type
         specific_type = self._determine_specific_type(primary_subject, text)
@@ -417,6 +416,114 @@ class AssignmentOrchestrator:
             steps.append("Continue practicing to maintain proficiency")
 
         return steps
+
+    def _determine_complexity_advanced(self, text_lower: str, metadata: Dict[str, Any], subject: SubjectType) -> AssignmentComplexity:
+        """Advanced complexity determination using multiple factors."""
+
+        # Initialize scores for each complexity level
+        complexity_scores = {}
+        for complexity in AssignmentComplexity:
+            complexity_scores[complexity] = 0
+
+        # 1. Pattern-based scoring (original method, but weighted lower)
+        for complexity, patterns in self.complexity_patterns.items():
+            for pattern in patterns:
+                matches = len(re.findall(pattern, text_lower))
+                complexity_scores[complexity] += matches * 0.3  # Reduced weight
+
+        # 2. Metadata-based classification (higher weight)
+        if metadata:
+            class_info = metadata.get('class', '').lower()
+
+            # Extract grade levels or course names
+            if 'ap' in class_info or 'advanced placement' in class_info:
+                complexity_scores[AssignmentComplexity.HIGH_SCHOOL] += 3
+            elif 'college' in class_info or 'university' in class_info:
+                complexity_scores[AssignmentComplexity.COLLEGE] += 3
+            elif any(grade in class_info for grade in ['algebra ii', 'algebra 2', 'calculus', 'pre-calc']):
+                complexity_scores[AssignmentComplexity.HIGH_SCHOOL] += 2
+            elif any(grade in class_info for grade in ['algebra i', 'algebra 1', 'geometry']):
+                complexity_scores[AssignmentComplexity.HIGH_SCHOOL] += 1.5
+            elif any(grade in class_info for grade in ['6', '7', '8', 'middle']):
+                complexity_scores[AssignmentComplexity.MIDDLE_SCHOOL] += 2
+            elif any(grade in class_info for grade in ['1', '2', '3', '4', '5', 'elementary']):
+                complexity_scores[AssignmentComplexity.ELEMENTARY] += 2
+
+        # 3. Subject-specific complexity indicators
+        if subject == SubjectType.MATHEMATICS:
+            # Advanced math concepts indicate higher complexity
+            advanced_math_terms = [
+                'derivative', 'integral', 'limit', 'calculus', 'differential',
+                'partial', 'vector', 'matrix', 'eigenvalue', 'fourier',
+                'laplace', 'convergence', 'series', 'multivariable'
+            ]
+            for term in advanced_math_terms:
+                if term in text_lower:
+                    complexity_scores[AssignmentComplexity.COLLEGE] += 1.5
+
+            # High school math concepts
+            high_school_math = [
+                'quadratic', 'polynomial', 'exponential', 'logarithm',
+                'trigonometry', 'sine', 'cosine', 'tangent', 'theorem'
+            ]
+            for term in high_school_math:
+                if term in text_lower:
+                    complexity_scores[AssignmentComplexity.HIGH_SCHOOL] += 1
+
+            # Middle school math concepts
+            middle_school_math = [
+                'fraction', 'decimal', 'percentage', 'ratio', 'proportion',
+                'basic algebra', 'linear equation'
+            ]
+            for term in middle_school_math:
+                if term in text_lower:
+                    complexity_scores[AssignmentComplexity.MIDDLE_SCHOOL] += 0.8
+
+        # 4. Content length and complexity indicators
+        text_length = len(text_lower)
+        if text_length > 2000:  # Long assignments tend to be more complex
+            complexity_scores[AssignmentComplexity.COLLEGE] += 0.5
+            complexity_scores[AssignmentComplexity.HIGH_SCHOOL] += 0.3
+        elif text_length < 300:  # Very short assignments might be elementary
+            complexity_scores[AssignmentComplexity.ELEMENTARY] += 0.5
+
+        # 5. Cognitive complexity indicators
+        high_order_thinking = [
+            'analyze', 'synthesize', 'evaluate', 'critique', 'compare',
+            'contrast', 'justify', 'argue', 'prove', 'derive'
+        ]
+        for term in high_order_thinking:
+            if term in text_lower:
+                complexity_scores[AssignmentComplexity.HIGH_SCHOOL] += 0.5
+                complexity_scores[AssignmentComplexity.COLLEGE] += 0.3
+
+        # 6. Research and academic indicators
+        academic_terms = [
+            'research', 'hypothesis', 'methodology', 'bibliography',
+            'citation', 'peer review', 'scholarly', 'empirical'
+        ]
+        for term in academic_terms:
+            if term in text_lower:
+                complexity_scores[AssignmentComplexity.COLLEGE] += 1
+
+        # Find the complexity level with the highest score
+        best_complexity = max(complexity_scores.items(), key=lambda x: x[1])
+
+        # If no clear winner or very low scores, use heuristics
+        if best_complexity[1] < 0.5:
+            # Fallback to basic pattern matching
+            if any(term in text_lower for term in ['elementary', 'basic', 'simple']):
+                return AssignmentComplexity.ELEMENTARY
+            elif any(term in text_lower for term in ['middle school', 'grade 6', 'grade 7', 'grade 8']):
+                return AssignmentComplexity.MIDDLE_SCHOOL
+            elif any(term in text_lower for term in ['high school', 'secondary', 'ap']):
+                return AssignmentComplexity.HIGH_SCHOOL
+            elif any(term in text_lower for term in ['college', 'university', 'undergraduate']):
+                return AssignmentComplexity.COLLEGE
+            else:
+                return AssignmentComplexity.UNKNOWN
+
+        return best_complexity[0]
 
     def get_available_processors(self) -> Dict[str, List[str]]:
         """Get information about available specialized processors."""
