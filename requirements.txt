@@ -42,4 +42,4 @@ cryptography>=41.0.0
 pydantic>=2.5.0
 ratelimit>=2.2.1
 python-jose>=3.3.0
-hashlib-compat>=1.0.1
+# NOTE: hashlib is part of Python's standard library; no external compat package needed
