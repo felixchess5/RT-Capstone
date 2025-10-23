@@ -37,3 +37,11 @@
 2025-09-19 17:04:12,336 - security - INFO - SecurityManager initialized with enterprise-grade protection
 2025-09-19 17:04:47,981 - security - INFO - SecurityManager initialized with enterprise-grade protection
 2025-09-19 17:04:48,042 - security - WARNING - Security threat detected: {"threat_type": "PROMPT_INJECTION", "severity": "HIGH", "description": "Prompt injection pattern detected: ignore\\s+(?:previous|all|the|above|your)\\s+(?:instructions?|prompts?|commands?)", "timestamp": "2025-09-19T17:04:48.041975", "source_ip": null, "user_id": null, "blocked": false, "input_hash": "889cd275126aeabc"}
+2025-09-21 15:49:47,661 - security - INFO - SecurityManager initialized with enterprise-grade protection
+2025-09-21 15:50:07,261 - security - INFO - SecurityManager initialized with enterprise-grade protection
+2025-09-21 15:51:53,676 - security - INFO - SecurityManager initialized with enterprise-grade protection
+2025-09-21 15:54:23,839 - security - INFO - SecurityManager initialized with enterprise-grade protection
+2025-09-21 15:55:20,378 - security - INFO - SecurityManager initialized with enterprise-grade protection
+2025-09-21 15:59:14,013 - security - INFO - SecurityManager initialized with enterprise-grade protection
+2025-09-21 15:59:50,463 - security - INFO - SecurityManager initialized with enterprise-grade protection
+2025-09-21 16:00:00,743 - security - INFO - SecurityManager initialized with enterprise-grade protection
