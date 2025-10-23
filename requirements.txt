@@ -26,6 +26,7 @@ langdetect
 matplotlib
 antlr4-python3-runtime
 spacy
+es_core_news_sm
 numpy
 opencv-python
 pillow
