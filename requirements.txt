@@ -25,6 +25,12 @@ sympy
 langdetect
 matplotlib
 antlr4-python3-runtime
+spacy
+numpy
+opencv-python
+pillow
+pytesseract
+pdf2image
 
 # Testing dependencies
 pytest>=8.0.0
