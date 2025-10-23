@@ -1,5 +1,11 @@
 # Feature List
 
+Note (updated):
+- Core features listed below are implemented unless otherwise noted.
+- Subject-specific processors are implemented for Math, Spanish, Science, and History; English is handled in the orchestrator (no dedicated module yet).
+- MCP server entry point is `src/mcp/mcp_server.py` (no `main_mcp.py` in this folder).
+- Web interface (Gradio) is implemented; see `launch_gradio.py` and `src/gradio_app.py`.
+
 This document tracks all features and functionality in the Capstone project.
 
 ## Core Features
