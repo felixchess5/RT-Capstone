@@ -21,6 +21,10 @@ pyyaml
 google-generativeai
 gradio
 pandas
+sympy
+langdetect
+matplotlib
+antlr4-python3-runtime
 
 # Testing dependencies
 pytest>=8.0.0
