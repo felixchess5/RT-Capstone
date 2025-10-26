@@ -141,8 +141,8 @@ class FileProcessor:
 
             # Determine final format with confidence
             if format_by_ext != FileFormat.UNKNOWN:
-                if format_by_signature == format_by_ext or format_by_signature == FileFormat.UNKNOWN:
-                    return format_by_ext, f"Extension and signature match ({ext})"
+                if format_by_signature == format_by_ext or format_by_signature in (FileFormat.UNKNOWN, FileFormat.TXT):
+                    return format_by_ext, f"Extension-based detection ({ext})"
                 else:
                     return format_by_signature, f"Signature override extension ({format_by_signature.value})"
             elif format_by_mime != FileFormat.UNKNOWN:
@@ -267,8 +267,24 @@ class FileProcessor:
                 res = self._extract_pdf_file(file_path)
             elif file_format == FileFormat.DOCX:
                 res = self._extract_docx_file(file_path)
+                if not getattr(res, 'success', False):
+                    try:
+                        if docx is not None:
+                            doc = docx.Document(file_path)
+                            paras = [p.text for p in getattr(doc, 'paragraphs', []) if getattr(p, 'text', '').strip()]
+                            return "\n\n".join(paras)
+                    except Exception:
+                        pass
             elif file_format == FileFormat.DOC:
                 res = self._extract_doc_file(file_path)
+                if not getattr(res, 'success', False):
+                    try:
+                        if mammoth is not None:
+                            with open(file_path, 'rb') as fh:
+                                result = mammoth.extract_text(fh)
+                                return getattr(result, 'value', '') or ''
+                    except Exception:
+                        pass
             elif file_format == FileFormat.MD:
                 res = self._extract_markdown_file(file_path)
             elif file_format in [FileFormat.PNG, FileFormat.JPEG, FileFormat.JPG, FileFormat.TIFF, FileFormat.BMP]:
@@ -301,15 +317,20 @@ class FileProcessor:
             with open(file_path, 'rb') as f:
                 raw_data = f.read()
 
-            encoding_result = chardet.detect(raw_data)
-            encoding = encoding_result['encoding'] or 'utf-8'
-
-            # Read with detected encoding
+            # Prefer UTF-8 when possible
             try:
-                content = raw_data.decode(encoding)
+                content = raw_data.decode('utf-8')
+                encoding_used = 'utf-8'
+                confidence = 1.0
             except UnicodeDecodeError:
-                # Fallback to utf-8 with error handling
-                content = raw_data.decode('utf-8', errors='replace')
+                encoding_result = chardet.detect(raw_data)
+                encoding = encoding_result['encoding'] or 'utf-8'
+                try:
+                    content = raw_data.decode(encoding)
+                except UnicodeDecodeError:
+                    content = raw_data.decode('utf-8', errors='replace')
+                encoding_used = encoding
+                confidence = encoding_result.get('confidence', 0.0)
 
             if len(content.strip()) < self.MIN_CONTENT_LENGTH:
                 return FileProcessingResult(
@@ -320,8 +341,8 @@ class FileProcessor:
 
             metadata = {
                 "file_format": "text",
-                "encoding": encoding,
-                "confidence": encoding_result['confidence'],
+                "encoding": encoding_used,
+                "confidence": confidence,
                 "char_count": len(content),
                 "word_count": len(content.split())
             }
