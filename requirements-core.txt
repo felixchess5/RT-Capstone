@@ -82,10 +82,15 @@ proto-plus==1.24.0
 grpcio==1.62.2
 grpcio-status==1.62.2
 
+# FastAPI backend
+fastapi==0.115.0
+uvicorn==0.30.6
+python-multipart==0.0.9
+
 # Requests family
 requests==2.32.3
 urllib3==2.2.3
-certifi==2025.8.3
+certifi==2024.8.30
 charset-normalizer==3.4.2
 
 # Hugging Face

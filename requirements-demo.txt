@@ -19,11 +19,12 @@ sniffio==1.3.1
 packaging==24.1
 typing-extensions==4.12.2
 tqdm==4.67.1
+python-dotenv==1.0.1
 
 # Requests family
 requests==2.32.3
 urllib3==2.2.3
-certifi==2025.8.3
+certifi==2024.8.30
 charset-normalizer==3.4.2
 
 # Optional: HF Hub (often pulled indirectly by components)
@@ -31,3 +32,4 @@ huggingface-hub==0.33.5
 
 # NOTE: No spaCy/weasel/typer pins here to avoid conflicts.
 # The demo should call backend APIs rather than import NLP processors directly.
+pandas==2.3.3

@@ -17,6 +17,8 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+import httpx
+import mimetypes
 
 import gradio as gr
 import pandas as pd
@@ -27,10 +29,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 from core.llms import llm_manager
 from core.paths import ASSIGNMENTS_FOLDER, OUTPUT_FOLDER
 from core.subject_output_manager import create_subject_output_manager
-from support.file_processor import FileProcessor
-
-# Import core system components
-from workflows.agentic_workflow import run_agentic_workflow
 
 
 class GradioAssignmentGrader:
@@ -38,9 +36,10 @@ class GradioAssignmentGrader:
 
     def __init__(self):
         """Initialize the Gradio interface."""
-        self.file_processor = FileProcessor()
         self.output_manager = create_subject_output_manager(OUTPUT_FOLDER)
         self.temp_dir = tempfile.mkdtemp()
+        self.backend_url = os.getenv("BACKEND_URL", "").strip()
+        self.max_upload_mb = int(os.getenv("DEMO_MAX_UPLOAD_MB", "20"))
 
     def process_single_file(
         self, file_path: str, requirements: Dict[str, bool]
@@ -235,6 +234,103 @@ class GradioAssignmentGrader:
             print(f"❌ {error_msg}")
             return f"❌ {error_msg}", "", None, error_msg
 
+    # Backend-driven implementations (UI-only env)
+    def process_single_file_v2(
+        self, file_path: str, requirements: Dict[str, bool]
+    ) -> Tuple[str, str, Optional[str], str]:
+        if not file_path:
+            return "? No file uploaded", "", None, "No file provided"
+        try:
+            # size guard
+            try:
+                if os.path.getsize(file_path) > self.max_upload_mb * 1024 * 1024:
+                    return (
+                        f"? File too large (> {self.max_upload_mb} MB)",
+                        "",
+                        None,
+                        "File exceeds upload size limit",
+                    )
+            except Exception:
+                pass
+
+            if not self.backend_url:
+                return (
+                    "? Backend URL not configured",
+                    "",
+                    None,
+                    "Set BACKEND_URL for demo UI",
+                )
+
+            mime, _ = mimetypes.guess_type(file_path)
+            mime = mime or "application/octet-stream"
+            data = {"requirements": json.dumps(requirements or {})}
+            with open(file_path, "rb") as fh:
+                files = {"file": (os.path.basename(file_path), fh, mime)}
+                with httpx.Client(timeout=60.0) as client:
+                    resp = client.post(
+                        f"{self.backend_url.rstrip('/')}/process_file",
+                        files=files,
+                        data=data,
+                    )
+            if resp.status_code != 200:
+                return (
+                    f"? Processing failed: {resp.status_code}",
+                    "",
+                    None,
+                    resp.text,
+                )
+            result = resp.json()
+            if isinstance(result, dict) and "error" in result:
+                return f"? Processing failed: {result['error']}", "", None, result["error"]
+
+            summary = self._format_results(result)
+            download_path = self._create_download_files(
+                result, os.path.basename(file_path)
+            )
+            return (
+                f"? Processing completed successfully!",
+                summary,
+                download_path if download_path else None,
+                "",
+            )
+        except Exception as e:
+            return f"? Backend error: {e}", "", None, str(e)
+
+    def process_multiple_files_v2(
+        self, files: List[str], requirements: Dict[str, bool]
+    ) -> Tuple[str, str, Optional[str], str]:
+        if not files:
+            return "? No files uploaded", "", None, "No files provided"
+        results = []
+        errors = []
+        for p in files:
+            status, result_summary, _, error = self.process_single_file_v2(p, requirements)
+            if error:
+                errors.append(f"{os.path.basename(p)}: {error}")
+            else:
+                results.append(
+                    {
+                        "filename": os.path.basename(p),
+                        "status": ("? Success" if "?" in status else "? Failed"),
+                        "summary": (
+                            result_summary[:300] + "..."
+                            if len(result_summary) > 300
+                            else result_summary
+                        ),
+                    }
+                )
+        # summary text/html
+        if results:
+            df = pd.DataFrame(results)
+            summary_table = df.to_html(index=False, classes="gradio-table")
+        else:
+            summary_table = "No successful results to display"
+        error_summary = "\n".join(errors) if errors else ""
+        status_message = f"?? Processed {len(files)} files: {len(results)} successful, {len(errors)} failed"
+        # optional CSV download
+        download_path = self._create_batch_download(results)
+        return status_message, summary_table, download_path, error_summary
+
     def _format_results(self, result: Dict[str, Any]) -> str:
         """Format processing results for display."""
         try:
@@ -387,6 +483,17 @@ class GradioAssignmentGrader:
         """Get current system status with detailed LLM information."""
         try:
             status_parts = []
+            # Backend status
+            if hasattr(self, "backend_url") and self.backend_url:
+                try:
+                    with httpx.Client(timeout=5.0) as client:
+                        r = client.get(f"{self.backend_url.rstrip('/')}/status")
+                    if r.status_code == 200:
+                        status_parts.append("?? Backend: reachable")
+                    else:
+                        status_parts.append(f"? Backend: HTTP {r.status_code}")
+                except Exception as e:
+                    status_parts.append(f"? Backend: unreachable ({e})")
 
             # Detailed LLM status
             if llm_manager:
@@ -705,7 +812,7 @@ def create_interface():
 
         # Single file processing
         process_single_btn.click(
-            fn=lambda file, g, p, r, gr, s, sp: grader.process_single_file(
+            fn=lambda file, g, p, r, gr, s, sp: grader.process_single_file_v2(
                 file, create_requirements_dict(g, p, r, gr, s, sp)
             ),
             inputs=[
@@ -722,7 +829,7 @@ def create_interface():
 
         # Batch processing
         process_batch_btn.click(
-            fn=lambda files, g, p, r, gr, s, sp: grader.process_multiple_files(
+            fn=lambda files, g, p, r, gr, s, sp: grader.process_multiple_files_v2(
                 files, create_requirements_dict(g, p, r, gr, s, sp)
             ),
             inputs=[
@@ -766,6 +873,13 @@ def main():
         # Create interface
         interface = create_interface()
 
+        # Optional basic auth
+        demo_user = os.getenv("DEMO_USER", "").strip()
+        demo_pass = os.getenv("DEMO_PASS", "").strip()
+        auth = (demo_user, demo_pass) if demo_user and demo_pass else None
+
+        inbrowser = os.getenv("DEMO_INBROWSER", "false").lower() in ("1", "true", "yes")
+
         # Launch the interface
         interface.launch(
             server_name="0.0.0.0",
@@ -773,7 +887,8 @@ def main():
             share=False,
             debug=False,
             show_error=True,
-            inbrowser=True,
+            inbrowser=inbrowser,
+            auth=auth,
         )
 
     except Exception as e:
