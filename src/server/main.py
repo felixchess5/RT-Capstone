@@ -104,7 +104,12 @@ async def process_file(
         req_dict: Dict[str, Any] = {}
         if requirements:
             try:
-                req_dict = json.loads(requirements)
+                parsed = json.loads(requirements)
+                if isinstance(parsed, dict):
+                    req_dict = parsed
+                else:
+                    # If client sent a bare true/false or list/string, ignore
+                    req_dict = {}
             except Exception:
                 req_dict = {}
 
@@ -118,4 +123,3 @@ async def process_file(
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
-

@@ -849,17 +849,16 @@ def create_interface():
 
         # Show/hide error displays based on content
         single_status.change(
-            fn=lambda status: gr.update(visible="❌" in status),
+            fn=lambda status: gr.update(visible="?" in str(status or "")),
             inputs=[single_status],
             outputs=[single_errors],
         )
 
         batch_status.change(
-            fn=lambda status: gr.update(visible="failed" in status.lower()),
+            fn=lambda status: gr.update(visible="failed" in str(status or "").lower()),
             inputs=[batch_status],
             outputs=[batch_errors],
         )
-
     return interface
 
 
@@ -898,3 +897,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
