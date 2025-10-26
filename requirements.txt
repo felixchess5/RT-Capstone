@@ -1,9 +1,9 @@
 datasets
-langchain-groq
-langchain-openai
-langchain-anthropic
-langchain-community
-langgraph
+langchain-groq>=0.3.6; python_version >= "3.11"
+langchain-openai>=1.0.1; python_version >= "3.11"
+langchain-anthropic>=1.0.0; python_version >= "3.11"
+langchain-community>=0.2.19; python_version >= "3.11"
+langgraph>=1.0.1; python_version >= "3.11"
 langsmith
 python-dotenv
 ragas
