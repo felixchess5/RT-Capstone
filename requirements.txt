@@ -24,8 +24,7 @@ sympy
 langdetect
 matplotlib
 antlr4-python3-runtime
-spacy
-es_core_news_sm
+spacy>=3.8,<3.9
 numpy
 opencv-python
 pillow
