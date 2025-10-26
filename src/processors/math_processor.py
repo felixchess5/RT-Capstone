@@ -208,8 +208,7 @@ class MathProcessor:
         equations = []
 
         # Pattern for equations with = sign
-        eq_pattern = r'([^.!?]*?[a-zA-Z0-9+\-*/^()√∫∑πθ][^.!?]*?=[^.!?]*?[a-zA-Z0-9+\-*/^()√∫∑πθ][^.!?]*?)(?=[.!?]|$)'
-        equations.extend(re.findall(eq_pattern, text))
+        eq_pattern = r'[^\n]*?[A-Za-z0-9+\\-*/^() ]+=[^\n]+'\n        equations.extend(re.findall(eq_pattern, text))
 
         # Pattern for expressions in parentheses or math notation
         math_pattern = r'\$([^$]+)\$|\\begin\{[^}]+\}.*?\\end\{[^}]+\}|\\\([^)]+\\\)'
@@ -466,3 +465,6 @@ class MathProcessor:
 def create_math_processor() -> MathProcessor:
     """Factory function to create a math processor instance."""
     return MathProcessor()
+
+
+
