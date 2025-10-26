@@ -56,6 +56,16 @@ yarl>=1.17.0,<2.0.0
 frozenlist==1.5.0
 multidict==6.1.0
 aiosignal==1.4.0
+fsspec==2024.10.0
+
+# Google client stack pins to reduce resolver backtracking
+google-api-core[grpc]==2.19.1
+google-auth==2.35.0
+googleapis-common-protos==1.63.1
+protobuf==4.25.3
+proto-plus==1.24.0
+grpcio==1.62.2
+grpcio-status==1.62.2
 
 # Testing dependencies
 pytest==8.4.2
