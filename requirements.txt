@@ -2,7 +2,9 @@ datasets
 langchain-groq>=0.3.6; python_version >= "3.11"
 langchain-openai>=1.0.1; python_version >= "3.11"
 langchain-anthropic>=1.0.0; python_version >= "3.11"
-langchain-community>=0.2.19; python_version >= "3.11"
+langchain-core>=0.3.41,<0.4.0; python_version >= "3.11"
+langchain>=0.3.7,<0.4.0; python_version >= "3.11"
+langchain-community>=0.3.7,<0.4.0; python_version >= "3.11"
 langgraph>=1.0.1; python_version >= "3.11"
 langsmith
 python-dotenv
