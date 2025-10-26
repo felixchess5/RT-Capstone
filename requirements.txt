@@ -24,7 +24,7 @@ chardet==5.2.0
 mammoth==1.11.0
 pyyaml==6.0.2
 google-generativeai==0.8.5
-gradio==5.49.1
+gradio==4.44.1
 pandas==2.3.3
 sympy==1.14.0
 langdetect==1.0.9
@@ -52,6 +52,9 @@ pytesseract==0.3.13
 pdf2image==1.17.0
 typing-extensions==4.12.2
 tqdm==4.67.1
+
+# Align CLI dependencies across spaCy/weasel and gradio
+typer==0.9.0
 
 # Networking/runtime pins to help pip resolver (Python 3.11)
 aiohttp==3.12.15
