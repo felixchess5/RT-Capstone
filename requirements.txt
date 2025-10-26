@@ -1,4 +1,4 @@
-datasets==2.19.0
+datasets==4.3.0
 langchain-groq>=0.3.6; python_version >= "3.11"
 langchain-openai>=1.0.1; python_version >= "3.11"
 langchain-anthropic>=1.0.0; python_version >= "3.11"
