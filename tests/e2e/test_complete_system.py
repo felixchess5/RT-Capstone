@@ -5,19 +5,21 @@ Tests the entire system from file upload to final graded results,
 including all major workflows and user scenarios.
 """
 
-import pytest
 import asyncio
-import tempfile
-import json
 import csv
-from pathlib import Path
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
+import json
 import subprocess
+import tempfile
 import time
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
+
+from gradio_app import GradioAssignmentGrader
 
 # Import system components
 from main_agentic import main as agentic_main
-from gradio_app import GradioAssignmentGrader
 
 
 class TestCompleteSystem:
@@ -47,7 +49,6 @@ x = 7
 Problem 2: Factor: x² - 9
 Solution: (x + 3)(x - 3)
             """,
-
             "spanish_essay.txt": """
 Name: Carlos Rodriguez
 Date: 2025-01-15
@@ -61,7 +62,6 @@ Mis padres trabajan mucho pero siempre tienen tiempo para nosotros.
 Los fines de semana nos gusta ir al parque y jugar fútbol juntos.
 La cultura hispana valora mucho la familia y las tradiciones.
             """,
-
             "science_lab.txt": """
 Name: Emma Wilson
 Date: 2025-01-15
@@ -91,7 +91,6 @@ Conclusion:
 The hypothesis is supported. Plants in light produced significantly more oxygen,
 confirming that photosynthesis requires light energy.
             """,
-
             "history_essay.txt": """
 Name: James Miller
 Date: 2025-01-15
@@ -112,7 +111,7 @@ increased international tensions.
 
 These factors combined to create a volatile situation where a single
 spark could ignite a global conflagration.
-            """
+            """,
         }
 
         for filename, content in assignments.items():
@@ -129,7 +128,9 @@ spark could ignite a global conflagration.
 
     @pytest.mark.e2e
     @pytest.mark.slow
-    def test_command_line_processing_workflow(self, sample_assignments_dir, output_dir, mock_multi_llm_manager):
+    def test_command_line_processing_workflow(
+        self, sample_assignments_dir, output_dir, mock_multi_llm_manager
+    ):
         """Test the complete command-line processing workflow."""
         # Mock LLM responses for different assignment types
         mock_llm = AsyncMock()
@@ -153,6 +154,7 @@ spark could ignite a global conflagration.
 
         # Set up environment for testing
         import os
+
         original_cwd = os.getcwd()
 
         try:
@@ -172,32 +174,33 @@ spark could ignite a global conflagration.
             test_output.symlink_to(output_dir)
 
             # Mock the main processing function
-            with patch('main_agentic.run_agentic_workflow') as mock_workflow:
+            with patch("main_agentic.run_agentic_workflow") as mock_workflow:
                 mock_workflow.return_value = {
-                    'math_algebra.txt': {
-                        'overall_score': 8.5,
-                        'subject': 'mathematics',
-                        'feedback': 'Good algebraic work'
+                    "math_algebra.txt": {
+                        "overall_score": 8.5,
+                        "subject": "mathematics",
+                        "feedback": "Good algebraic work",
                     },
-                    'spanish_essay.txt': {
-                        'overall_score': 7.5,
-                        'subject': 'spanish',
-                        'feedback': 'Nice essay structure'
+                    "spanish_essay.txt": {
+                        "overall_score": 7.5,
+                        "subject": "spanish",
+                        "feedback": "Nice essay structure",
                     },
-                    'science_lab.txt': {
-                        'overall_score': 9.0,
-                        'subject': 'science',
-                        'feedback': 'Excellent lab report'
+                    "science_lab.txt": {
+                        "overall_score": 9.0,
+                        "subject": "science",
+                        "feedback": "Excellent lab report",
                     },
-                    'history_essay.txt': {
-                        'overall_score': 8.0,
-                        'subject': 'history',
-                        'feedback': 'Good historical analysis'
-                    }
+                    "history_essay.txt": {
+                        "overall_score": 8.0,
+                        "subject": "history",
+                        "feedback": "Good historical analysis",
+                    },
                 }
 
                 # Run the main workflow
                 from main_agentic import main
+
                 result = main()
 
                 # Verify processing occurred
@@ -211,7 +214,7 @@ spark could ignite a global conflagration.
     @pytest.mark.gradio
     def test_gradio_interface_workflow(self, sample_assignments_dir, temp_dir):
         """Test the complete Gradio interface workflow."""
-        with patch('gradio_app.MultiLLMManager') as mock_llm_manager_class:
+        with patch("gradio_app.MultiLLMManager") as mock_llm_manager_class:
             # Set up mock LLM manager
             mock_llm_manager = Mock()
             mock_llm = AsyncMock()
@@ -226,18 +229,18 @@ spark could ignite a global conflagration.
             test_file = sample_assignments_dir / "math_algebra.txt"
 
             # Mock the agentic workflow
-            with patch('gradio_app.run_agentic_workflow') as mock_workflow:
+            with patch("gradio_app.run_agentic_workflow") as mock_workflow:
                 mock_workflow.return_value = {
-                    'overall_score': 8.5,
-                    'classification': {
-                        'subject': 'mathematics',
-                        'complexity': 'high_school',
-                        'confidence': 0.9
+                    "overall_score": 8.5,
+                    "classification": {
+                        "subject": "mathematics",
+                        "complexity": "high_school",
+                        "confidence": 0.9,
                     },
-                    'specialized_feedback': ['Good algebraic reasoning'],
-                    'grammar': {'score': 8, 'errors': 2},
-                    'plagiarism': {'score': 9, 'similarity_percentage': 5},
-                    'relevance': {'score': 8, 'alignment_score': 80}
+                    "specialized_feedback": ["Good algebraic reasoning"],
+                    "grammar": {"score": 8, "errors": 2},
+                    "plagiarism": {"score": 9, "similarity_percentage": 5},
+                    "relevance": {"score": 8, "alignment_score": 80},
                 }
 
                 # Process single assignment
@@ -247,11 +250,14 @@ spark could ignite a global conflagration.
                     enable_plagiarism=True,
                     enable_relevance=True,
                     enable_grading=True,
-                    enable_summary=True
+                    enable_summary=True,
                 )
 
                 # Verify results
-                assert "Processing completed successfully" in result or result != "No file uploaded"
+                assert (
+                    "Processing completed successfully" in result
+                    or result != "No file uploaded"
+                )
                 assert mock_workflow.called
 
     @pytest.mark.e2e
@@ -262,11 +268,13 @@ spark could ignite a global conflagration.
         assert len(assignment_files) == 4
 
         # Mock batch processing
-        with patch('workflows.agentic_workflow.create_workflow') as mock_create_workflow:
+        with patch(
+            "workflows.agentic_workflow.create_workflow"
+        ) as mock_create_workflow:
             mock_workflow = AsyncMock()
             mock_workflow.ainvoke.return_value = {
-                'overall_score': 8.0,
-                'results': {'feedback': 'Good work'}
+                "overall_score": 8.0,
+                "results": {"feedback": "Good work"},
             }
             mock_create_workflow.return_value = mock_workflow
 
@@ -275,7 +283,7 @@ spark could ignite a global conflagration.
             from core.llms import MultiLLMManager
 
             # Mock LLM manager
-            with patch('core.llms.MultiLLMManager') as mock_llm_class:
+            with patch("core.llms.MultiLLMManager") as mock_llm_class:
                 mock_llm_manager = Mock()
                 mock_llm_class.return_value = mock_llm_manager
 
@@ -287,19 +295,21 @@ spark could ignite a global conflagration.
                     classification = orchestrator.classify_assignment(
                         assignment_file.read_text()
                     )
-                    results.append({
-                        'file': assignment_file.name,
-                        'subject': classification.subject.value,
-                        'complexity': classification.complexity.value
-                    })
+                    results.append(
+                        {
+                            "file": assignment_file.name,
+                            "subject": classification.subject.value,
+                            "complexity": classification.complexity.value,
+                        }
+                    )
 
                 # Verify all assignments were processed
                 assert len(results) == 4
 
                 # Verify different subjects were detected
-                subjects = [r['subject'] for r in results]
-                assert 'mathematics' in subjects or 'general' in subjects
-                assert 'spanish' in subjects or 'general' in subjects
+                subjects = [r["subject"] for r in results]
+                assert "mathematics" in subjects or "general" in subjects
+                assert "spanish" in subjects or "general" in subjects
 
     @pytest.mark.e2e
     @pytest.mark.asyncio
@@ -307,7 +317,7 @@ spark could ignite a global conflagration.
         """Test error recovery in the complete workflow."""
         # Create a corrupted file
         corrupted_file = sample_assignments_dir / "corrupted.txt"
-        corrupted_file.write_bytes(b'\x00\x01\x02\x03')  # Binary data
+        corrupted_file.write_bytes(b"\x00\x01\x02\x03")  # Binary data
 
         # Test system's ability to handle corrupted files
         from support.file_processor import FileProcessor
@@ -327,7 +337,9 @@ spark could ignite a global conflagration.
     def test_output_file_generation(self, sample_assignments_dir, output_dir):
         """Test generation of output files."""
         # Mock the subject output manager
-        with patch('core.subject_output_manager.SubjectOutputManager') as mock_output_manager:
+        with patch(
+            "core.subject_output_manager.SubjectOutputManager"
+        ) as mock_output_manager:
             mock_manager = Mock()
             mock_output_manager.return_value = mock_manager
 
@@ -338,17 +350,17 @@ spark could ignite a global conflagration.
             # Simulate processing results
             results = [
                 {
-                    'file_name': 'math_algebra.txt',
-                    'subject': 'mathematics',
-                    'overall_score': 8.5,
-                    'classification': {'complexity': 'high_school'}
+                    "file_name": "math_algebra.txt",
+                    "subject": "mathematics",
+                    "overall_score": 8.5,
+                    "classification": {"complexity": "high_school"},
                 },
                 {
-                    'file_name': 'spanish_essay.txt',
-                    'subject': 'spanish',
-                    'overall_score': 7.5,
-                    'classification': {'complexity': 'high_school'}
-                }
+                    "file_name": "spanish_essay.txt",
+                    "subject": "spanish",
+                    "overall_score": 7.5,
+                    "classification": {"complexity": "high_school"},
+                },
             ]
 
             # Test output generation
@@ -358,8 +370,8 @@ spark could ignite a global conflagration.
 
             # Mock the actual file writing
             for result in results:
-                mock_manager.write_results_to_csv([result], result['subject'])
-                mock_manager.write_results_to_json([result], result['subject'])
+                mock_manager.write_results_to_csv([result], result["subject"])
+                mock_manager.write_results_to_json([result], result["subject"])
 
             # Verify output manager was called
             assert mock_manager.write_results_to_csv.called
@@ -367,20 +379,22 @@ spark could ignite a global conflagration.
 
     @pytest.mark.e2e
     @pytest.mark.performance
-    def test_system_performance_end_to_end(self, sample_assignments_dir, performance_monitor):
+    def test_system_performance_end_to_end(
+        self, sample_assignments_dir, performance_monitor
+    ):
         """Test overall system performance."""
         start_time = time.time()
 
         # Process multiple files to test performance
         assignment_files = list(sample_assignments_dir.glob("*.txt"))
 
-        from support.file_processor import FileProcessor
         from core.assignment_orchestrator import AssignmentOrchestrator
+        from support.file_processor import FileProcessor
 
         processor = FileProcessor()
 
         # Mock LLM manager for performance testing
-        with patch('core.llms.MultiLLMManager') as mock_llm_class:
+        with patch("core.llms.MultiLLMManager") as mock_llm_class:
             mock_llm_manager = Mock()
             mock_llm_class.return_value = mock_llm_manager
 
@@ -405,26 +419,25 @@ spark could ignite a global conflagration.
         """Test system configuration loading."""
         # Create test environment file
         env_file = temp_dir / ".env"
-        env_file.write_text("""
+        env_file.write_text(
+            """
 GROQ_API_KEY=test_key
 LANGCHAIN_TRACING_V2=false
 TESTING=true
-        """)
+        """
+        )
 
         # Test environment loading
         import os
         from pathlib import Path
 
         # Mock environment loading
-        with patch.dict(os.environ, {
-            'GROQ_API_KEY': 'test_key',
-            'TESTING': 'true'
-        }):
+        with patch.dict(os.environ, {"GROQ_API_KEY": "test_key", "TESTING": "true"}):
             # Import components that use environment variables
             from core.llms import MultiLLMManager
 
             # Should initialize without errors
-            with patch('core.llms.ChatGroq') as mock_groq:
+            with patch("core.llms.ChatGroq") as mock_groq:
                 mock_groq.return_value = Mock()
 
                 try:
@@ -439,57 +452,57 @@ TESTING=true
         """Test complete user workflow scenarios."""
         scenarios = [
             {
-                'name': 'new_teacher_first_use',
-                'steps': [
-                    'upload_assignment',
-                    'select_grading_options',
-                    'process_assignment',
-                    'review_results',
-                    'download_report'
-                ]
+                "name": "new_teacher_first_use",
+                "steps": [
+                    "upload_assignment",
+                    "select_grading_options",
+                    "process_assignment",
+                    "review_results",
+                    "download_report",
+                ],
             },
             {
-                'name': 'batch_grading_session',
-                'steps': [
-                    'upload_multiple_assignments',
-                    'configure_batch_settings',
-                    'process_batch',
-                    'review_summary',
-                    'export_results'
-                ]
+                "name": "batch_grading_session",
+                "steps": [
+                    "upload_multiple_assignments",
+                    "configure_batch_settings",
+                    "process_batch",
+                    "review_summary",
+                    "export_results",
+                ],
             },
             {
-                'name': 'error_handling_scenario',
-                'steps': [
-                    'upload_invalid_file',
-                    'handle_error_message',
-                    'retry_with_valid_file',
-                    'complete_processing'
-                ]
-            }
+                "name": "error_handling_scenario",
+                "steps": [
+                    "upload_invalid_file",
+                    "handle_error_message",
+                    "retry_with_valid_file",
+                    "complete_processing",
+                ],
+            },
         ]
 
         for scenario in scenarios:
             # Mock scenario execution
             scenario_results = []
 
-            for step in scenario['steps']:
+            for step in scenario["steps"]:
                 # Simulate step execution
-                step_result = {'step': step, 'success': True}
+                step_result = {"step": step, "success": True}
 
-                if step == 'upload_invalid_file':
+                if step == "upload_invalid_file":
                     # Test error handling
-                    step_result['success'] = False
-                    step_result['error'] = 'Invalid file format'
+                    step_result["success"] = False
+                    step_result["error"] = "Invalid file format"
 
                 scenario_results.append(step_result)
 
             # Verify scenario completion
-            assert len(scenario_results) == len(scenario['steps'])
+            assert len(scenario_results) == len(scenario["steps"])
 
             # Check error handling in error scenario
-            if scenario['name'] == 'error_handling_scenario':
-                error_steps = [r for r in scenario_results if not r['success']]
+            if scenario["name"] == "error_handling_scenario":
+                error_steps = [r for r in scenario_results if not r["success"]]
                 assert len(error_steps) > 0
 
     @pytest.mark.e2e
@@ -500,10 +513,11 @@ TESTING=true
         malicious_files = [
             ("../../../etc/passwd", "path_traversal"),
             ("script.exe", "executable_file"),
-            ("large_file.txt", "oversized_file")
+            ("large_file.txt", "oversized_file"),
         ]
 
         from support.file_processor import FileProcessor
+
         processor = FileProcessor()
 
         for filename, attack_type in malicious_files:
@@ -538,10 +552,10 @@ TESTING=true
 
         # Mock data persistence
         persistent_data = {
-            'session_id': 'test_session_123',
-            'assignments_processed': [],
-            'results': {},
-            'timestamps': {}
+            "session_id": "test_session_123",
+            "assignments_processed": [],
+            "results": {},
+            "timestamps": {},
         }
 
         # Simulate processing multiple assignments
@@ -550,20 +564,20 @@ TESTING=true
         for assignment_file in assignment_files:
             # Mock processing
             assignment_data = {
-                'filename': assignment_file.name,
-                'content_length': len(assignment_file.read_text()),
-                'processed_at': time.time()
+                "filename": assignment_file.name,
+                "content_length": len(assignment_file.read_text()),
+                "processed_at": time.time(),
             }
 
-            persistent_data['assignments_processed'].append(assignment_data)
-            persistent_data['results'][assignment_file.name] = {
-                'score': 8.0,
-                'subject': 'general'
+            persistent_data["assignments_processed"].append(assignment_data)
+            persistent_data["results"][assignment_file.name] = {
+                "score": 8.0,
+                "subject": "general",
             }
 
         # Verify data persistence
-        assert len(persistent_data['assignments_processed']) == len(assignment_files)
-        assert len(persistent_data['results']) == len(assignment_files)
+        assert len(persistent_data["assignments_processed"]) == len(assignment_files)
+        assert len(persistent_data["results"]) == len(assignment_files)
 
         # Test data serialization
         json_data = json.dumps(persistent_data, default=str)
@@ -584,18 +598,18 @@ TESTING=true
             "specialized_processing",
             "result_generation",
             "output_formatting",
-            "file_export"
+            "file_export",
         ]
 
         step_results = {}
 
         try:
             # Step 1: System initialization
+            from core.assignment_orchestrator import AssignmentOrchestrator
             from core.llms import MultiLLMManager
             from support.file_processor import FileProcessor
-            from core.assignment_orchestrator import AssignmentOrchestrator
 
-            with patch('core.llms.ChatGroq') as mock_groq:
+            with patch("core.llms.ChatGroq") as mock_groq:
                 mock_groq.return_value = Mock()
 
                 # Initialize components
@@ -612,13 +626,15 @@ TESTING=true
             step_results["content_extraction"] = len(content) > 0
 
             # Step 4: Assignment classification
-            with patch('core.llms.MultiLLMManager') as mock_llm_class:
+            with patch("core.llms.MultiLLMManager") as mock_llm_class:
                 mock_llm_manager = Mock()
                 mock_llm_class.return_value = mock_llm_manager
 
                 orchestrator = AssignmentOrchestrator(mock_llm_manager)
                 classification = orchestrator.classify_assignment(content)
-                step_results["assignment_classification"] = classification.subject is not None
+                step_results["assignment_classification"] = (
+                    classification.subject is not None
+                )
 
             # Step 5: Specialized processing (mocked)
             step_results["specialized_processing"] = True

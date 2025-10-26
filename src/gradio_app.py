@@ -7,28 +7,31 @@ RT-Capstone assignment grading system with multi-LLM support and
 subject-specific processing.
 """
 
-import gradio as gr
-import os
-import sys
 import asyncio
 import json
-import pandas as pd
-import tempfile
+import os
 import shutil
-from pathlib import Path
-from typing import List, Tuple, Optional, Dict, Any
-from datetime import datetime
+import sys
+import tempfile
 import zipfile
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import gradio as gr
+import pandas as pd
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 
+from core.llms import llm_manager
+from core.paths import ASSIGNMENTS_FOLDER, OUTPUT_FOLDER
+from core.subject_output_manager import create_subject_output_manager
+from support.file_processor import FileProcessor
+
 # Import core system components
 from workflows.agentic_workflow import run_agentic_workflow
-from support.file_processor import FileProcessor
-from core.llms import llm_manager
-from core.subject_output_manager import create_subject_output_manager
-from core.paths import ASSIGNMENTS_FOLDER, OUTPUT_FOLDER
+
 
 class GradioAssignmentGrader:
     """Main Gradio interface for assignment grading."""
@@ -39,7 +42,9 @@ class GradioAssignmentGrader:
         self.output_manager = create_subject_output_manager(OUTPUT_FOLDER)
         self.temp_dir = tempfile.mkdtemp()
 
-    def process_single_file(self, file_path: str, requirements: Dict[str, bool]) -> Tuple[str, str, str, str]:
+    def process_single_file(
+        self, file_path: str, requirements: Dict[str, bool]
+    ) -> Tuple[str, str, str, str]:
         """
         Process a single assignment file.
 
@@ -60,12 +65,17 @@ class GradioAssignmentGrader:
             # Extract content from file
             content_result = self.file_processor.extract_text_content(file_path)
             if not content_result.success:
-                error_msg = content_result.error or 'Unknown file processing error'
+                error_msg = content_result.error or "Unknown file processing error"
                 return f"❌ File processing failed: {error_msg}", "", None, error_msg
 
             content = content_result.content
             if not content.strip():
-                return "❌ No content extracted from file", "", None, "Empty file content"
+                return (
+                    "❌ No content extracted from file",
+                    "",
+                    None,
+                    "Empty file content",
+                )
 
             # Process with agentic workflow
             async def run_processing():
@@ -79,21 +89,21 @@ class GradioAssignmentGrader:
                         "name": base_name,
                         "date": datetime.now().strftime("%Y-%m-%d"),
                         "class": "Unknown",
-                        "subject": "General"
+                        "subject": "General",
                     }
 
                     # Try to extract metadata from content if present
                     try:
-                        lines = content.split('\n')[:10]  # Check first 10 lines
+                        lines = content.split("\n")[:10]  # Check first 10 lines
                         for line in lines:
-                            if 'name:' in line.lower():
-                                metadata["name"] = line.split(':', 1)[1].strip()
-                            elif 'date:' in line.lower():
-                                metadata["date"] = line.split(':', 1)[1].strip()
-                            elif 'class:' in line.lower():
-                                metadata["class"] = line.split(':', 1)[1].strip()
-                            elif 'subject:' in line.lower():
-                                metadata["subject"] = line.split(':', 1)[1].strip()
+                            if "name:" in line.lower():
+                                metadata["name"] = line.split(":", 1)[1].strip()
+                            elif "date:" in line.lower():
+                                metadata["date"] = line.split(":", 1)[1].strip()
+                            elif "class:" in line.lower():
+                                metadata["class"] = line.split(":", 1)[1].strip()
+                            elif "subject:" in line.lower():
+                                metadata["subject"] = line.split(":", 1)[1].strip()
                     except:
                         pass  # Use defaults if extraction fails
 
@@ -122,13 +132,15 @@ class GradioAssignmentGrader:
             results_json = json.dumps(result, indent=2, default=str)
 
             # Create downloadable files
-            download_path = self._create_download_files(result, os.path.basename(file_path))
+            download_path = self._create_download_files(
+                result, os.path.basename(file_path)
+            )
 
             return (
                 f"✅ Processing completed successfully!",
                 results_summary,
                 download_path if download_path else None,
-                ""
+                "",
             )
 
         except Exception as e:
@@ -136,7 +148,9 @@ class GradioAssignmentGrader:
             print(f"❌ {error_msg}")
             return f"❌ {error_msg}", "", None, error_msg
 
-    def process_multiple_files(self, files: List[str], requirements: Dict[str, bool]) -> Tuple[str, str, str, str]:
+    def process_multiple_files(
+        self, files: List[str], requirements: Dict[str, bool]
+    ) -> Tuple[str, str, str, str]:
         """
         Process multiple assignment files.
 
@@ -158,19 +172,31 @@ class GradioAssignmentGrader:
 
             for i, file_path in enumerate(files):
                 try:
-                    print(f"📄 Processing file {i+1}/{len(files)}: {os.path.basename(file_path)}")
+                    print(
+                        f"📄 Processing file {i+1}/{len(files)}: {os.path.basename(file_path)}"
+                    )
 
                     # Process individual file
-                    status, result_summary, _, error = self.process_single_file(file_path, requirements)
+                    status, result_summary, _, error = self.process_single_file(
+                        file_path, requirements
+                    )
 
                     if error:
                         errors.append(f"{os.path.basename(file_path)}: {error}")
                     else:
-                        results.append({
-                            "filename": os.path.basename(file_path),
-                            "status": "✅ Success" if "✅" in status else "❌ Failed",
-                            "summary": result_summary[:300] + "..." if len(result_summary) > 300 else result_summary
-                        })
+                        results.append(
+                            {
+                                "filename": os.path.basename(file_path),
+                                "status": (
+                                    "✅ Success" if "✅" in status else "❌ Failed"
+                                ),
+                                "summary": (
+                                    result_summary[:300] + "..."
+                                    if len(result_summary) > 300
+                                    else result_summary
+                                ),
+                            }
+                        )
 
                 except Exception as e:
                     error_msg = f"{os.path.basename(file_path)}: {str(e)}"
@@ -197,7 +223,12 @@ class GradioAssignmentGrader:
             # Create batch download
             download_path = self._create_batch_download(results)
 
-            return status_message, summary_table, download_path if download_path else None, error_summary
+            return (
+                status_message,
+                summary_table,
+                download_path if download_path else None,
+                error_summary,
+            )
 
         except Exception as e:
             error_msg = f"Batch processing error: {str(e)}"
@@ -239,7 +270,9 @@ class GradioAssignmentGrader:
                 if "subject" in classification:
                     output.append(f"**Subject:** {classification['subject'].title()}")
                 if "complexity" in classification:
-                    output.append(f"**Complexity:** {classification['complexity'].title()}")
+                    output.append(
+                        f"**Complexity:** {classification['complexity'].title()}"
+                    )
 
             # Summary
             if "summary_result" in result and "summary" in result["summary_result"]:
@@ -262,13 +295,17 @@ class GradioAssignmentGrader:
                     output.append(f"• {feedback}")
 
                 if len(result["specialized_feedback"]) > 8:
-                    output.append(f"• ... and {len(result['specialized_feedback']) - 8} more items")
+                    output.append(
+                        f"• ... and {len(result['specialized_feedback']) - 8} more items"
+                    )
 
             # Add processing metadata
             if "processing_metadata" in result:
                 metadata = result["processing_metadata"]
                 if "completed_steps" in metadata:
-                    output.append(f"**Processing Steps Completed:** {len(metadata['completed_steps'])}")
+                    output.append(
+                        f"**Processing Steps Completed:** {len(metadata['completed_steps'])}"
+                    )
                 if "errors" in metadata and metadata["errors"]:
                     output.append(f"**Processing Errors:** {len(metadata['errors'])}")
 
@@ -280,7 +317,11 @@ class GradioAssignmentGrader:
                     if isinstance(score, (int, float)):
                         output.append(f"• {category.title()}: {score:.2f}/10")
 
-            return "\n\n".join(output) if output else "Processing completed - see JSON for details"
+            return (
+                "\n\n".join(output)
+                if output
+                else "Processing completed - see JSON for details"
+            )
 
         except Exception as e:
             return f"Error formatting results: {str(e)}"
@@ -292,22 +333,26 @@ class GradioAssignmentGrader:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
             # Create download directory
-            download_dir = os.path.join(self.temp_dir, f"results_{base_name}_{timestamp}")
+            download_dir = os.path.join(
+                self.temp_dir, f"results_{base_name}_{timestamp}"
+            )
             os.makedirs(download_dir, exist_ok=True)
 
             # Save JSON results
             json_path = os.path.join(download_dir, f"{base_name}_results.json")
-            with open(json_path, 'w', encoding='utf-8') as f:
+            with open(json_path, "w", encoding="utf-8") as f:
                 json.dump(result, f, indent=2, default=str)
 
             # Save summary
             summary_path = os.path.join(download_dir, f"{base_name}_summary.txt")
-            with open(summary_path, 'w', encoding='utf-8') as f:
+            with open(summary_path, "w", encoding="utf-8") as f:
                 f.write(self._format_results(result))
 
             # Create ZIP file
-            zip_path = os.path.join(self.temp_dir, f"{base_name}_results_{timestamp}.zip")
-            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zip_path = os.path.join(
+                self.temp_dir, f"{base_name}_results_{timestamp}.zip"
+            )
+            with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
                 for root, dirs, files in os.walk(download_dir):
                     for file in files:
                         file_path = os.path.join(root, file)
@@ -346,50 +391,67 @@ class GradioAssignmentGrader:
             # Detailed LLM status
             if llm_manager:
                 health = llm_manager.get_health_status()
-                healthy_providers = sum(1 for provider_status in health.values()
-                                      if provider_status.get('is_healthy', False))
+                healthy_providers = sum(
+                    1
+                    for provider_status in health.values()
+                    if provider_status.get("is_healthy", False)
+                )
                 total_providers = len(health)
-                status_parts.append(f"🔗 LLM Providers: {healthy_providers}/{total_providers} healthy")
+                status_parts.append(
+                    f"🔗 LLM Providers: {healthy_providers}/{total_providers} healthy"
+                )
 
                 # Show individual provider status
                 for provider_name, provider_health in health.items():
-                    status_icon = "✅" if provider_health.get('is_healthy', False) else "❌"
+                    status_icon = (
+                        "✅" if provider_health.get("is_healthy", False) else "❌"
+                    )
 
                     # Safe calculation of success rate
                     success_rate = 0
-                    total_requests = provider_health.get('total_requests', 0)
-                    successful_requests = provider_health.get('successful_requests', 0)
+                    total_requests = provider_health.get("total_requests", 0)
+                    successful_requests = provider_health.get("successful_requests", 0)
 
                     if isinstance(total_requests, (int, float)) and total_requests > 0:
                         if isinstance(successful_requests, (int, float)):
                             success_rate = (successful_requests / total_requests) * 100
 
                     # Safe formatting of average time
-                    avg_time = provider_health.get('average_response_time', 0)
+                    avg_time = provider_health.get("average_response_time", 0)
                     if not isinstance(avg_time, (int, float)):
                         avg_time = 0
 
-                    status_parts.append(f"  {status_icon} {provider_name.title()}: {success_rate:.1f}% success, {avg_time:.2f}s avg")
+                    status_parts.append(
+                        f"  {status_icon} {provider_name.title()}: {success_rate:.1f}% success, {avg_time:.2f}s avg"
+                    )
 
                 # Show priority order
                 try:
                     priority_order = llm_manager.get_priority_order()
                     if priority_order:
-                        status_parts.append(f"📋 Priority Order: {' → '.join(priority_order)}")
+                        status_parts.append(
+                            f"📋 Priority Order: {' → '.join(priority_order)}"
+                        )
                     else:
                         status_parts.append("📋 Priority Order: Not configured")
                 except Exception as e:
-                    status_parts.append(f"📋 Priority Order: Error getting order ({str(e)})")
+                    status_parts.append(
+                        f"📋 Priority Order: Error getting order ({str(e)})"
+                    )
 
                 # Show available models
                 try:
                     available_providers = list(llm_manager.providers.keys())
                     if available_providers:
-                        status_parts.append(f"🤖 Available Models: {', '.join(available_providers)}")
+                        status_parts.append(
+                            f"🤖 Available Models: {', '.join(available_providers)}"
+                        )
                     else:
                         status_parts.append("🤖 Available Models: None initialized")
                 except Exception as e:
-                    status_parts.append(f"🤖 Available Models: Error getting providers ({str(e)})")
+                    status_parts.append(
+                        f"🤖 Available Models: Error getting providers ({str(e)})"
+                    )
 
             else:
                 status_parts.append("❌ LLM Manager: Not initialized")
@@ -402,6 +464,7 @@ class GradioAssignmentGrader:
 
         except Exception as e:
             return f"❌ Error getting system status: {str(e)}"
+
 
 def create_interface():
     """Create and configure the Gradio interface."""
@@ -431,7 +494,8 @@ def create_interface():
     with gr.Blocks(css=custom_css, title="RT-Capstone Assignment Grader") as interface:
 
         # Header
-        gr.Markdown("""
+        gr.Markdown(
+            """
         # 🎓 RT-Capstone Assignment Grading System
 
         **Advanced AI-powered assignment grading with multi-LLM support and subject-specific analysis**
@@ -441,7 +505,8 @@ def create_interface():
         • Grammar and plagiarism detection
         • Detailed feedback and scoring
         • Multi-language support
-        """)
+        """
+        )
 
         # System status
         with gr.Row():
@@ -451,7 +516,7 @@ def create_interface():
                 interactive=False,
                 lines=8,
                 max_lines=15,
-                show_copy_button=True
+                show_copy_button=True,
             )
             status_refresh = gr.Button("🔄 Refresh Status", size="sm")
 
@@ -467,18 +532,32 @@ def create_interface():
                         single_file = gr.File(
                             label="Upload Assignment File",
                             file_types=[".pdf", ".docx", ".doc", ".txt", ".md"],
-                            type="filepath"
+                            type="filepath",
                         )
 
                         gr.Markdown("### Processing Options")
-                        grammar_check = gr.Checkbox(label="Grammar Analysis", value=True)
-                        plagiarism_check = gr.Checkbox(label="Plagiarism Detection", value=True)
-                        relevance_check = gr.Checkbox(label="Source Relevance", value=True)
-                        grading_check = gr.Checkbox(label="Automated Grading", value=True)
-                        summary_check = gr.Checkbox(label="Generate Summary", value=True)
-                        specialized_check = gr.Checkbox(label="Subject-Specific Analysis", value=True)
+                        grammar_check = gr.Checkbox(
+                            label="Grammar Analysis", value=True
+                        )
+                        plagiarism_check = gr.Checkbox(
+                            label="Plagiarism Detection", value=True
+                        )
+                        relevance_check = gr.Checkbox(
+                            label="Source Relevance", value=True
+                        )
+                        grading_check = gr.Checkbox(
+                            label="Automated Grading", value=True
+                        )
+                        summary_check = gr.Checkbox(
+                            label="Generate Summary", value=True
+                        )
+                        specialized_check = gr.Checkbox(
+                            label="Subject-Specific Analysis", value=True
+                        )
 
-                        process_single_btn = gr.Button("🚀 Process Assignment", variant="primary")
+                        process_single_btn = gr.Button(
+                            "🚀 Process Assignment", variant="primary"
+                        )
 
                     with gr.Column(scale=2):
                         gr.Markdown("### Results")
@@ -488,11 +567,13 @@ def create_interface():
                             lines=20,
                             max_lines=50,
                             interactive=False,
-                            show_copy_button=True
+                            show_copy_button=True,
                         )
                         single_json = gr.JSON(label="Detailed Results")
                         single_download = gr.File(label="Download Results")
-                        single_errors = gr.Textbox(label="Errors", interactive=False, visible=False)
+                        single_errors = gr.Textbox(
+                            label="Errors", interactive=False, visible=False
+                        )
 
             # Batch processing tab
             with gr.Tab("📚 Batch Processing"):
@@ -504,29 +585,48 @@ def create_interface():
                             label="Upload Assignment Files",
                             file_count="multiple",
                             file_types=[".pdf", ".docx", ".doc", ".txt", ".md"],
-                            type="filepath"
+                            type="filepath",
                         )
 
                         gr.Markdown("### Batch Processing Options")
-                        batch_grammar = gr.Checkbox(label="Grammar Analysis", value=True)
-                        batch_plagiarism = gr.Checkbox(label="Plagiarism Detection", value=True)
-                        batch_relevance = gr.Checkbox(label="Source Relevance", value=True)
-                        batch_grading = gr.Checkbox(label="Automated Grading", value=True)
-                        batch_summary = gr.Checkbox(label="Generate Summary", value=True)
-                        batch_specialized = gr.Checkbox(label="Subject-Specific Analysis", value=True)
+                        batch_grammar = gr.Checkbox(
+                            label="Grammar Analysis", value=True
+                        )
+                        batch_plagiarism = gr.Checkbox(
+                            label="Plagiarism Detection", value=True
+                        )
+                        batch_relevance = gr.Checkbox(
+                            label="Source Relevance", value=True
+                        )
+                        batch_grading = gr.Checkbox(
+                            label="Automated Grading", value=True
+                        )
+                        batch_summary = gr.Checkbox(
+                            label="Generate Summary", value=True
+                        )
+                        batch_specialized = gr.Checkbox(
+                            label="Subject-Specific Analysis", value=True
+                        )
 
-                        process_batch_btn = gr.Button("🚀 Process All Assignments", variant="primary")
+                        process_batch_btn = gr.Button(
+                            "🚀 Process All Assignments", variant="primary"
+                        )
 
                     with gr.Column(scale=2):
                         gr.Markdown("### Batch Results")
-                        batch_status = gr.Textbox(label="Batch Status", interactive=False)
+                        batch_status = gr.Textbox(
+                            label="Batch Status", interactive=False
+                        )
                         batch_summary_table = gr.HTML(label="Results Summary")
                         batch_download = gr.File(label="Download Batch Results")
-                        batch_errors = gr.Textbox(label="Errors", lines=5, interactive=False, visible=False)
+                        batch_errors = gr.Textbox(
+                            label="Errors", lines=5, interactive=False, visible=False
+                        )
 
             # Help and documentation tab
             with gr.Tab("❓ Help & Documentation"):
-                gr.Markdown("""
+                gr.Markdown(
+                    """
                 ## How to Use the Assignment Grading System
 
                 ### Supported File Formats
@@ -587,17 +687,20 @@ def create_interface():
                 - **Processing Errors**: Verify content is readable
                 - **Slow Processing**: System handles rate limits automatically
                 - **Missing Results**: Check error messages for details
-                """)
+                """
+                )
 
         # Event handlers
-        def create_requirements_dict(grammar, plagiarism, relevance, grading, summary, specialized):
+        def create_requirements_dict(
+            grammar, plagiarism, relevance, grading, summary, specialized
+        ):
             return {
                 "grammar": grammar,
                 "plagiarism": plagiarism,
                 "relevance": relevance,
                 "grading": grading,
                 "summary": summary,
-                "specialized": specialized
+                "specialized": specialized,
             }
 
         # Single file processing
@@ -606,10 +709,15 @@ def create_interface():
                 file, create_requirements_dict(g, p, r, gr, s, sp)
             ),
             inputs=[
-                single_file, grammar_check, plagiarism_check, relevance_check,
-                grading_check, summary_check, specialized_check
+                single_file,
+                grammar_check,
+                plagiarism_check,
+                relevance_check,
+                grading_check,
+                summary_check,
+                specialized_check,
             ],
-            outputs=[single_status, single_results, single_download, single_errors]
+            outputs=[single_status, single_results, single_download, single_errors],
         )
 
         # Batch processing
@@ -618,32 +726,35 @@ def create_interface():
                 files, create_requirements_dict(g, p, r, gr, s, sp)
             ),
             inputs=[
-                batch_files, batch_grammar, batch_plagiarism, batch_relevance,
-                batch_grading, batch_summary, batch_specialized
+                batch_files,
+                batch_grammar,
+                batch_plagiarism,
+                batch_relevance,
+                batch_grading,
+                batch_summary,
+                batch_specialized,
             ],
-            outputs=[batch_status, batch_summary_table, batch_download, batch_errors]
+            outputs=[batch_status, batch_summary_table, batch_download, batch_errors],
         )
 
         # Status refresh
-        status_refresh.click(
-            fn=grader.get_system_status,
-            outputs=[status_display]
-        )
+        status_refresh.click(fn=grader.get_system_status, outputs=[status_display])
 
         # Show/hide error displays based on content
         single_status.change(
             fn=lambda status: gr.update(visible="❌" in status),
             inputs=[single_status],
-            outputs=[single_errors]
+            outputs=[single_errors],
         )
 
         batch_status.change(
             fn=lambda status: gr.update(visible="failed" in status.lower()),
             inputs=[batch_status],
-            outputs=[batch_errors]
+            outputs=[batch_errors],
         )
 
     return interface
+
 
 def main():
     """Main entry point for the Gradio application."""
@@ -662,12 +773,13 @@ def main():
             share=False,
             debug=False,
             show_error=True,
-            inbrowser=True
+            inbrowser=True,
         )
 
     except Exception as e:
         print(f"❌ Failed to start Gradio interface: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

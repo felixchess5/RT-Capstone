@@ -7,49 +7,58 @@ ordering, automatic failover, circuit breaker patterns, specialized routing,
 and enterprise-grade security protection.
 """
 
+import logging
 import os
 import time
-import yaml
-import logging
-from typing import Dict, List, Optional, Any, Union
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
+
+import yaml
 from dotenv import load_dotenv
 
 # Security imports
 try:
-    from security.security_manager import SecurityManager, SecurityConfig
-    from security.secure_llm_wrapper import SecureLLMWrapper, SecureLLMFactory
+    from security.secure_llm_wrapper import SecureLLMFactory, SecureLLMWrapper
+    from security.security_manager import SecurityConfig, SecurityManager
+
     SECURITY_AVAILABLE = True
 except ImportError:
     SECURITY_AVAILABLE = False
-    logging.warning("Security modules not available - LLMs will run without security protection")
+    logging.warning(
+        "Security modules not available - LLMs will run without security protection"
+    )
 
 # LangChain imports with error handling
 try:
     from langchain_groq import ChatGroq
+
     GROQ_AVAILABLE = True
 except ImportError:
     GROQ_AVAILABLE = False
 
 try:
     from langchain_openai import ChatOpenAI
+
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
 
 try:
     from langchain_anthropic import ChatAnthropic
+
     ANTHROPIC_AVAILABLE = True
 except ImportError:
     ANTHROPIC_AVAILABLE = False
 
 try:
     from langchain_google_genai import ChatGoogleGenerativeAI
+
     GEMINI_AVAILABLE = True
 except ImportError:
     try:
         import google.generativeai as genai
+
         GOOGLE_AI_AVAILABLE = True
         GEMINI_AVAILABLE = False
     except ImportError:
@@ -58,6 +67,7 @@ except ImportError:
 
 try:
     from langchain_community.llms import Ollama
+
     LOCAL_AVAILABLE = True
 except ImportError:
     LOCAL_AVAILABLE = False
@@ -69,17 +79,20 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configure LangSmith tracing if enabled
-if os.getenv('LANGCHAIN_TRACING_V2') == 'true':
+if os.getenv("LANGCHAIN_TRACING_V2") == "true":
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
-    os.environ["LANGCHAIN_PROJECT"] = os.getenv('LANGCHAIN_PROJECT', 'Assignment Grader')
-    if os.getenv('LANGCHAIN_API_KEY'):
-        os.environ["LANGCHAIN_API_KEY"] = os.getenv('LANGCHAIN_API_KEY')
+    os.environ["LANGCHAIN_PROJECT"] = os.getenv(
+        "LANGCHAIN_PROJECT", "Assignment Grader"
+    )
+    if os.getenv("LANGCHAIN_API_KEY"):
+        os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
         logger.info("LangSmith tracing enabled")
 
 
 @dataclass
 class ProviderHealth:
     """Track health status of LLM providers."""
+
     consecutive_failures: int = 0
     last_failure_time: Optional[datetime] = None
     is_healthy: bool = True
@@ -92,6 +105,7 @@ class ProviderHealth:
 @dataclass
 class LLMResponse:
     """Standardized response format for all LLM providers."""
+
     content: str
     provider: str
     model: str
@@ -116,7 +130,9 @@ class CircuitBreaker:
             return True
 
         if self.state == "OPEN":
-            if datetime.now() - self.last_failure_time > timedelta(seconds=self.timeout):
+            if datetime.now() - self.last_failure_time > timedelta(
+                seconds=self.timeout
+            ):
                 self.state = "HALF_OPEN"
                 return True
             return False
@@ -147,7 +163,7 @@ class GeminiWrapper:
         self.model_name = model
         self.temperature = temperature
         if GOOGLE_AI_AVAILABLE:
-            api_key = os.getenv('GEMINI_API_KEY')
+            api_key = os.getenv("GEMINI_API_KEY")
             if api_key:
                 genai.configure(api_key=api_key)
                 self.model = genai.GenerativeModel(model)
@@ -164,13 +180,13 @@ class GeminiWrapper:
             if isinstance(prompt, str):
                 content = prompt
             else:
-                content = prompt.content if hasattr(prompt, 'content') else str(prompt)
+                content = prompt.content if hasattr(prompt, "content") else str(prompt)
 
             response = self.model.generate_content(
                 content,
                 generation_config=genai.types.GenerationConfig(
                     temperature=self.temperature
-                )
+                ),
             )
 
             response_time = time.time() - start_time
@@ -178,7 +194,7 @@ class GeminiWrapper:
                 content=response.text,
                 provider="gemini",
                 model=self.model_name,
-                response_time=response_time
+                response_time=response_time,
             )
         except Exception as e:
             raise Exception(f"Gemini API call failed: {e}")
@@ -187,7 +203,9 @@ class GeminiWrapper:
 class MultiLLMManager:
     """Comprehensive LLM management system with failover, monitoring, and enterprise security."""
 
-    def __init__(self, config_path: str = "config/llm_config.yaml", enable_security: bool = True):
+    def __init__(
+        self, config_path: str = "config/llm_config.yaml", enable_security: bool = True
+    ):
         self.config = self._load_config(config_path)
         self.provider_health: Dict[str, ProviderHealth] = {}
         self.circuit_breakers: Dict[str, CircuitBreaker] = {}
@@ -205,7 +223,7 @@ class MultiLLMManager:
                 enable_output_sanitization=True,
                 enable_audit_logging=True,
                 max_input_length=100000,
-                max_requests_per_minute=60
+                max_requests_per_minute=60,
             )
             self.security_manager = SecurityManager(security_config)
             logger.info("✓ Enterprise security protection enabled")
@@ -213,10 +231,14 @@ class MultiLLMManager:
             logger.warning("⚠️  Running without security protection")
 
         # Initialize health tracking and circuit breakers
-        for provider_name in self.config.get('providers', {}):
+        for provider_name in self.config.get("providers", {}):
             self.provider_health[provider_name] = ProviderHealth()
-            threshold = self.config.get('failover', {}).get('circuit_breaker_threshold', 5)
-            timeout = self.config.get('failover', {}).get('circuit_breaker_timeout', 300)
+            threshold = self.config.get("failover", {}).get(
+                "circuit_breaker_threshold", 5
+            )
+            timeout = self.config.get("failover", {}).get(
+                "circuit_breaker_timeout", 300
+            )
             self.circuit_breakers[provider_name] = CircuitBreaker(threshold, timeout)
 
         self._initialize_providers()
@@ -224,7 +246,7 @@ class MultiLLMManager:
     def _load_config(self, config_path: str) -> Dict:
         """Load configuration from YAML file."""
         try:
-            with open(config_path, 'r') as file:
+            with open(config_path, "r") as file:
                 return yaml.safe_load(file)
         except FileNotFoundError:
             logger.warning(f"Config file {config_path} not found, using defaults")
@@ -233,38 +255,48 @@ class MultiLLMManager:
     def _get_default_config(self) -> Dict:
         """Get default configuration if config file is not found."""
         return {
-            'provider_priority': {1: 'groq', 2: 'openai', 3: 'anthropic', 4: 'gemini'},
-            'providers': {
-                'groq': {'enabled': True, 'models': {'default': 'llama-3.1-8b-instant'}},
-                'openai': {'enabled': True, 'models': {'default': 'gpt-4o-mini'}},
-                'anthropic': {'enabled': True, 'models': {'default': 'claude-3-5-sonnet-20241022'}},
-                'gemini': {'enabled': True, 'models': {'default': 'gemini-1.5-pro'}}
-            }
+            "provider_priority": {1: "groq", 2: "openai", 3: "anthropic", 4: "gemini"},
+            "providers": {
+                "groq": {
+                    "enabled": True,
+                    "models": {"default": "llama-3.1-8b-instant"},
+                },
+                "openai": {"enabled": True, "models": {"default": "gpt-4o-mini"}},
+                "anthropic": {
+                    "enabled": True,
+                    "models": {"default": "claude-3-5-sonnet-20241022"},
+                },
+                "gemini": {"enabled": True, "models": {"default": "gemini-1.5-pro"}},
+            },
         }
 
     def _initialize_providers(self):
         """Initialize all enabled LLM providers."""
-        for provider_name, config in self.config.get('providers', {}).items():
-            if not config.get('enabled', False):
+        for provider_name, config in self.config.get("providers", {}).items():
+            if not config.get("enabled", False):
                 continue
 
             try:
                 provider = self._create_provider(provider_name, config)
                 if provider:
                     self.providers[provider_name] = provider
-                    logger.info(f"✓ {provider_name.title()} LLM initialized successfully")
+                    logger.info(
+                        f"✓ {provider_name.title()} LLM initialized successfully"
+                    )
             except Exception as e:
-                logger.error(f"✗ {provider_name.title()} LLM initialization failed: {e}")
+                logger.error(
+                    f"✗ {provider_name.title()} LLM initialization failed: {e}"
+                )
 
     def _create_provider(self, provider_name: str, config: Dict) -> Optional[Any]:
         """Create a specific LLM provider instance."""
-        model = config.get('models', {}).get('default', '')
-        temperature = config.get('temperature', 0.7)
-        max_tokens = config.get('max_tokens', 4096)
-        timeout = config.get('timeout', 60)
+        model = config.get("models", {}).get("default", "")
+        temperature = config.get("temperature", 0.7)
+        max_tokens = config.get("max_tokens", 4096)
+        timeout = config.get("timeout", 60)
 
-        if provider_name == 'groq' and GROQ_AVAILABLE:
-            api_key = os.getenv('GROQ_API_KEY')
+        if provider_name == "groq" and GROQ_AVAILABLE:
+            api_key = os.getenv("GROQ_API_KEY")
             if not api_key:
                 raise ValueError("GROQ_API_KEY environment variable required")
             return ChatGroq(
@@ -272,11 +304,11 @@ class MultiLLMManager:
                 temperature=temperature,
                 max_tokens=max_tokens,
                 timeout=timeout,
-                api_key=api_key
+                api_key=api_key,
             )
 
-        elif provider_name == 'openai' and OPENAI_AVAILABLE:
-            api_key = os.getenv('OPENAI_API_KEY')
+        elif provider_name == "openai" and OPENAI_AVAILABLE:
+            api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
                 raise ValueError("OPENAI_API_KEY environment variable required")
             return ChatOpenAI(
@@ -284,11 +316,11 @@ class MultiLLMManager:
                 temperature=temperature,
                 max_tokens=max_tokens,
                 timeout=timeout,
-                api_key=api_key
+                api_key=api_key,
             )
 
-        elif provider_name == 'anthropic' and ANTHROPIC_AVAILABLE:
-            api_key = os.getenv('ANTHROPIC_API_KEY')
+        elif provider_name == "anthropic" and ANTHROPIC_AVAILABLE:
+            api_key = os.getenv("ANTHROPIC_API_KEY")
             if not api_key:
                 raise ValueError("ANTHROPIC_API_KEY environment variable required")
             return ChatAnthropic(
@@ -296,11 +328,11 @@ class MultiLLMManager:
                 temperature=temperature,
                 max_tokens=max_tokens,
                 timeout=timeout,
-                api_key=api_key
+                api_key=api_key,
             )
 
-        elif provider_name == 'gemini':
-            api_key = os.getenv('GEMINI_API_KEY')
+        elif provider_name == "gemini":
+            api_key = os.getenv("GEMINI_API_KEY")
             if not api_key:
                 raise ValueError("GEMINI_API_KEY environment variable required")
 
@@ -310,30 +342,30 @@ class MultiLLMManager:
                     temperature=temperature,
                     max_tokens=max_tokens,
                     timeout=timeout,
-                    google_api_key=api_key
+                    google_api_key=api_key,
                 )
             elif GOOGLE_AI_AVAILABLE:
                 return GeminiWrapper(model=model, temperature=temperature)
 
-        elif provider_name == 'local' and LOCAL_AVAILABLE:
-            base_url = config.get('base_url', 'http://localhost:11434')
-            return Ollama(
-                model=model,
-                base_url=base_url,
-                temperature=temperature
-            )
+        elif provider_name == "local" and LOCAL_AVAILABLE:
+            base_url = config.get("base_url", "http://localhost:11434")
+            return Ollama(model=model, base_url=base_url, temperature=temperature)
 
         return None
 
     def get_priority_order(self, use_case: Optional[str] = None) -> List[str]:
         """Get provider priority order, optionally for specific use cases."""
-        if use_case and use_case in self.config.get('specialized_routing', {}):
-            routing_config = self.config['specialized_routing'][use_case]
-            return routing_config.get('preferred_providers', [])
+        if use_case and use_case in self.config.get("specialized_routing", {}):
+            routing_config = self.config["specialized_routing"][use_case]
+            return routing_config.get("preferred_providers", [])
 
         # Use global priority order
-        priority_dict = self.config.get('provider_priority', {})
-        return [priority_dict[i] for i in sorted(priority_dict.keys()) if priority_dict[i] in self.providers]
+        priority_dict = self.config.get("provider_priority", {})
+        return [
+            priority_dict[i]
+            for i in sorted(priority_dict.keys())
+            if priority_dict[i] in self.providers
+        ]
 
     def _record_success(self, provider_name: str, response_time: float):
         """Record successful request for monitoring."""
@@ -347,7 +379,9 @@ class MultiLLMManager:
         if health.average_response_time == 0:
             health.average_response_time = response_time
         else:
-            health.average_response_time = (health.average_response_time + response_time) / 2
+            health.average_response_time = (
+                health.average_response_time + response_time
+            ) / 2
 
         self.circuit_breakers[provider_name].record_success()
 
@@ -355,8 +389,15 @@ class MultiLLMManager:
         """Check if the error is a rate limiting error that should trigger failover."""
         error_str = str(error).lower()
         rate_limit_indicators = [
-            "rate limit", "rate_limit", "ratelimit", "429", "too many requests",
-            "quota exceeded", "api quota", "rate exceeded", "throttled"
+            "rate limit",
+            "rate_limit",
+            "ratelimit",
+            "429",
+            "too many requests",
+            "quota exceeded",
+            "api quota",
+            "rate exceeded",
+            "throttled",
         ]
         return any(indicator in error_str for indicator in rate_limit_indicators)
 
@@ -368,16 +409,20 @@ class MultiLLMManager:
         health.last_failure_time = datetime.now()
 
         # Mark as unhealthy after threshold
-        circuit_breaker_threshold = self.config.get('failover', {}).get('circuit_breaker_threshold', 5)
+        circuit_breaker_threshold = self.config.get("failover", {}).get(
+            "circuit_breaker_threshold", 5
+        )
         if health.consecutive_failures >= circuit_breaker_threshold:
             health.is_healthy = False
 
         self.circuit_breakers[provider_name].record_failure()
 
-    def invoke_with_fallback(self, prompt: str, use_case: Optional[str] = None, max_retries: int = None) -> LLMResponse:
+    def invoke_with_fallback(
+        self, prompt: str, use_case: Optional[str] = None, max_retries: int = None
+    ) -> LLMResponse:
         """Invoke LLM with automatic failover across providers."""
         if max_retries is None:
-            max_retries = self.config.get('failover', {}).get('max_total_attempts', 10)
+            max_retries = self.config.get("failover", {}).get("max_total_attempts", 10)
 
         priority_order = self.get_priority_order(use_case)
         attempts = 0
@@ -396,8 +441,16 @@ class MultiLLMManager:
                 continue
 
             provider = self.providers[provider_name]
-            retry_attempts = self.config.get('providers', {}).get(provider_name, {}).get('retry_attempts', 3)
-            retry_delay = self.config.get('providers', {}).get(provider_name, {}).get('retry_delay', 2)
+            retry_attempts = (
+                self.config.get("providers", {})
+                .get(provider_name, {})
+                .get("retry_attempts", 3)
+            )
+            retry_delay = (
+                self.config.get("providers", {})
+                .get(provider_name, {})
+                .get("retry_delay", 2)
+            )
 
             # Try this provider with retries
             for retry in range(retry_attempts):
@@ -405,7 +458,9 @@ class MultiLLMManager:
                 start_time = time.time()
 
                 try:
-                    logger.info(f"Attempting {provider_name} (attempt {retry + 1}/{retry_attempts})")
+                    logger.info(
+                        f"Attempting {provider_name} (attempt {retry + 1}/{retry_attempts})"
+                    )
 
                     # Handle different provider response formats
                     if isinstance(provider, GeminiWrapper):
@@ -416,28 +471,36 @@ class MultiLLMManager:
                         response_time = time.time() - start_time
 
                         # Extract content based on response type
-                        if hasattr(llm_response, 'content'):
+                        if hasattr(llm_response, "content"):
                             content = llm_response.content
-                        elif hasattr(llm_response, 'text'):
+                        elif hasattr(llm_response, "text"):
                             content = llm_response.text
                         else:
                             content = str(llm_response)
 
                         # Get model name
-                        model_name = getattr(provider, 'model_name', getattr(provider, 'model', 'unknown'))
+                        model_name = getattr(
+                            provider,
+                            "model_name",
+                            getattr(provider, "model", "unknown"),
+                        )
 
                         response = LLMResponse(
                             content=content,
                             provider=provider_name,
                             model=model_name,
-                            response_time=response_time
+                            response_time=response_time,
                         )
 
                     # Record success
                     self._record_success(provider_name, response.response_time)
 
-                    if self.config.get('monitoring', {}).get('log_response_times', False):
-                        logger.info(f"✓ {provider_name} succeeded in {response.response_time:.2f}s")
+                    if self.config.get("monitoring", {}).get(
+                        "log_response_times", False
+                    ):
+                        logger.info(
+                            f"✓ {provider_name} succeeded in {response.response_time:.2f}s"
+                        )
 
                     return response
 
@@ -447,7 +510,9 @@ class MultiLLMManager:
 
                     # Check if this is a rate limiting error that should trigger immediate failover
                     if self._is_rate_limit_error(e):
-                        logger.info(f"Rate limit detected for {provider_name}, failing over to next provider")
+                        logger.info(
+                            f"Rate limit detected for {provider_name}, failing over to next provider"
+                        )
                         break  # Break out of retry loop for this provider
 
                     if retry < retry_attempts - 1:  # Don't sleep on last retry
@@ -467,18 +532,28 @@ class MultiLLMManager:
         for provider_name, health in self.provider_health.items():
             success_rate = 0
             if health.total_requests > 0:
-                success_rate = (health.successful_requests / health.total_requests) * 100
+                success_rate = (
+                    health.successful_requests / health.total_requests
+                ) * 100
 
             status[provider_name] = {
-                'is_healthy': health.is_healthy,
-                'total_requests': health.total_requests,
-                'successful_requests': health.successful_requests,
-                'success_rate': f"{success_rate:.1f}%",
-                'consecutive_failures': health.consecutive_failures,
-                'average_response_time': f"{health.average_response_time:.2f}s",
-                'circuit_breaker_state': self.circuit_breakers[provider_name].state,
-                'last_success': health.last_success_time.isoformat() if health.last_success_time else None,
-                'last_failure': health.last_failure_time.isoformat() if health.last_failure_time else None
+                "is_healthy": health.is_healthy,
+                "total_requests": health.total_requests,
+                "successful_requests": health.successful_requests,
+                "success_rate": f"{success_rate:.1f}%",
+                "consecutive_failures": health.consecutive_failures,
+                "average_response_time": f"{health.average_response_time:.2f}s",
+                "circuit_breaker_state": self.circuit_breakers[provider_name].state,
+                "last_success": (
+                    health.last_success_time.isoformat()
+                    if health.last_success_time
+                    else None
+                ),
+                "last_failure": (
+                    health.last_failure_time.isoformat()
+                    if health.last_failure_time
+                    else None
+                ),
             }
 
         return status
@@ -499,7 +574,9 @@ class MultiLLMManager:
                 if SECURITY_AVAILABLE and self.security_manager:
                     return SecureLLMWrapper(provider, self.security_manager)
                 else:
-                    logger.warning(f"Security not available for {provider_name}, returning raw provider")
+                    logger.warning(
+                        f"Security not available for {provider_name}, returning raw provider"
+                    )
                     return provider
             else:
                 logger.error(f"Provider {provider_name} not found")
@@ -514,7 +591,9 @@ class MultiLLMManager:
                     if SECURITY_AVAILABLE and self.security_manager:
                         return SecureLLMWrapper(provider, self.security_manager)
                     else:
-                        logger.warning(f"Security not available, returning raw {name} provider")
+                        logger.warning(
+                            f"Security not available, returning raw {name} provider"
+                        )
                         return provider
 
             logger.error("No LLM providers available")
@@ -526,7 +605,9 @@ class MultiLLMManager:
 
         for provider_name, provider in self.providers.items():
             if SECURITY_AVAILABLE and self.security_manager:
-                secure_providers[provider_name] = SecureLLMWrapper(provider, self.security_manager)
+                secure_providers[provider_name] = SecureLLMWrapper(
+                    provider, self.security_manager
+                )
                 logger.info(f"Secured {provider_name} LLM provider")
             else:
                 secure_providers[provider_name] = provider
@@ -546,7 +627,9 @@ class MultiLLMManager:
 # Initialize the global multi-LLM manager
 try:
     llm_manager = MultiLLMManager()
-    logger.info(f"Multi-LLM Manager initialized with {len(llm_manager.providers)} providers")
+    logger.info(
+        f"Multi-LLM Manager initialized with {len(llm_manager.providers)} providers"
+    )
 except Exception as e:
     logger.error(f"Failed to initialize Multi-LLM Manager: {e}")
     llm_manager = None
@@ -578,7 +661,7 @@ def invoke_with_fallback(prompt: str, primary_llm=None, fallback_llm=None):
     if llm_manager:
         try:
             response = llm_manager.invoke_with_fallback(prompt)
-            return type('Response', (), {'content': response.content})()
+            return type("Response", (), {"content": response.content})()
         except Exception as e:
             logger.error(f"Multi-LLM invoke failed: {e}")
             raise
@@ -589,8 +672,8 @@ def invoke_with_fallback(prompt: str, primary_llm=None, fallback_llm=None):
 # Legacy LLM creation functions (for backward compatibility)
 def create_groq_llm(model: str = "llama-3.1-8b-instant", temperature: float = 0.7):
     """Create Groq LLM instance with security wrapper (backward compatibility)."""
-    if llm_manager and 'groq' in llm_manager.providers:
-        provider = llm_manager.providers['groq']
+    if llm_manager and "groq" in llm_manager.providers:
+        provider = llm_manager.providers["groq"]
         # Return secure wrapper if security is available
         if SECURITY_AVAILABLE and llm_manager.security_manager:
             return SecureLLMWrapper(provider, llm_manager.security_manager)
@@ -600,7 +683,7 @@ def create_groq_llm(model: str = "llama-3.1-8b-instant", temperature: float = 0.
     if not GROQ_AVAILABLE:
         raise ImportError("Groq provider not available")
 
-    api_key = os.getenv('GROQ_API_KEY')
+    api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise ValueError("GROQ_API_KEY environment variable required")
 
@@ -616,20 +699,22 @@ def create_groq_llm(model: str = "llama-3.1-8b-instant", temperature: float = 0.
 
 def create_gemini_llm(model: str = "gemini-1.5-pro", temperature: float = 0.7):
     """Create Gemini LLM instance with security wrapper (backward compatibility)."""
-    if llm_manager and 'gemini' in llm_manager.providers:
-        provider = llm_manager.providers['gemini']
+    if llm_manager and "gemini" in llm_manager.providers:
+        provider = llm_manager.providers["gemini"]
         # Return secure wrapper if security is available
         if SECURITY_AVAILABLE and llm_manager.security_manager:
             return SecureLLMWrapper(provider, llm_manager.security_manager)
         else:
             return provider
 
-    api_key = os.getenv('GEMINI_API_KEY')
+    api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise ValueError("GEMINI_API_KEY environment variable required")
 
     if GEMINI_AVAILABLE:
-        provider = ChatGoogleGenerativeAI(model=model, temperature=temperature, google_api_key=api_key)
+        provider = ChatGoogleGenerativeAI(
+            model=model, temperature=temperature, google_api_key=api_key
+        )
     elif GOOGLE_AI_AVAILABLE:
         provider = GeminiWrapper(model=model, temperature=temperature)
     else:
@@ -646,8 +731,8 @@ def create_gemini_llm(model: str = "gemini-1.5-pro", temperature: float = 0.7):
 # Initialize legacy variables for backward compatibility
 try:
     primary_llm = get_available_llm()
-    groq_llm = llm_manager.providers.get('groq') if llm_manager else None
-    gemini_llm = llm_manager.providers.get('gemini') if llm_manager else None
+    groq_llm = llm_manager.providers.get("groq") if llm_manager else None
+    gemini_llm = llm_manager.providers.get("gemini") if llm_manager else None
 except Exception as e:
     logger.error(f"Failed to initialize legacy LLM variables: {e}")
     primary_llm = None

@@ -4,11 +4,12 @@ Unit tests for MathProcessor class.
 Tests mathematical analysis, equation solving, and math-specific grading.
 """
 
-import pytest
-from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, Any
+from typing import Any, Dict
+from unittest.mock import AsyncMock, Mock, patch
 
-from processors.math_processor import MathProcessor, MathProblemType
+import pytest
+
+from processors.math_processor import MathProblemType, MathProcessor
 
 
 class TestMathProcessor:
@@ -19,17 +20,20 @@ class TestMathProcessor:
         processor = MathProcessor(mock_multi_llm_manager)
 
         assert processor.llm_manager == mock_multi_llm_manager
-        assert hasattr(processor, 'problem_patterns')
-        assert hasattr(processor, 'difficulty_indicators')
+        assert hasattr(processor, "problem_patterns")
+        assert hasattr(processor, "difficulty_indicators")
 
-    @pytest.mark.parametrize("text,expected_type", [
-        ("Solve for x: 2x + 5 = 13", MathProblemType.ALGEBRA),
-        ("Find the derivative of x²", MathProblemType.CALCULUS),
-        ("Calculate the area of a triangle", MathProblemType.GEOMETRY),
-        ("Find the mean of the dataset", MathProblemType.STATISTICS),
-        ("Solve the differential equation", MathProblemType.CALCULUS),
-        ("Factor the polynomial x² - 4", MathProblemType.ALGEBRA)
-    ])
+    @pytest.mark.parametrize(
+        "text,expected_type",
+        [
+            ("Solve for x: 2x + 5 = 13", MathProblemType.ALGEBRA),
+            ("Find the derivative of x²", MathProblemType.CALCULUS),
+            ("Calculate the area of a triangle", MathProblemType.GEOMETRY),
+            ("Find the mean of the dataset", MathProblemType.STATISTICS),
+            ("Solve the differential equation", MathProblemType.CALCULUS),
+            ("Factor the polynomial x² - 4", MathProblemType.ALGEBRA),
+        ],
+    )
     def test_classify_math_problem(self, math_processor, text, expected_type):
         """Test classification of different math problem types."""
         problem_type = math_processor.classify_math_problem(text)
@@ -46,7 +50,7 @@ class TestMathProcessor:
         x = 4
         """
 
-        with patch.object(math_processor.llm_manager, 'get_llm') as mock_get_llm:
+        with patch.object(math_processor.llm_manager, "get_llm") as mock_get_llm:
             mock_llm = AsyncMock()
             mock_llm.ainvoke.return_value = Mock(content="8.5")
             mock_get_llm.return_value = mock_llm
@@ -54,11 +58,11 @@ class TestMathProcessor:
             result = math_processor.grade_math_assignment(assignment_text)
 
             assert isinstance(result, dict)
-            assert 'overall_score' in result
-            assert 'math_accuracy' in result
-            assert 'problem_solving_approach' in result
-            assert 'notation_clarity' in result
-            assert 'step_by_step_work' in result
+            assert "overall_score" in result
+            assert "math_accuracy" in result
+            assert "problem_solving_approach" in result
+            assert "notation_clarity" in result
+            assert "step_by_step_work" in result
 
     def test_extract_equations(self, math_processor):
         """Test equation extraction from text."""
@@ -77,19 +81,14 @@ class TestMathProcessor:
 
     def test_validate_solution_steps(self, math_processor):
         """Test solution step validation."""
-        correct_steps = [
-            "2x + 5 = 13",
-            "2x = 13 - 5",
-            "2x = 8",
-            "x = 4"
-        ]
+        correct_steps = ["2x + 5 = 13", "2x = 13 - 5", "2x = 8", "x = 4"]
 
         validation = math_processor.validate_solution_steps(correct_steps)
 
         assert isinstance(validation, dict)
-        assert 'is_valid' in validation
-        assert 'errors' in validation
-        assert 'clarity_score' in validation
+        assert "is_valid" in validation
+        assert "errors" in validation
+        assert "clarity_score" in validation
 
     def test_check_mathematical_notation(self, math_processor):
         """Test mathematical notation checking."""
@@ -108,23 +107,31 @@ class TestMathProcessor:
     def test_analyze_problem_complexity(self, math_processor):
         """Test problem complexity analysis."""
         simple_problem = "What is 2 + 2?"
-        complex_problem = "Find the limit of (sin x - x)/x³ as x approaches 0 using L'Hôpital's rule"
+        complex_problem = (
+            "Find the limit of (sin x - x)/x³ as x approaches 0 using L'Hôpital's rule"
+        )
 
         simple_complexity = math_processor.analyze_problem_complexity(simple_problem)
         complex_complexity = math_processor.analyze_problem_complexity(complex_problem)
 
         assert isinstance(simple_complexity, dict)
         assert isinstance(complex_complexity, dict)
-        assert 'complexity_score' in simple_complexity
-        assert 'complexity_score' in complex_complexity
-        assert simple_complexity['complexity_score'] < complex_complexity['complexity_score']
+        assert "complexity_score" in simple_complexity
+        assert "complexity_score" in complex_complexity
+        assert (
+            simple_complexity["complexity_score"]
+            < complex_complexity["complexity_score"]
+        )
 
-    @pytest.mark.parametrize("problem_text,expected_difficulty", [
-        ("2 + 2 = ?", "elementary"),
-        ("Solve for x: 2x + 5 = 13", "middle_school"),
-        ("Find the derivative of x² + 3x", "high_school"),
-        ("Evaluate the triple integral", "college")
-    ])
+    @pytest.mark.parametrize(
+        "problem_text,expected_difficulty",
+        [
+            ("2 + 2 = ?", "elementary"),
+            ("Solve for x: 2x + 5 = 13", "middle_school"),
+            ("Find the derivative of x² + 3x", "high_school"),
+            ("Evaluate the triple integral", "college"),
+        ],
+    )
     def test_assess_difficulty(self, math_processor, problem_text, expected_difficulty):
         """Test difficulty assessment for different problems."""
         difficulty = math_processor.assess_difficulty(problem_text)
@@ -134,6 +141,7 @@ class TestMathProcessor:
         """Test symbolic computation capabilities."""
         try:
             import sympy
+
             equation = "x**2 - 4"
             factored = math_processor.symbolic_factor(equation)
             assert factored is not None
@@ -152,9 +160,9 @@ class TestMathProcessor:
         reasoning_score = math_processor.evaluate_mathematical_reasoning(reasoning_text)
 
         assert isinstance(reasoning_score, dict)
-        assert 'reasoning_quality' in reasoning_score
-        assert 'logical_flow' in reasoning_score
-        assert 'verification_present' in reasoning_score
+        assert "reasoning_quality" in reasoning_score
+        assert "logical_flow" in reasoning_score
+        assert "verification_present" in reasoning_score
 
     def test_detect_common_errors(self, math_processor):
         """Test detection of common mathematical errors."""
@@ -176,14 +184,14 @@ class TestMathProcessor:
         Solution: Area = (1/2) × base × height = (1/2) × 6 × 4 = 12 square units
         """
 
-        with patch.object(math_processor.llm_manager, 'get_llm') as mock_get_llm:
+        with patch.object(math_processor.llm_manager, "get_llm") as mock_get_llm:
             mock_llm = AsyncMock()
             mock_llm.ainvoke.return_value = Mock(content="9.0")
             mock_get_llm.return_value = mock_llm
 
             result = math_processor.grade_math_assignment(geometry_text)
 
-            assert result['problem_type'] == MathProblemType.GEOMETRY.value
+            assert result["problem_type"] == MathProblemType.GEOMETRY.value
 
     def test_grade_calculus_problem(self, math_processor):
         """Test grading of calculus-specific problems."""
@@ -192,21 +200,21 @@ class TestMathProcessor:
         Solution: f'(x) = 3x² + 4x
         """
 
-        with patch.object(math_processor.llm_manager, 'get_llm') as mock_get_llm:
+        with patch.object(math_processor.llm_manager, "get_llm") as mock_get_llm:
             mock_llm = AsyncMock()
             mock_llm.ainvoke.return_value = Mock(content="8.5")
             mock_get_llm.return_value = mock_llm
 
             result = math_processor.grade_math_assignment(calculus_text)
 
-            assert result['problem_type'] == MathProblemType.CALCULUS.value
+            assert result["problem_type"] == MathProblemType.CALCULUS.value
 
     def test_error_handling(self, math_processor):
         """Test error handling in math processing."""
         # Test with empty input
         result = math_processor.grade_math_assignment("")
         assert isinstance(result, dict)
-        assert 'error' in result or 'overall_score' in result
+        assert "error" in result or "overall_score" in result
 
         # Test with invalid mathematical expressions
         invalid_text = "This is not a math problem at all!"
@@ -226,7 +234,7 @@ class TestMathProcessor:
         Solution: 120
         """
 
-        with patch.object(math_processor.llm_manager, 'get_llm') as mock_get_llm:
+        with patch.object(math_processor.llm_manager, "get_llm") as mock_get_llm:
             mock_llm = AsyncMock()
             mock_llm.ainvoke.return_value = Mock(content="8.0")
             mock_get_llm.return_value = mock_llm
@@ -234,7 +242,7 @@ class TestMathProcessor:
             result = math_processor.grade_math_assignment(multi_problem_text)
 
             assert isinstance(result, dict)
-            assert 'overall_score' in result
+            assert "overall_score" in result
             # Should handle multiple problems appropriately
 
     def test_mathematical_symbols_recognition(self, math_processor):
@@ -257,26 +265,34 @@ class TestMathProcessor:
         assert isinstance(consistent_result, dict)
         assert isinstance(inconsistent_result, dict)
 
-    @pytest.mark.parametrize("expression,expected_evaluation", [
-        ("2 + 3", 5),
-        ("10 - 4", 6),
-        ("3 * 4", 12),
-        ("15 / 3", 5),
-    ])
-    def test_basic_arithmetic_evaluation(self, math_processor, expression, expected_evaluation):
+    @pytest.mark.parametrize(
+        "expression,expected_evaluation",
+        [
+            ("2 + 3", 5),
+            ("10 - 4", 6),
+            ("3 * 4", 12),
+            ("15 / 3", 5),
+        ],
+    )
+    def test_basic_arithmetic_evaluation(
+        self, math_processor, expression, expected_evaluation
+    ):
         """Test basic arithmetic evaluation."""
         result = math_processor.evaluate_expression(expression)
         assert result == expected_evaluation
 
     def test_performance_with_large_text(self, math_processor, performance_monitor):
         """Test performance with large mathematical text."""
-        large_text = """
+        large_text = (
+            """
         Problem: Solve the system of equations:
         2x + 3y = 7
         4x - y = 1
-        """ * 100  # Repeat to create large text
+        """
+            * 100
+        )  # Repeat to create large text
 
-        with patch.object(math_processor.llm_manager, 'get_llm') as mock_get_llm:
+        with patch.object(math_processor.llm_manager, "get_llm") as mock_get_llm:
             mock_llm = AsyncMock()
             mock_llm.ainvoke.return_value = Mock(content="7.5")
             mock_get_llm.return_value = mock_llm
@@ -299,5 +315,5 @@ class TestMathProcessor:
         proof_evaluation = math_processor.evaluate_mathematical_proof(proof_text)
 
         assert isinstance(proof_evaluation, dict)
-        assert 'proof_validity' in proof_evaluation
-        assert 'logical_structure' in proof_evaluation
+        assert "proof_validity" in proof_evaluation
+        assert "logical_structure" in proof_evaluation

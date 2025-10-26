@@ -2,32 +2,44 @@
 Agentic AI Workflow using LangGraph with proper nodes and edges.
 This refactors the async running functionality into a full-fledged workflow orchestration system.
 """
+
 import asyncio
 import json
-from typing import Dict, List, Literal, Optional, TypedDict
 from enum import Enum
+from typing import Dict, List, Literal, Optional, TypedDict
 
 try:
     from langsmith import traceable
+
     LANGSMITH_AVAILABLE = True
 except ImportError:
+
     def traceable(func=None, **kwargs):
         def decorator(f):
             return f
+
         return decorator(func) if func else decorator
+
     LANGSMITH_AVAILABLE = False
 
-from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import END, StateGraph
 
-from core.llms import groq_llm, gemini_llm, invoke_with_fallback
+from core.assignment_orchestrator import SubjectType, create_assignment_orchestrator
+from core.llms import gemini_llm, groq_llm, invoke_with_fallback
 from support.language_support import detect_text_language, get_localized_prompt
-from support.prompts import GRAMMAR_CHECK, PLAGIARISM_CHECK, RELEVANCE_CHECK, GRADING_PROMPT, SUMMARY_PROMPT
-from core.assignment_orchestrator import create_assignment_orchestrator, SubjectType
+from support.prompts import (
+    GRADING_PROMPT,
+    GRAMMAR_CHECK,
+    PLAGIARISM_CHECK,
+    RELEVANCE_CHECK,
+    SUMMARY_PROMPT,
+)
 
 
 class WorkflowState(TypedDict):
     """State definition for the agentic workflow."""
+
     # Input data
     content: str
     metadata: Dict
@@ -65,6 +77,7 @@ class WorkflowState(TypedDict):
 
 class WorkflowStep(Enum):
     """Enumeration of workflow steps."""
+
     INITIALIZE = "initialize"
     QUALITY_CHECK = "quality_check"
     SUBJECT_CLASSIFICATION = "subject_classification"
@@ -83,13 +96,17 @@ class WorkflowStep(Enum):
 @traceable(name="workflow_initializer")
 def initialize_workflow(state: WorkflowState) -> WorkflowState:
     """Initialize the workflow state and determine processing requirements."""
-    print(f"🚀 Initializing workflow for student: {state['metadata'].get('name', 'Unknown')}")
+    print(
+        f"🚀 Initializing workflow for student: {state['metadata'].get('name', 'Unknown')}"
+    )
 
     # Set processing requirements based on content analysis
     content_length = len(state["content"])
 
     state["requires_grammar_check"] = True
-    state["requires_plagiarism_check"] = content_length > 100  # Skip plagiarism for very short texts
+    state["requires_plagiarism_check"] = (
+        content_length > 100
+    )  # Skip plagiarism for very short texts
     state["requires_relevance_check"] = bool(state.get("source_text"))
     state["requires_grading"] = True
     state["requires_summary"] = content_length > 200
@@ -114,12 +131,14 @@ def initialize_workflow(state: WorkflowState) -> WorkflowState:
     state["assignment_classification"] = None
     state["specialized_processing_result"] = None
 
-    print(f"📋 Processing requirements: Grammar={state['requires_grammar_check']}, "
-          f"Plagiarism={state['requires_plagiarism_check']}, "
-          f"Relevance={state['requires_relevance_check']}, "
-          f"Grading={state['requires_grading']}, "
-          f"Summary={state['requires_summary']}, "
-          f"Specialized={state['requires_specialized_processing']}")
+    print(
+        f"📋 Processing requirements: Grammar={state['requires_grammar_check']}, "
+        f"Plagiarism={state['requires_plagiarism_check']}, "
+        f"Relevance={state['requires_relevance_check']}, "
+        f"Grading={state['requires_grading']}, "
+        f"Summary={state['requires_summary']}, "
+        f"Specialized={state['requires_specialized_processing']}"
+    )
 
     return state
 
@@ -134,8 +153,11 @@ def quality_check_agent(state: WorkflowState) -> WorkflowState:
     word_count = len(content.split())
 
     # Basic quality metrics
-    has_structure = any(marker in content.lower() for marker in ['introduction', 'conclusion', 'paragraph'])
-    has_citations = any(marker in content for marker in ['[', ']', '(', ')'])
+    has_structure = any(
+        marker in content.lower()
+        for marker in ["introduction", "conclusion", "paragraph"]
+    )
+    has_citations = any(marker in content for marker in ["[", "]", "(", ")"])
 
     # Calculate quality score
     quality_score = 0.0
@@ -152,7 +174,9 @@ def quality_check_agent(state: WorkflowState) -> WorkflowState:
     state["current_step"] = WorkflowStep.SUBJECT_CLASSIFICATION.value
     state["completed_steps"].append(WorkflowStep.QUALITY_CHECK.value)
 
-    print(f"📊 Quality score: {quality_score:.2f} | Words: {word_count} | Length: {content_length}")
+    print(
+        f"📊 Quality score: {quality_score:.2f} | Words: {word_count} | Length: {content_length}"
+    )
 
     return state
 
@@ -171,7 +195,9 @@ def subject_classification_agent(state: WorkflowState) -> WorkflowState:
         orchestrator = create_assignment_orchestrator()
 
         # Classify the assignment
-        classification = orchestrator.classify_assignment(state["content"], state["metadata"])
+        classification = orchestrator.classify_assignment(
+            state["content"], state["metadata"]
+        )
 
         state["assignment_classification"] = {
             "subject": classification.subject.value,
@@ -180,16 +206,21 @@ def subject_classification_agent(state: WorkflowState) -> WorkflowState:
             "confidence": classification.confidence,
             "language": classification.language,
             "tools_needed": classification.tools_needed,
-            "processing_approach": classification.processing_approach
+            "processing_approach": classification.processing_approach,
         }
 
-        print(f"   Subject: {classification.subject.value} ({classification.specific_type})")
+        print(
+            f"   Subject: {classification.subject.value} ({classification.specific_type})"
+        )
         print(f"   Complexity: {classification.complexity.value}")
         print(f"   Confidence: {classification.confidence:.2f}")
         print(f"   Processing approach: {classification.processing_approach}")
 
         # Determine if we should use specialized processing
-        if classification.subject in [SubjectType.MATHEMATICS, SubjectType.SPANISH] and classification.confidence > 0.3:
+        if (
+            classification.subject in [SubjectType.MATHEMATICS, SubjectType.SPANISH]
+            and classification.confidence > 0.3
+        ):
             state["current_step"] = WorkflowStep.SPECIALIZED_PROCESSING.value
         else:
             state["current_step"] = WorkflowStep.GRAMMAR_ANALYSIS.value
@@ -199,7 +230,7 @@ def subject_classification_agent(state: WorkflowState) -> WorkflowState:
         state["assignment_classification"] = {
             "subject": "unknown",
             "error": str(e),
-            "status": "error"
+            "status": "error",
         }
         state["errors"].append(f"Subject classification: {str(e)}")
         state["current_step"] = WorkflowStep.GRAMMAR_ANALYSIS.value
@@ -219,13 +250,13 @@ async def specialized_processing_agent(state: WorkflowState) -> WorkflowState:
 
         # Process with specialized processor
         result = await orchestrator.process_assignment(
-            state["content"],
-            state.get("source_text"),
-            state["metadata"]
+            state["content"], state.get("source_text"), state["metadata"]
         )
 
         # Convert any analysis objects to dicts for serialization
-        if "processing_results" in result and hasattr(result["processing_results"], 'to_dict'):
+        if "processing_results" in result and hasattr(
+            result["processing_results"], "to_dict"
+        ):
             result["processing_results"] = result["processing_results"].to_dict()
 
         state["specialized_processing_result"] = result
@@ -235,23 +266,23 @@ async def specialized_processing_agent(state: WorkflowState) -> WorkflowState:
         print(f"   Specialized feedback items: {len(result['specialized_feedback'])}")
 
         # Use specialized grading result as primary grading if available
-        if result["processing_results"] and "overall_score" in result["processing_results"]:
+        if (
+            result["processing_results"]
+            and "overall_score" in result["processing_results"]
+        ):
             state["grading_result"] = {
                 "overall_score": result["overall_score"],
                 "specialized_scores": result["processing_results"],
                 "feedback": result["specialized_feedback"],
                 "processor_used": result["classification"]["subject"],
-                "status": "success_specialized"
+                "status": "success_specialized",
             }
             # Skip regular grading since we have specialized results
             state["requires_grading"] = False
 
     except Exception as e:
         print(f"❌ Specialized processing failed: {e}")
-        state["specialized_processing_result"] = {
-            "error": str(e),
-            "status": "error"
-        }
+        state["specialized_processing_result"] = {"error": str(e), "status": "error"}
         state["errors"].append(f"Specialized processing: {str(e)}")
 
     state["current_step"] = WorkflowStep.GRAMMAR_ANALYSIS.value
@@ -273,15 +304,22 @@ def grammar_analysis_agent(state: WorkflowState) -> WorkflowState:
         lang_result = detect_text_language(state["content"])
         detected_language = lang_result.fallback_language
 
-        print(f"   Detected language: {detected_language} (confidence: {lang_result.confidence:.2f})")
+        print(
+            f"   Detected language: {detected_language} (confidence: {lang_result.confidence:.2f})"
+        )
 
         # Use localized grammar check prompt
-        prompt = get_localized_prompt("grammar_check", detected_language, text=state["content"])
+        prompt = get_localized_prompt(
+            "grammar_check", detected_language, text=state["content"]
+        )
         response = invoke_with_fallback(prompt, groq_llm, gemini_llm)
-        raw_response = response.content if hasattr(response, "content") else str(response).strip()
+        raw_response = (
+            response.content if hasattr(response, "content") else str(response).strip()
+        )
 
         # Enhanced grammar analysis
         import re
+
         error_match = re.search(r"\d+", raw_response)
         error_count = int(error_match.group()) if error_match else 0
 
@@ -291,7 +329,7 @@ def grammar_analysis_agent(state: WorkflowState) -> WorkflowState:
             "quality_impact": min(error_count * 0.1, 1.0),  # Impact on quality score
             "detected_language": detected_language,
             "language_confidence": lang_result.confidence,
-            "status": "success"
+            "status": "success",
         }
 
         print(f"✅ Grammar analysis complete: {error_count} errors detected")
@@ -301,7 +339,7 @@ def grammar_analysis_agent(state: WorkflowState) -> WorkflowState:
         state["grammar_result"] = {
             "error_count": -1,
             "error": str(e),
-            "status": "error"
+            "status": "error",
         }
         state["errors"].append(f"Grammar analysis: {str(e)}")
 
@@ -321,35 +359,48 @@ def plagiarism_detection_agent(state: WorkflowState) -> WorkflowState:
 
     try:
         # Use the language detected from grammar analysis if available
-        detected_language = state.get("grammar_result", {}).get("detected_language", "en")
+        detected_language = state.get("grammar_result", {}).get(
+            "detected_language", "en"
+        )
 
         # Use localized plagiarism check prompt
-        prompt = get_localized_prompt("plagiarism_check", detected_language, text=state["content"])
+        prompt = get_localized_prompt(
+            "plagiarism_check", detected_language, text=state["content"]
+        )
         response = invoke_with_fallback(prompt, groq_llm, gemini_llm)
-        analysis = response.content if hasattr(response, "content") else str(response).strip()
+        analysis = (
+            response.content if hasattr(response, "content") else str(response).strip()
+        )
 
         # Save detailed report
-        from core.paths import PLAGIARISM_REPORTS_FOLDER
         import os
+
+        from core.paths import PLAGIARISM_REPORTS_FOLDER
+
         student_name = state["metadata"]["name"]
         os.makedirs(PLAGIARISM_REPORTS_FOLDER, exist_ok=True)
-        report_path = os.path.join(PLAGIARISM_REPORTS_FOLDER, f"{student_name}_workflow_report.json")
+        report_path = os.path.join(
+            PLAGIARISM_REPORTS_FOLDER, f"{student_name}_workflow_report.json"
+        )
 
         with open(report_path, "w") as f:
             import time
+
             report_data = {
                 "student": student_name,
                 "analysis": analysis,
                 "timestamp": str(time.time()),
-                "workflow_version": "agentic_v1"
+                "workflow_version": "agentic_v1",
             }
             json.dump(report_data, f, indent=2)
 
         state["plagiarism_result"] = {
             "report_file": report_path,
             "analysis": analysis,
-            "originality_score": state["quality_score"],  # Could be enhanced with more analysis
-            "status": "success"
+            "originality_score": state[
+                "quality_score"
+            ],  # Could be enhanced with more analysis
+            "status": "success",
         }
 
         print(f"✅ Plagiarism analysis complete, report saved: {report_path}")
@@ -359,7 +410,7 @@ def plagiarism_detection_agent(state: WorkflowState) -> WorkflowState:
         state["plagiarism_result"] = {
             "report_file": None,
             "error": str(e),
-            "status": "error"
+            "status": "error",
         }
         state["errors"].append(f"Plagiarism detection: {str(e)}")
 
@@ -379,16 +430,26 @@ def relevance_analysis_agent(state: WorkflowState) -> WorkflowState:
 
     try:
         # Use the language detected from grammar analysis if available
-        detected_language = state.get("grammar_result", {}).get("detected_language", "en")
+        detected_language = state.get("grammar_result", {}).get(
+            "detected_language", "en"
+        )
 
         # Use localized relevance check prompt
-        prompt = get_localized_prompt("relevance_check", detected_language, text=state["content"], source=state["source_text"])
+        prompt = get_localized_prompt(
+            "relevance_check",
+            detected_language,
+            text=state["content"],
+            source=state["source_text"],
+        )
         response = invoke_with_fallback(prompt, groq_llm, gemini_llm)
-        analysis = response.content if hasattr(response, "content") else str(response).strip()
+        analysis = (
+            response.content if hasattr(response, "content") else str(response).strip()
+        )
 
         # Extract relevance score if possible
         import re
-        score_match = re.search(r'(\d+(?:\.\d+)?)/10|(\d+(?:\.\d+)?)%', analysis)
+
+        score_match = re.search(r"(\d+(?:\.\d+)?)/10|(\d+(?:\.\d+)?)%", analysis)
         relevance_score = 0.0
         if score_match:
             if score_match.group(1):  # X/10 format
@@ -400,7 +461,7 @@ def relevance_analysis_agent(state: WorkflowState) -> WorkflowState:
             "analysis": analysis,
             "relevance_score": relevance_score,
             "source_alignment": relevance_score > 0.7,
-            "status": "success"
+            "status": "success",
         }
 
         print(f"✅ Relevance analysis complete: {relevance_score:.2f} alignment score")
@@ -410,7 +471,7 @@ def relevance_analysis_agent(state: WorkflowState) -> WorkflowState:
         state["relevance_result"] = {
             "analysis": None,
             "error": str(e),
-            "status": "error"
+            "status": "error",
         }
         state["errors"].append(f"Relevance analysis: {str(e)}")
 
@@ -430,12 +491,21 @@ def content_grading_agent(state: WorkflowState) -> WorkflowState:
 
     try:
         # Use the language detected from grammar analysis if available
-        detected_language = state.get("grammar_result", {}).get("detected_language", "en")
+        detected_language = state.get("grammar_result", {}).get(
+            "detected_language", "en"
+        )
 
         # Use localized grading prompt
-        prompt = get_localized_prompt("grading_prompt", detected_language, answer=state["content"], source=state.get("source_text", ""))
+        prompt = get_localized_prompt(
+            "grading_prompt",
+            detected_language,
+            answer=state["content"],
+            source=state.get("source_text", ""),
+        )
         response = invoke_with_fallback(prompt, groq_llm, gemini_llm)
-        raw_response = response.content if hasattr(response, "content") else str(response).strip()
+        raw_response = (
+            response.content if hasattr(response, "content") else str(response).strip()
+        )
 
         # Parse grading results
         try:
@@ -443,6 +513,7 @@ def content_grading_agent(state: WorkflowState) -> WorkflowState:
         except json.JSONDecodeError:
             # Fallback parsing
             import re
+
             matches = re.findall(r'"(\w+)":\s*([0-9.]+)', raw_response)
             scores = {k: float(v) for k, v in matches}
 
@@ -451,7 +522,7 @@ def content_grading_agent(state: WorkflowState) -> WorkflowState:
             "factuality": round(scores.get("factuality", 0), 2),
             "relevance": round(scores.get("relevance", 0), 2),
             "coherence": round(scores.get("coherence", 0), 2),
-            "grammar": round(max(scores.get("grammar", 1), 1), 2)
+            "grammar": round(max(scores.get("grammar", 1), 1), 2),
         }
 
         # Calculate overall score
@@ -462,18 +533,25 @@ def content_grading_agent(state: WorkflowState) -> WorkflowState:
             "overall_score": round(overall_score, 2),
             "raw_response": raw_response,
             "grade_letter": get_letter_grade(overall_score),
-            "status": "success"
+            "status": "success",
         }
 
-        print(f"✅ Grading complete: Overall {overall_score:.2f}/10 ({get_letter_grade(overall_score)})")
+        print(
+            f"✅ Grading complete: Overall {overall_score:.2f}/10 ({get_letter_grade(overall_score)})"
+        )
 
     except Exception as e:
         print(f"❌ Content grading failed: {e}")
         state["grading_result"] = {
-            "individual_scores": {"factuality": 0, "relevance": 0, "coherence": 0, "grammar": 1},
+            "individual_scores": {
+                "factuality": 0,
+                "relevance": 0,
+                "coherence": 0,
+                "grammar": 1,
+            },
             "overall_score": 0.25,
             "error": str(e),
-            "status": "error"
+            "status": "error",
         }
         state["errors"].append(f"Content grading: {str(e)}")
 
@@ -493,17 +571,26 @@ def summary_generation_agent(state: WorkflowState) -> WorkflowState:
 
     try:
         # Use the language detected from grammar analysis if available
-        detected_language = state.get("grammar_result", {}).get("detected_language", "en")
+        detected_language = state.get("grammar_result", {}).get(
+            "detected_language", "en"
+        )
 
         # Get the subject from assignment classification
         subject = "assignment"  # default fallback
-        if "assignment_classification" in state and "subject" in state["assignment_classification"]:
+        if (
+            "assignment_classification" in state
+            and "subject" in state["assignment_classification"]
+        ):
             subject = state["assignment_classification"]["subject"]
 
         # Use localized summary prompt with dynamic subject
-        prompt = get_localized_prompt("summary_prompt", detected_language, text=state["content"], subject=subject)
+        prompt = get_localized_prompt(
+            "summary_prompt", detected_language, text=state["content"], subject=subject
+        )
         response = invoke_with_fallback(prompt, groq_llm, gemini_llm)
-        summary = response.content if hasattr(response, "content") else str(response).strip()
+        summary = (
+            response.content if hasattr(response, "content") else str(response).strip()
+        )
 
         # Clean up unwanted preambles that LLM might add despite our instructions
         import re
@@ -523,28 +610,25 @@ def summary_generation_agent(state: WorkflowState) -> WorkflowState:
             match = re.search(pattern, summary, re.IGNORECASE)
             if match:
                 # Remove the matched preamble and any following newlines/spaces
-                summary = summary[match.end():].lstrip("\n ").strip()
+                summary = summary[match.end() :].lstrip("\n ").strip()
                 break
 
         # Enhanced summary with metadata
         import time
+
         state["summary_result"] = {
             "summary": summary,
             "word_count": len(state["content"].split()),
             "character_count": len(state["content"]),
             "generated_at": str(time.time()),
-            "status": "success"
+            "status": "success",
         }
 
         print(f"✅ Summary generated: {len(summary)} characters")
 
     except Exception as e:
         print(f"❌ Summary generation failed: {e}")
-        state["summary_result"] = {
-            "summary": None,
-            "error": str(e),
-            "status": "error"
-        }
+        state["summary_result"] = {"summary": None, "error": str(e), "status": "error"}
         state["errors"].append(f"Summary generation: {str(e)}")
 
     state["current_step"] = WorkflowStep.QUALITY_VALIDATION.value
@@ -649,8 +733,8 @@ def results_aggregation_agent(state: WorkflowState) -> WorkflowState:
             "completed_steps": state["completed_steps"],
             "retry_count": state["retry_count"],
             "quality_score": state["quality_score"],
-            "errors": state["errors"]
-        }
+            "errors": state["errors"],
+        },
     }
 
     # Add grammar results
@@ -683,7 +767,9 @@ def results_aggregation_agent(state: WorkflowState) -> WorkflowState:
     # Add grading results
     if state["grading_result"]:
         if state["grading_result"]["status"] == "success":
-            final_results["initial_grade"] = state["grading_result"]["individual_scores"]
+            final_results["initial_grade"] = state["grading_result"][
+                "individual_scores"
+            ]
             final_results["overall_score"] = state["grading_result"]["overall_score"]
             final_results["letter_grade"] = state["grading_result"]["grade_letter"]
         else:
@@ -711,9 +797,14 @@ def results_aggregation_agent(state: WorkflowState) -> WorkflowState:
         final_results["specialized_processing"] = state["specialized_processing_result"]
 
         # If we have specialized grading, override general grading
-        if state["grading_result"] and state["grading_result"].get("status") == "success_specialized":
+        if (
+            state["grading_result"]
+            and state["grading_result"].get("status") == "success_specialized"
+        ):
             final_results["overall_score"] = state["grading_result"]["overall_score"]
-            final_results["specialized_grades"] = state["grading_result"]["specialized_scores"]
+            final_results["specialized_grades"] = state["grading_result"][
+                "specialized_scores"
+            ]
             final_results["specialized_feedback"] = state["grading_result"]["feedback"]
             final_results["processor_used"] = state["grading_result"]["processor_used"]
     else:
@@ -774,7 +865,22 @@ def get_letter_grade(score: float) -> str:
         return "F"
 
 
-def route_workflow(state: WorkflowState) -> Literal["subject_classification", "specialized_processing", "grammar_analysis", "plagiarism_detection", "relevance_analysis", "content_grading", "summary_generation", "quality_validation", "error_recovery", "results_aggregation", "finalize", "__end__"]:
+def route_workflow(
+    state: WorkflowState,
+) -> Literal[
+    "subject_classification",
+    "specialized_processing",
+    "grammar_analysis",
+    "plagiarism_detection",
+    "relevance_analysis",
+    "content_grading",
+    "summary_generation",
+    "quality_validation",
+    "error_recovery",
+    "results_aggregation",
+    "finalize",
+    "__end__",
+]:
     """Route workflow based on current step."""
     current_step = state["current_step"]
 
@@ -855,7 +961,9 @@ def build_agentic_workflow() -> StateGraph:
 
 
 @traceable(name="run_agentic_workflow")
-async def run_agentic_workflow(content: str, metadata: Dict, source_text: str = "") -> Dict:
+async def run_agentic_workflow(
+    content: str, metadata: Dict, source_text: str = ""
+) -> Dict:
     """Run the complete agentic workflow on a single assignment."""
     print(f"🚀 Starting agentic workflow for: {metadata.get('name', 'Unknown')}")
 
@@ -882,12 +990,16 @@ async def run_agentic_workflow(content: str, metadata: Dict, source_text: str = 
         errors=[],
         retry_count=0,
         quality_score=0.0,
-        final_results=None
+        final_results=None,
     )
 
     try:
         # Execute the workflow
-        config = {"configurable": {"thread_id": f"assignment_{metadata.get('name', 'unknown')}"}}
+        config = {
+            "configurable": {
+                "thread_id": f"assignment_{metadata.get('name', 'unknown')}"
+            }
+        }
         final_state = await workflow.ainvoke(initial_state, config=config)
 
         # Return the final results
@@ -904,7 +1016,7 @@ async def run_agentic_workflow(content: str, metadata: Dict, source_text: str = 
                 "Grammar Errors": "N/A",
                 "Plagiarism File": "N/A",
                 "Content Relevance": "N/A",
-                "Initial Grade": "N/A"
+                "Initial Grade": "N/A",
             }
 
     except Exception as e:
@@ -918,7 +1030,7 @@ async def run_agentic_workflow(content: str, metadata: Dict, source_text: str = 
             "Grammar Errors": "N/A",
             "Plagiarism File": "N/A",
             "Content Relevance": "N/A",
-            "Initial Grade": "N/A"
+            "Initial Grade": "N/A",
         }
 
 
@@ -942,16 +1054,16 @@ if __name__ == "__main__":
         "name": "Test Student",
         "date": "2025-01-15",
         "class": "10",
-        "subject": "English"
+        "subject": "English",
     }
 
     test_source = "The Renaissance was a cultural movement that began in Italy..."
 
     async def test_workflow():
         result = await run_agentic_workflow(test_content, test_metadata, test_source)
-        print("\n" + "="*50)
+        print("\n" + "=" * 50)
         print("WORKFLOW TEST RESULTS")
-        print("="*50)
+        print("=" * 50)
         for key, value in result.items():
             print(f"{key}: {value}")
 

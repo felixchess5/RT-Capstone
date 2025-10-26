@@ -10,21 +10,28 @@ Provides a security layer around LLM interactions to prevent:
 """
 
 import asyncio
-import logging
 import hashlib
-from typing import Dict, List, Optional, Any, Union, Callable
-from datetime import datetime
 import json
+import logging
 import re
+from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional, Union
 
 try:
-    from langchain.schema import BaseMessage, HumanMessage, SystemMessage, AIMessage
+    from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
     from langchain.schema.runnable import Runnable
+
     LANGCHAIN_AVAILABLE = True
 except ImportError:
     try:
-        from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage, AIMessage
+        from langchain_core.messages import (
+            AIMessage,
+            BaseMessage,
+            HumanMessage,
+            SystemMessage,
+        )
         from langchain_core.runnables import Runnable
+
         LANGCHAIN_AVAILABLE = True
     except ImportError:
         # Define basic classes if LangChain not available
@@ -50,7 +57,13 @@ except ImportError:
             async def ainvoke(self, *args, **kwargs):
                 raise NotImplementedError
 
-from security.security_manager import SecurityManager, SecurityConfig, SecurityError, SecurityThreat
+
+from security.security_manager import (
+    SecurityConfig,
+    SecurityError,
+    SecurityManager,
+    SecurityThreat,
+)
 
 
 class SecureLLMWrapper:
@@ -68,7 +81,7 @@ class SecureLLMWrapper:
         enable_prompt_isolation: bool = True,
         enable_response_filtering: bool = True,
         enable_context_protection: bool = True,
-        max_context_length: int = 10000
+        max_context_length: int = 10000,
     ):
         """Initialize secure LLM wrapper."""
         self.llm = llm
@@ -90,7 +103,7 @@ class SecureLLMWrapper:
         self,
         input_data: Union[str, Dict[str, Any], List[BaseMessage]],
         config: Optional[Dict[str, Any]] = None,
-        **kwargs
+        **kwargs,
     ) -> Any:
         """Securely invoke LLM with input validation and output filtering."""
         start_time = datetime.now()
@@ -106,7 +119,9 @@ class SecureLLMWrapper:
             response = await self.llm.ainvoke(secured_input, config, **kwargs)
 
             # 4. Validate and filter response
-            secure_response = await self._validate_and_filter_response(response, input_data)
+            secure_response = await self._validate_and_filter_response(
+                response, input_data
+            )
 
             # 5. Log successful interaction
             self._log_interaction(input_data, response, start_time, "SUCCESS")
@@ -126,7 +141,7 @@ class SecureLLMWrapper:
         self,
         input_data: Union[str, Dict[str, Any], List[BaseMessage]],
         config: Optional[Dict[str, Any]] = None,
-        **kwargs
+        **kwargs,
     ) -> Any:
         """Synchronous secure invoke."""
         return asyncio.run(self.ainvoke(input_data, config, **kwargs))
@@ -134,49 +149,50 @@ class SecureLLMWrapper:
     async def _validate_and_secure_input(
         self,
         input_data: Union[str, Dict[str, Any], List[BaseMessage]],
-        config: Optional[Dict[str, Any]] = None
+        config: Optional[Dict[str, Any]] = None,
     ) -> Union[str, Dict[str, Any], List[BaseMessage]]:
         """Validate and secure input data."""
         # Extract text content for validation
         text_content = self._extract_text_content(input_data)
 
         # Get user context for security validation
-        user_id = config.get('user_id') if config else None
-        source_ip = config.get('source_ip') if config else None
+        user_id = config.get("user_id") if config else None
+        source_ip = config.get("source_ip") if config else None
 
         # Validate through security manager
         sanitized_content, threats = self.security_manager.validate_and_sanitize_input(
-            content=text_content,
-            user_id=user_id,
-            source_ip=source_ip
+            content=text_content, user_id=user_id, source_ip=source_ip
         )
 
         # Check for blocking threats
         blocking_threats = [t for t in threats if t.blocked]
         if blocking_threats:
             threat_descriptions = [t.description for t in blocking_threats]
-            raise SecurityError(f"Input blocked due to security threats: {threat_descriptions}")
+            raise SecurityError(
+                f"Input blocked due to security threats: {threat_descriptions}"
+            )
 
         # Return sanitized version of original input structure
         return self._replace_text_content(input_data, sanitized_content)
 
     async def _apply_security_boundaries(
-        self,
-        input_data: Union[str, Dict[str, Any], List[BaseMessage]]
+        self, input_data: Union[str, Dict[str, Any], List[BaseMessage]]
     ) -> Union[str, Dict[str, Any], List[BaseMessage]]:
         """Apply security boundaries to input."""
         if self.enable_prompt_isolation:
             input_data = self.system_prompt_guard.isolate_user_input(input_data)
 
         if self.enable_context_protection:
-            input_data = self.context_isolator.protect_context(input_data, self.max_context_length)
+            input_data = self.context_isolator.protect_context(
+                input_data, self.max_context_length
+            )
 
         return input_data
 
     async def _validate_and_filter_response(
         self,
         response: Any,
-        original_input: Union[str, Dict[str, Any], List[BaseMessage]]
+        original_input: Union[str, Dict[str, Any], List[BaseMessage]],
     ) -> Any:
         """Validate and filter LLM response."""
         if not self.enable_response_filtering:
@@ -187,15 +203,18 @@ class SecureLLMWrapper:
 
         # Validate response for security issues
         validation_result = self.response_validator.validate_response(
-            response_text,
-            original_input
+            response_text, original_input
         )
 
         if validation_result.has_security_issues:
-            self.logger.warning(f"Response validation failed: {validation_result.issues}")
+            self.logger.warning(
+                f"Response validation failed: {validation_result.issues}"
+            )
 
             # Apply response filtering
-            filtered_response_text = self.response_validator.filter_response(response_text)
+            filtered_response_text = self.response_validator.filter_response(
+                response_text
+            )
             return self._replace_response_text(response, filtered_response_text)
 
         # Sanitize output
@@ -208,10 +227,10 @@ class SecureLLMWrapper:
             return input_data
         elif isinstance(input_data, dict):
             # Handle dictionary input
-            if 'content' in input_data:
-                return str(input_data['content'])
-            elif 'text' in input_data:
-                return str(input_data['text'])
+            if "content" in input_data:
+                return str(input_data["content"])
+            elif "text" in input_data:
+                return str(input_data["text"])
             else:
                 return str(input_data)
         elif isinstance(input_data, list):
@@ -221,10 +240,10 @@ class SecureLLMWrapper:
                 if isinstance(item, BaseMessage):
                     text_parts.append(item.content)
                 elif isinstance(item, dict):
-                    text_parts.append(str(item.get('content', item)))
+                    text_parts.append(str(item.get("content", item)))
                 else:
                     text_parts.append(str(item))
-            return '\n'.join(text_parts)
+            return "\n".join(text_parts)
         else:
             return str(input_data)
 
@@ -234,10 +253,10 @@ class SecureLLMWrapper:
             return new_content
         elif isinstance(original_input, dict):
             result = original_input.copy()
-            if 'content' in result:
-                result['content'] = new_content
-            elif 'text' in result:
-                result['text'] = new_content
+            if "content" in result:
+                result["content"] = new_content
+            elif "text" in result:
+                result["text"] = new_content
             return result
         elif isinstance(original_input, list):
             # Handle message list
@@ -266,22 +285,22 @@ class SecureLLMWrapper:
 
     def _extract_response_text(self, response: Any) -> str:
         """Extract text from LLM response."""
-        if hasattr(response, 'content'):
+        if hasattr(response, "content"):
             return response.content
         elif isinstance(response, dict):
-            return response.get('content', str(response))
+            return response.get("content", str(response))
         else:
             return str(response)
 
     def _replace_response_text(self, original_response: Any, new_text: str) -> Any:
         """Replace text in original response structure."""
-        if hasattr(original_response, 'content'):
+        if hasattr(original_response, "content"):
             # Create new response object with filtered content
             response_copy = type(original_response)(content=new_text)
             return response_copy
         elif isinstance(original_response, dict):
             result = original_response.copy()
-            result['content'] = new_text
+            result["content"] = new_text
             return result
         else:
             return new_text
@@ -292,14 +311,12 @@ class SecureLLMWrapper:
         response: Any,
         start_time: datetime,
         status: str,
-        error_msg: Optional[str] = None
+        error_msg: Optional[str] = None,
     ):
         """Log LLM interaction for security monitoring."""
         duration = (datetime.now() - start_time).total_seconds()
 
-        input_hash = hashlib.sha256(
-            str(input_data).encode()
-        ).hexdigest()[:16]
+        input_hash = hashlib.sha256(str(input_data).encode()).hexdigest()[:16]
 
         log_data = {
             "timestamp": start_time.isoformat(),
@@ -308,7 +325,7 @@ class SecureLLMWrapper:
             "input_hash": input_hash,
             "input_length": len(str(input_data)),
             "response_length": len(str(response)) if response else 0,
-            "error": error_msg
+            "error": error_msg,
         }
 
         if status == "SUCCESS":
@@ -333,9 +350,7 @@ class SystemPromptGuard:
             for message in input_data:
                 if isinstance(message, HumanMessage):
                     isolated_content = (
-                        self.isolation_prefix +
-                        message.content +
-                        self.isolation_suffix
+                        self.isolation_prefix + message.content + self.isolation_suffix
                     )
                     result.append(HumanMessage(content=isolated_content))
                 else:
@@ -343,11 +358,7 @@ class SystemPromptGuard:
             return result
         elif isinstance(input_data, str):
             # Handle string input
-            return (
-                self.isolation_prefix +
-                input_data +
-                self.isolation_suffix
-            )
+            return self.isolation_prefix + input_data + self.isolation_suffix
         else:
             return input_data
 
@@ -372,7 +383,9 @@ class ContextIsolator:
                     elif current_length < max_length:
                         remaining = max_length - current_length
                         if len(message.content) > remaining:
-                            truncated_content = message.content[:remaining] + "... [truncated]"
+                            truncated_content = (
+                                message.content[:remaining] + "... [truncated]"
+                            )
                             if isinstance(message, HumanMessage):
                                 result.append(HumanMessage(content=truncated_content))
                             else:
@@ -436,9 +449,7 @@ class ResponseValidator:
         ]
 
     def validate_response(
-        self,
-        response_text: str,
-        original_input: Any
+        self, response_text: str, original_input: Any
     ) -> ResponseValidationResult:
         """Validate response for security issues."""
         result = ResponseValidationResult()
@@ -479,18 +490,22 @@ class ResponseValidator:
 
         # Remove sensitive patterns
         for pattern in self.data_exfiltration_patterns:
-            filtered_text = re.sub(pattern, "[SENSITIVE_DATA_REMOVED]", filtered_text, flags=re.IGNORECASE)
+            filtered_text = re.sub(
+                pattern, "[SENSITIVE_DATA_REMOVED]", filtered_text, flags=re.IGNORECASE
+            )
 
         # Remove system information
         for pattern in self.system_info_patterns:
-            filtered_text = re.sub(pattern, "[SYSTEM_INFO_REMOVED]", filtered_text, flags=re.IGNORECASE)
+            filtered_text = re.sub(
+                pattern, "[SYSTEM_INFO_REMOVED]", filtered_text, flags=re.IGNORECASE
+            )
 
         # Remove code blocks that might be harmful
         filtered_text = re.sub(
             r"```(?:python|javascript|bash|shell|sql).*?```",
             "[CODE_BLOCK_REMOVED]",
             filtered_text,
-            flags=re.IGNORECASE | re.DOTALL
+            flags=re.IGNORECASE | re.DOTALL,
         )
 
         return filtered_text
@@ -502,8 +517,7 @@ class SecureLLMFactory:
 
     @staticmethod
     def create_secure_llm(
-        llm: Runnable,
-        security_config: SecurityConfig = None
+        llm: Runnable, security_config: SecurityConfig = None
     ) -> SecureLLMWrapper:
         """Create a secure LLM wrapper."""
         security_manager = SecurityManager(security_config or SecurityConfig())

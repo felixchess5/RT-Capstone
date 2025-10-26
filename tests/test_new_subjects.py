@@ -6,18 +6,26 @@ This script tests the new Science and History processors to ensure they work
 correctly with the assignment grading system.
 """
 
+import asyncio
 import os
 import sys
-import asyncio
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Add the current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from science_processor import create_science_processor, ScienceSubject, ScienceAssignmentType
-from history_processor import create_history_processor, HistoryPeriod, HistoryAssignmentType
 from assignment_orchestrator import create_assignment_orchestrator
-from subject_output_manager import create_subject_output_manager, OutputSubject
+from history_processor import (
+    HistoryAssignmentType,
+    HistoryPeriod,
+    create_history_processor,
+)
+from science_processor import (
+    ScienceAssignmentType,
+    ScienceSubject,
+    create_science_processor,
+)
+from subject_output_manager import OutputSubject, create_subject_output_manager
 
 
 def test_science_processor():
@@ -29,7 +37,7 @@ def test_science_processor():
     # Read science example files
     science_files = [
         "Assignments/science_example_1.txt",
-        "Assignments/science_example_2.txt"
+        "Assignments/science_example_2.txt",
     ]
 
     science_processor = create_science_processor()
@@ -39,7 +47,7 @@ def test_science_processor():
             print(f"⚠️  Science example file not found: {file_path}")
             continue
 
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         print(f"\n📄 Testing: {os.path.basename(file_path)}")
@@ -51,12 +59,22 @@ def test_science_processor():
 
             print(f"✅ Subject Area: {analysis.subject_area.value}")
             print(f"✅ Assignment Type: {analysis.assignment_type.value}")
-            print(f"✅ Scientific Method Elements: {sum(analysis.scientific_method_elements.values())}/{len(analysis.scientific_method_elements)}")
-            print(f"✅ Units/Measurements Found: {len(analysis.units_and_measurements)}")
+            print(
+                f"✅ Scientific Method Elements: {sum(analysis.scientific_method_elements.values())}/{len(analysis.scientific_method_elements)}"
+            )
+            print(
+                f"✅ Units/Measurements Found: {len(analysis.units_and_measurements)}"
+            )
             print(f"✅ Formulas Identified: {len(analysis.formulas_identified)}")
-            print(f"✅ Hypothesis Present: {'Yes' if analysis.hypothesis_present else 'No'}")
-            print(f"✅ Conclusion Present: {'Yes' if analysis.conclusion_present else 'No'}")
-            print(f"✅ Scientific Vocabulary Score: {analysis.scientific_vocabulary_score:.1f}/10")
+            print(
+                f"✅ Hypothesis Present: {'Yes' if analysis.hypothesis_present else 'No'}"
+            )
+            print(
+                f"✅ Conclusion Present: {'Yes' if analysis.conclusion_present else 'No'}"
+            )
+            print(
+                f"✅ Scientific Vocabulary Score: {analysis.scientific_vocabulary_score:.1f}/10"
+            )
             print(f"✅ Safety Considerations: {len(analysis.safety_considerations)}")
 
             # Test specific methods
@@ -87,7 +105,7 @@ def test_history_processor():
     # Read history example files
     history_files = [
         "Assignments/history_example_1.txt",
-        "Assignments/history_example_2.txt"
+        "Assignments/history_example_2.txt",
     ]
 
     history_processor = create_history_processor()
@@ -97,7 +115,7 @@ def test_history_processor():
             print(f"⚠️  History example file not found: {file_path}")
             continue
 
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         print(f"\n📄 Testing: {os.path.basename(file_path)}")
@@ -114,9 +132,15 @@ def test_history_processor():
             print(f"✅ Historical Figures: {len(analysis.historical_figures)}")
             print(f"✅ Events Mentioned: {len(analysis.events_mentioned)}")
             print(f"✅ Sources Cited: {len(analysis.sources_cited)}")
-            print(f"✅ Chronological Accuracy: {analysis.chronological_accuracy:.1f}/10")
-            print(f"✅ Historical Context Score: {analysis.historical_context_score:.1f}/10")
-            print(f"✅ Historical Vocabulary Score: {analysis.historical_vocabulary_score:.1f}/10")
+            print(
+                f"✅ Chronological Accuracy: {analysis.chronological_accuracy:.1f}/10"
+            )
+            print(
+                f"✅ Historical Context Score: {analysis.historical_context_score:.1f}/10"
+            )
+            print(
+                f"✅ Historical Vocabulary Score: {analysis.historical_vocabulary_score:.1f}/10"
+            )
 
             # Test specific methods
             period = history_processor.identify_historical_period(content)
@@ -151,7 +175,7 @@ async def test_orchestrator_integration():
         ("Assignments/science_example_1.txt", "Science"),
         ("Assignments/science_example_2.txt", "Science"),
         ("Assignments/history_example_1.txt", "History"),
-        ("Assignments/history_example_2.txt", "History")
+        ("Assignments/history_example_2.txt", "History"),
     ]
 
     for file_path, expected_subject in test_files:
@@ -159,7 +183,7 @@ async def test_orchestrator_integration():
             print(f"⚠️  Test file not found: {file_path}")
             continue
 
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         print(f"\n📄 Testing Orchestrator: {os.path.basename(file_path)}")
@@ -182,12 +206,16 @@ async def test_orchestrator_integration():
             print(f"\n📊 Processing Results:")
             print(f"   Overall Score: {result['overall_score']:.1f}/10")
             print(f"   Feedback Items: {len(result['specialized_feedback'])}")
-            print(f"   Processing Status: {'Success' if 'error' not in result['processing_results'] else 'Failed'}")
+            print(
+                f"   Processing Status: {'Success' if 'error' not in result['processing_results'] else 'Failed'}"
+            )
 
             if expected_subject.lower() in classification.subject.value:
                 print(f"✅ Subject detection correct: {expected_subject}")
             else:
-                print(f"⚠️  Subject detection mismatch: expected {expected_subject}, got {classification.subject.value}")
+                print(
+                    f"⚠️  Subject detection mismatch: expected {expected_subject}, got {classification.subject.value}"
+                )
 
         except Exception as e:
             print(f"❌ Orchestrator integration test failed: {e}")
@@ -217,17 +245,17 @@ def test_subject_output_manager():
                         "hypothesis_quality": 9.0,
                         "data_analysis": 8.5,
                         "experimental_design": 8.0,
-                        "conclusion_validity": 9.0
+                        "conclusion_validity": 9.0,
                     },
                     "analysis": {
                         "subject_area": "chemistry",
                         "assignment_type": "laboratory_report",
                         "units_and_measurements_count": 15,
                         "formulas_identified_count": 3,
-                        "scientific_vocabulary_score": 8.2
-                    }
-                }
-            }
+                        "scientific_vocabulary_score": 8.2,
+                    },
+                },
+            },
         },
         {
             "student_name": "Emily Rodriguez",
@@ -241,7 +269,7 @@ def test_subject_output_manager():
                         "chronological_understanding": 8.5,
                         "source_analysis": 9.5,
                         "contextual_awareness": 8.5,
-                        "argument_development": 9.0
+                        "argument_development": 9.0,
                     },
                     "analysis": {
                         "period": "modern",
@@ -249,30 +277,40 @@ def test_subject_output_manager():
                         "region_focus": "european_history",
                         "dates_identified_count": 12,
                         "historical_figures_count": 8,
-                        "sources_cited_count": 3
-                    }
-                }
-            }
-        }
+                        "sources_cited_count": 3,
+                    },
+                },
+            },
+        },
     ]
 
     try:
         # Test subject determination
         for assignment in mock_assignments:
             subject = output_manager.determine_subject(assignment)
-            print(f"✅ Subject determination: {assignment['student_name']} -> {subject.value}")
+            print(
+                f"✅ Subject determination: {assignment['student_name']} -> {subject.value}"
+            )
 
         # Test specialized data extraction
         science_assignment = mock_assignments[0]
-        science_data = output_manager.extract_specialized_data(science_assignment, OutputSubject.SCIENCE)
+        science_data = output_manager.extract_specialized_data(
+            science_assignment, OutputSubject.SCIENCE
+        )
         print(f"\n📊 Science specialized data extracted: {len(science_data)} fields")
-        print(f"   Scientific accuracy: {science_data.get('scientific_accuracy', 'N/A')}")
+        print(
+            f"   Scientific accuracy: {science_data.get('scientific_accuracy', 'N/A')}"
+        )
         print(f"   Subject area: {science_data.get('subject_area', 'N/A')}")
 
         history_assignment = mock_assignments[1]
-        history_data = output_manager.extract_specialized_data(history_assignment, OutputSubject.HISTORY)
+        history_data = output_manager.extract_specialized_data(
+            history_assignment, OutputSubject.HISTORY
+        )
         print(f"\n📊 History specialized data extracted: {len(history_data)} fields")
-        print(f"   Historical accuracy: {history_data.get('historical_accuracy', 'N/A')}")
+        print(
+            f"   Historical accuracy: {history_data.get('historical_accuracy', 'N/A')}"
+        )
         print(f"   Historical period: {history_data.get('historical_period', 'N/A')}")
 
         # Test export functionality
@@ -303,12 +341,14 @@ async def test_grading_functionality():
     science_files = ["Assignments/science_example_1.txt"]
     for file_path in science_files:
         if os.path.exists(file_path):
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             print(f"\n🧪 Testing Science Grading: {os.path.basename(file_path)}")
             try:
-                grading_result = await science_processor.grade_science_assignment(content)
+                grading_result = await science_processor.grade_science_assignment(
+                    content
+                )
                 print(f"✅ Science grading completed")
                 print(f"   Overall Score: {grading_result['overall_score']:.1f}/10")
                 print(f"   Subject Area: {grading_result['subject_area']}")
@@ -322,12 +362,14 @@ async def test_grading_functionality():
     history_files = ["Assignments/history_example_1.txt"]
     for file_path in history_files:
         if os.path.exists(file_path):
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             print(f"\n📚 Testing History Grading: {os.path.basename(file_path)}")
             try:
-                grading_result = await history_processor.grade_history_assignment(content)
+                grading_result = await history_processor.grade_history_assignment(
+                    content
+                )
                 print(f"✅ History grading completed")
                 print(f"   Overall Score: {grading_result['overall_score']:.1f}/10")
                 print(f"   Historical Period: {grading_result['period']}")
@@ -351,7 +393,7 @@ async def run_all_tests():
         ("History Processor", test_history_processor),
         ("Orchestrator Integration", test_orchestrator_integration),
         ("Subject Output Manager", test_subject_output_manager),
-        ("Grading Functionality", test_grading_functionality)
+        ("Grading Functionality", test_grading_functionality),
     ]
 
     results = {}
@@ -381,7 +423,9 @@ async def run_all_tests():
     print(f"\nResults: {passed}/{total} tests passed")
 
     if passed == total:
-        print("🎉 All tests passed! Science and History processors are working correctly.")
+        print(
+            "🎉 All tests passed! Science and History processors are working correctly."
+        )
     elif passed > total // 2:
         print("⚠️  Most tests passed. Check failed tests above.")
     else:

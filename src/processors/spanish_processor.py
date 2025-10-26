@@ -2,15 +2,19 @@
 Spanish Assignment Processor
 Handles Spanish language assignments including grammar, vocabulary, comprehension, and culture.
 """
-import re
+
 import json
-from typing import Dict, List, Optional, Tuple, Any
-from enum import Enum
-import spacy
+import re
 from collections import Counter
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
+import spacy
+
 
 class SpanishAssignmentType(Enum):
     """Types of Spanish assignments that can be identified."""
+
     GRAMMAR = "grammar"
     VOCABULARY = "vocabulary"
     READING_COMPREHENSION = "reading_comprehension"
@@ -22,14 +26,18 @@ class SpanishAssignmentType(Enum):
     LISTENING = "listening"
     UNKNOWN = "unknown"
 
+
 class SpanishGrammarRule:
     """Spanish grammar rule for checking."""
 
-    def __init__(self, rule_name: str, pattern: str, description: str, examples: List[str]):
+    def __init__(
+        self, rule_name: str, pattern: str, description: str, examples: List[str]
+    ):
         self.rule_name = rule_name
         self.pattern = pattern
         self.description = description
         self.examples = examples
+
 
 class SpanishAnalysis:
     """Container for Spanish assignment analysis results."""
@@ -48,7 +56,11 @@ class SpanishAnalysis:
     def to_dict(self):
         """Convert analysis to dictionary for serialization."""
         return {
-            "assignment_type": self.assignment_type.value if hasattr(self.assignment_type, 'value') else str(self.assignment_type),
+            "assignment_type": (
+                self.assignment_type.value
+                if hasattr(self.assignment_type, "value")
+                else str(self.assignment_type)
+            ),
             "grammar_errors": self.grammar_errors,
             "vocabulary_level": self.vocabulary_level,
             "verb_conjugations": self.verb_conjugations,
@@ -56,8 +68,9 @@ class SpanishAnalysis:
             "comprehension_questions": self.comprehension_questions,
             "translation_accuracy": self.translation_accuracy,
             "fluency_score": self.fluency_score,
-            "complexity_score": self.complexity_score
+            "complexity_score": self.complexity_score,
         }
+
 
 class SpanishProcessor:
     """Comprehensive Spanish assignment processor."""
@@ -68,7 +81,9 @@ class SpanishProcessor:
             self.nlp = spacy.load("es_core_news_sm")
             self.spacy_available = True
         except OSError:
-            print("[WARNING] Spanish spaCy model not available. Install with: python -m spacy download es_core_news_sm")
+            print(
+                "[WARNING] Spanish spaCy model not available. Install with: python -m spacy download es_core_news_sm"
+            )
             self.spacy_available = False
             self.nlp = None
 
@@ -81,71 +96,112 @@ class SpanishProcessor:
         # Assignment type patterns
         self.assignment_patterns = {
             SpanishAssignmentType.GRAMMAR: [
-                r'completa.*oración|complete.*sentence',
-                r'conjuga.*verbo|conjugate.*verb',
-                r'artículo|article.*el|la|los|las',
-                r'adjetivo|adjective',
-                r'sustantivo|noun',
-                r'tiempo.*verbal|verb.*tense'
+                r"completa.*oración|complete.*sentence",
+                r"conjuga.*verbo|conjugate.*verb",
+                r"artículo|article.*el|la|los|las",
+                r"adjetivo|adjective",
+                r"sustantivo|noun",
+                r"tiempo.*verbal|verb.*tense",
             ],
             SpanishAssignmentType.VOCABULARY: [
-                r'define.*palabra|define.*word',
-                r'vocabulario|vocabulary',
-                r'significado|meaning',
-                r'sinónimo|synonym',
-                r'antónimo|antonym',
-                r'palabra.*día|word.*day'
+                r"define.*palabra|define.*word",
+                r"vocabulario|vocabulary",
+                r"significado|meaning",
+                r"sinónimo|synonym",
+                r"antónimo|antonym",
+                r"palabra.*día|word.*day",
             ],
             SpanishAssignmentType.READING_COMPREHENSION: [
-                r'lee.*texto|read.*text',
-                r'comprensión|comprehension',
-                r'responde.*pregunta|answer.*question',
-                r'según.*texto|according.*text',
-                r'¿qué|¿cuál|¿cómo|¿dónde|¿cuándo'
+                r"lee.*texto|read.*text",
+                r"comprensión|comprehension",
+                r"responde.*pregunta|answer.*question",
+                r"según.*texto|according.*text",
+                r"¿qué|¿cuál|¿cómo|¿dónde|¿cuándo",
             ],
             SpanishAssignmentType.TRANSLATION: [
-                r'traduce|translate',
-                r'inglés.*español|english.*spanish',
-                r'español.*inglés|spanish.*english',
-                r'en.*español|in.*spanish',
-                r'en.*inglés|in.*english'
+                r"traduce|translate",
+                r"inglés.*español|english.*spanish",
+                r"español.*inglés|spanish.*english",
+                r"en.*español|in.*spanish",
+                r"en.*inglés|in.*english",
             ],
             SpanishAssignmentType.CULTURE: [
-                r'cultura|culture',
-                r'tradición|tradition',
-                r'país|country.*hispanic',
-                r'fiesta|celebration',
-                r'costumbre|custom',
-                r'historia.*españa|history.*spain'
+                r"cultura|culture",
+                r"tradición|tradition",
+                r"país|country.*hispanic",
+                r"fiesta|celebration",
+                r"costumbre|custom",
+                r"historia.*españa|history.*spain",
             ],
             SpanishAssignmentType.CONJUGATION: [
-                r'presente|present.*tense',
-                r'pretérito|preterite',
-                r'imperfecto|imperfect',
-                r'futuro|future.*tense',
-                r'subjuntivo|subjunctive',
-                r'imperativo|imperative'
-            ]
+                r"presente|present.*tense",
+                r"pretérito|preterite",
+                r"imperfecto|imperfect",
+                r"futuro|future.*tense",
+                r"subjuntivo|subjunctive",
+                r"imperativo|imperative",
+            ],
         }
 
     def _load_spanish_vocabulary(self) -> Dict[str, List[str]]:
         """Load Spanish vocabulary by level."""
         return {
-            'beginner': [
-                'hola', 'adiós', 'gracias', 'por favor', 'sí', 'no', 'agua', 'comida',
-                'casa', 'escuela', 'familia', 'amigo', 'gato', 'perro', 'rojo', 'azul',
-                'grande', 'pequeño', 'bueno', 'malo', 'nuevo', 'viejo'
+            "beginner": [
+                "hola",
+                "adiós",
+                "gracias",
+                "por favor",
+                "sí",
+                "no",
+                "agua",
+                "comida",
+                "casa",
+                "escuela",
+                "familia",
+                "amigo",
+                "gato",
+                "perro",
+                "rojo",
+                "azul",
+                "grande",
+                "pequeño",
+                "bueno",
+                "malo",
+                "nuevo",
+                "viejo",
             ],
-            'intermediate': [
-                'aunque', 'mientras', 'durante', 'después', 'antes', 'sin embargo',
-                'además', 'por tanto', 'desarrollo', 'experiencia', 'importante',
-                'necesario', 'posible', 'diferente', 'especial', 'internacional'
+            "intermediate": [
+                "aunque",
+                "mientras",
+                "durante",
+                "después",
+                "antes",
+                "sin embargo",
+                "además",
+                "por tanto",
+                "desarrollo",
+                "experiencia",
+                "importante",
+                "necesario",
+                "posible",
+                "diferente",
+                "especial",
+                "internacional",
             ],
-            'advanced': [
-                'consecuentemente', 'no obstante', 'por consiguiente', 'asimismo',
-                'establecimiento', 'procedimiento', 'acontecimiento', 'desenvolvimiento',
-                'perfeccionamiento', 'incomprensible', 'extraordinario', 'indispensable'
-            ]
+            "advanced": [
+                "consecuentemente",
+                "no obstante",
+                "por consiguiente",
+                "asimismo",
+                "establecimiento",
+                "procedimiento",
+                "acontecimiento",
+                "desenvolvimiento",
+                "perfeccionamiento",
+                "incomprensible",
+                "extraordinario",
+                "indispensable",
+            ],
         }
 
     def _load_grammar_rules(self) -> List[SpanishGrammarRule]:
@@ -155,46 +211,94 @@ class SpanishProcessor:
                 "article_agreement",
                 r"(el|la|los|las)\s+(.*?)(?=\s|$)",
                 "Articles must agree with noun gender and number",
-                ["el libro", "la mesa", "los niños", "las casas"]
+                ["el libro", "la mesa", "los niños", "las casas"],
             ),
             SpanishGrammarRule(
                 "adjective_agreement",
                 r"(.*?)\s+(alto|alta|altos|altas|bueno|buena|buenos|buenas)",
                 "Adjectives must agree with noun gender and number",
-                ["niño alto", "niña alta", "libros buenos", "casas buenas"]
+                ["niño alto", "niña alta", "libros buenos", "casas buenas"],
             ),
             SpanishGrammarRule(
                 "ser_estar_usage",
                 r"\b(es|está|son|están)\s+",
                 "Correct usage of ser vs estar",
-                ["Él es médico", "Ella está cansada"]
-            )
+                ["Él es médico", "Ella está cansada"],
+            ),
         ]
 
     def _load_verb_conjugations(self) -> Dict[str, Dict[str, List[str]]]:
         """Load common Spanish verb conjugations."""
         return {
-            'hablar': {
-                'presente': ['hablo', 'hablas', 'habla', 'hablamos', 'habláis', 'hablan'],
-                'pretérito': ['hablé', 'hablaste', 'habló', 'hablamos', 'hablasteis', 'hablaron']
+            "hablar": {
+                "presente": [
+                    "hablo",
+                    "hablas",
+                    "habla",
+                    "hablamos",
+                    "habláis",
+                    "hablan",
+                ],
+                "pretérito": [
+                    "hablé",
+                    "hablaste",
+                    "habló",
+                    "hablamos",
+                    "hablasteis",
+                    "hablaron",
+                ],
             },
-            'comer': {
-                'presente': ['como', 'comes', 'come', 'comemos', 'coméis', 'comen'],
-                'pretérito': ['comí', 'comiste', 'comió', 'comimos', 'comisteis', 'comieron']
+            "comer": {
+                "presente": ["como", "comes", "come", "comemos", "coméis", "comen"],
+                "pretérito": [
+                    "comí",
+                    "comiste",
+                    "comió",
+                    "comimos",
+                    "comisteis",
+                    "comieron",
+                ],
             },
-            'vivir': {
-                'presente': ['vivo', 'vives', 'vive', 'vivimos', 'vivís', 'viven'],
-                'pretérito': ['viví', 'viviste', 'vivió', 'vivimos', 'vivisteis', 'vivieron']
-            }
+            "vivir": {
+                "presente": ["vivo", "vives", "vive", "vivimos", "vivís", "viven"],
+                "pretérito": [
+                    "viví",
+                    "viviste",
+                    "vivió",
+                    "vivimos",
+                    "vivisteis",
+                    "vivieron",
+                ],
+            },
         }
 
     def _load_cultural_keywords(self) -> List[str]:
         """Load Spanish cultural keywords."""
         return [
-            'flamenco', 'tapas', 'siesta', 'paella', 'quinceañera', 'día de los muertos',
-            'semana santa', 'corrida de toros', 'sangría', 'gazpacho', 'churros',
-            'mariachi', 'salsa', 'tango', 'cumbia', 'reggaeton', 'españa', 'méxico',
-            'argentina', 'colombia', 'perú', 'chile', 'venezuela', 'ecuador'
+            "flamenco",
+            "tapas",
+            "siesta",
+            "paella",
+            "quinceañera",
+            "día de los muertos",
+            "semana santa",
+            "corrida de toros",
+            "sangría",
+            "gazpacho",
+            "churros",
+            "mariachi",
+            "salsa",
+            "tango",
+            "cumbia",
+            "reggaeton",
+            "españa",
+            "méxico",
+            "argentina",
+            "colombia",
+            "perú",
+            "chile",
+            "venezuela",
+            "ecuador",
         ]
 
     def identify_assignment_type(self, text: str) -> SpanishAssignmentType:
@@ -219,11 +323,17 @@ class SpanishProcessor:
 
     def analyze_vocabulary_level(self, text: str) -> str:
         """Analyze the vocabulary level of Spanish text."""
-        words = re.findall(r'\b[a-záéíóúñü]+\b', text.lower())
+        words = re.findall(r"\b[a-záéíóúñü]+\b", text.lower())
 
-        beginner_count = sum(1 for word in words if word in self.spanish_vocabulary['beginner'])
-        intermediate_count = sum(1 for word in words if word in self.spanish_vocabulary['intermediate'])
-        advanced_count = sum(1 for word in words if word in self.spanish_vocabulary['advanced'])
+        beginner_count = sum(
+            1 for word in words if word in self.spanish_vocabulary["beginner"]
+        )
+        intermediate_count = sum(
+            1 for word in words if word in self.spanish_vocabulary["intermediate"]
+        )
+        advanced_count = sum(
+            1 for word in words if word in self.spanish_vocabulary["advanced"]
+        )
 
         total_known = beginner_count + intermediate_count + advanced_count
 
@@ -255,14 +365,21 @@ class SpanishProcessor:
                     noun_phrase = match.group(2).lower()
 
                     # Check for obvious mismatches
-                    if (article in ['el', 'los'] and any(fem in noun_phrase for fem in ['a ', 'as '])) or \
-                       (article in ['la', 'las'] and any(masc in noun_phrase for masc in ['o ', 'os '])):
-                        errors.append({
-                            'rule': rule.rule_name,
-                            'text': matched_text,
-                            'description': rule.description,
-                            'position': match.start()
-                        })
+                    if (
+                        article in ["el", "los"]
+                        and any(fem in noun_phrase for fem in ["a ", "as "])
+                    ) or (
+                        article in ["la", "las"]
+                        and any(masc in noun_phrase for masc in ["o ", "os "])
+                    ):
+                        errors.append(
+                            {
+                                "rule": rule.rule_name,
+                                "text": matched_text,
+                                "description": rule.description,
+                                "position": match.start(),
+                            }
+                        )
 
         return errors
 
@@ -274,7 +391,7 @@ class SpanishProcessor:
             for tense, forms in conjugations.items():
                 found_forms = []
                 for form in forms:
-                    if re.search(rf'\b{form}\b', text, re.IGNORECASE):
+                    if re.search(rf"\b{form}\b", text, re.IGNORECASE):
                         found_forms.append(form)
 
                 if found_forms:
@@ -301,9 +418,9 @@ class SpanishProcessor:
 
         # Spanish question patterns
         question_patterns = [
-            r'¿[^?]*\?',  # Questions with Spanish question marks
-            r'[A-Z][^.!?]*[?]',  # Questions ending with ?
-            r'(?:Qué|Cuál|Cómo|Dónde|Cuándo|Por qué|Quién)[^.!?]*[?]'  # Specific question words
+            r"¿[^?]*\?",  # Questions with Spanish question marks
+            r"[A-Z][^.!?]*[?]",  # Questions ending with ?
+            r"(?:Qué|Cuál|Cómo|Dónde|Cuándo|Por qué|Quién)[^.!?]*[?]",  # Specific question words
         ]
 
         for pattern in question_patterns:
@@ -312,25 +429,22 @@ class SpanishProcessor:
                 question_type = "unknown"
                 match_lower = match.lower()
 
-                if any(word in match_lower for word in ['qué', 'what']):
+                if any(word in match_lower for word in ["qué", "what"]):
                     question_type = "what"
-                elif any(word in match_lower for word in ['cuál', 'which']):
+                elif any(word in match_lower for word in ["cuál", "which"]):
                     question_type = "which"
-                elif any(word in match_lower for word in ['cómo', 'how']):
+                elif any(word in match_lower for word in ["cómo", "how"]):
                     question_type = "how"
-                elif any(word in match_lower for word in ['dónde', 'where']):
+                elif any(word in match_lower for word in ["dónde", "where"]):
                     question_type = "where"
-                elif any(word in match_lower for word in ['cuándo', 'when']):
+                elif any(word in match_lower for word in ["cuándo", "when"]):
                     question_type = "when"
-                elif any(word in match_lower for word in ['por qué', 'why']):
+                elif any(word in match_lower for word in ["por qué", "why"]):
                     question_type = "why"
-                elif any(word in match_lower for word in ['quién', 'who']):
+                elif any(word in match_lower for word in ["quién", "who"]):
                     question_type = "who"
 
-                questions.append({
-                    'question': match.strip(),
-                    'type': question_type
-                })
+                questions.append({"question": match.strip(), "type": question_type})
 
         return questions
 
@@ -339,8 +453,10 @@ class SpanishProcessor:
         score = 0.0
 
         # Sentence structure variety (0-25 points)
-        sentences = re.split(r'[.!?]+', text)
-        avg_sentence_length = sum(len(s.split()) for s in sentences if s.strip()) / max(len(sentences), 1)
+        sentences = re.split(r"[.!?]+", text)
+        avg_sentence_length = sum(len(s.split()) for s in sentences if s.strip()) / max(
+            len(sentences), 1
+        )
         if 8 <= avg_sentence_length <= 20:
             score += 25
         elif 5 <= avg_sentence_length <= 25:
@@ -349,19 +465,24 @@ class SpanishProcessor:
             score += 5
 
         # Vocabulary diversity (0-25 points)
-        words = re.findall(r'\b[a-záéíóúñü]+\b', text.lower())
+        words = re.findall(r"\b[a-záéíóúñü]+\b", text.lower())
         unique_words = len(set(words))
         total_words = len(words)
         diversity_ratio = unique_words / max(total_words, 1)
         score += min(diversity_ratio * 25, 25)
 
         # Grammar complexity (0-25 points)
-        complex_structures = len(re.findall(r'\b(aunque|mientras|durante|después|sin embargo|por tanto)\b', text.lower()))
+        complex_structures = len(
+            re.findall(
+                r"\b(aunque|mientras|durante|después|sin embargo|por tanto)\b",
+                text.lower(),
+            )
+        )
         score += min(complex_structures * 5, 25)
 
         # Proper accents and special characters (0-25 points)
-        spanish_chars = len(re.findall(r'[áéíóúñü]', text.lower()))
-        total_chars = len(re.findall(r'[a-záéíóúñü]', text.lower()))
+        spanish_chars = len(re.findall(r"[áéíóúñü]", text.lower()))
+        total_chars = len(re.findall(r"[a-záéíóúñü]", text.lower()))
         if total_chars > 0:
             accent_ratio = spanish_chars / total_chars
             score += min(accent_ratio * 100, 25)
@@ -395,13 +516,15 @@ class SpanishProcessor:
 
         # Calculate complexity score
         words = len(text.split())
-        sentences = len(re.split(r'[.!?]+', text))
+        sentences = len(re.split(r"[.!?]+", text))
         avg_words_per_sentence = words / max(sentences, 1)
         analysis.complexity_score = min((avg_words_per_sentence / 15) * 100, 100)
 
         return analysis
 
-    def grade_spanish_assignment(self, assignment_text: str, source_text: str = None) -> Dict[str, Any]:
+    def grade_spanish_assignment(
+        self, assignment_text: str, source_text: str = None
+    ) -> Dict[str, Any]:
         """Grade Spanish assignment with language-specific criteria."""
         analysis = self.analyze_spanish_assignment(assignment_text)
 
@@ -429,27 +552,27 @@ class SpanishProcessor:
         cultural_understanding = min(cultural_understanding, 10)
 
         return {
-            'grammar_accuracy': grammar_accuracy,
-            'vocabulary_usage': vocabulary_usage,
-            'fluency_communication': fluency_communication,
-            'cultural_understanding': cultural_understanding,
-            'overall_score': (
-                grammar_accuracy * 0.3 +
-                vocabulary_usage * 0.25 +
-                fluency_communication * 0.3 +
-                cultural_understanding * 0.15
+            "grammar_accuracy": grammar_accuracy,
+            "vocabulary_usage": vocabulary_usage,
+            "fluency_communication": fluency_communication,
+            "cultural_understanding": cultural_understanding,
+            "overall_score": (
+                grammar_accuracy * 0.3
+                + vocabulary_usage * 0.25
+                + fluency_communication * 0.3
+                + cultural_understanding * 0.15
             ),
-            'analysis': analysis,
-            'feedback': self._generate_spanish_feedback(analysis)
+            "analysis": analysis,
+            "feedback": self._generate_spanish_feedback(analysis),
         }
 
     def _score_vocabulary_usage(self, level: str) -> float:
         """Score vocabulary usage based on level."""
         level_scores = {
-            'beginner': 6.0,
-            'intermediate': 8.0,
-            'advanced': 10.0,
-            'unknown': 3.0
+            "beginner": 6.0,
+            "intermediate": 8.0,
+            "advanced": 10.0,
+            "unknown": 3.0,
         }
         return level_scores.get(level, 3.0)
 
@@ -458,7 +581,9 @@ class SpanishProcessor:
         feedback = []
 
         if len(analysis.grammar_errors) > 3:
-            feedback.append("Revisa la concordancia entre artículos, sustantivos y adjetivos.")
+            feedback.append(
+                "Revisa la concordancia entre artículos, sustantivos y adjetivos."
+            )
 
         if analysis.vocabulary_level == "beginner":
             feedback.append("Intenta usar vocabulario más variado y avanzado.")
@@ -466,16 +591,24 @@ class SpanishProcessor:
         if analysis.fluency_score < 50:
             feedback.append("Trabaja en crear oraciones más complejas y naturales.")
 
-        if len(analysis.cultural_references) == 0 and analysis.assignment_type == SpanishAssignmentType.CULTURE:
-            feedback.append("Incluye más referencias culturales específicas del mundo hispanohablante.")
+        if (
+            len(analysis.cultural_references) == 0
+            and analysis.assignment_type == SpanishAssignmentType.CULTURE
+        ):
+            feedback.append(
+                "Incluye más referencias culturales específicas del mundo hispanohablante."
+            )
 
         if len(analysis.verb_conjugations) < 2:
             feedback.append("Usa una mayor variedad de tiempos verbales.")
 
         if not feedback:
-            feedback.append("¡Excelente trabajo en español! Tu uso del idioma es claro y apropiado.")
+            feedback.append(
+                "¡Excelente trabajo en español! Tu uso del idioma es claro y apropiado."
+            )
 
         return feedback
+
 
 def create_spanish_processor() -> SpanishProcessor:
     """Factory function to create a Spanish processor instance."""

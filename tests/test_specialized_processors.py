@@ -4,6 +4,7 @@ Test script for specialized math and Spanish processors.
 """
 import asyncio
 import json
+
 from assignment_orchestrator import create_assignment_orchestrator
 from math_processor import create_math_processor
 from spanish_processor import create_spanish_processor
@@ -75,6 +76,7 @@ Shakespeare uses various literary devices to convey these themes, including fore
 In conclusion, Romeo and Juliet remains relevant today because its themes of love, conflict, and choice are universal human experiences.
 """
 
+
 async def test_math_processor():
     """Test the math processor with a sample assignment."""
     print("🧮 Testing Math Processor")
@@ -99,8 +101,9 @@ async def test_math_processor():
     print(f"  Step-by-step work: {grading['step_by_step_work']:.2f}/10")
     print(f"  Overall score: {grading['overall_score']:.2f}/10")
     print(f"\nFeedback:")
-    for feedback in grading['feedback']:
+    for feedback in grading["feedback"]:
         print(f"  - {feedback}")
+
 
 async def test_spanish_processor():
     """Test the Spanish processor with a sample assignment."""
@@ -128,8 +131,9 @@ async def test_spanish_processor():
     print(f"  Cultural understanding: {grading['cultural_understanding']:.2f}/10")
     print(f"  Overall score: {grading['overall_score']:.2f}/10")
     print(f"\nFeedback:")
-    for feedback in grading['feedback']:
+    for feedback in grading["feedback"]:
         print(f"  - {feedback}")
+
 
 async def test_orchestrator():
     """Test the assignment orchestrator with all sample assignments."""
@@ -139,9 +143,21 @@ async def test_orchestrator():
     orchestrator = create_assignment_orchestrator()
 
     test_assignments = [
-        ("Math Assignment", MATH_ASSIGNMENT, {"subject": "mathematics", "class": "Algebra II"}),
-        ("Spanish Assignment", SPANISH_ASSIGNMENT, {"subject": "español", "class": "Spanish II"}),
-        ("General Assignment", GENERAL_ASSIGNMENT, {"subject": "english", "class": "English Literature"})
+        (
+            "Math Assignment",
+            MATH_ASSIGNMENT,
+            {"subject": "mathematics", "class": "Algebra II"},
+        ),
+        (
+            "Spanish Assignment",
+            SPANISH_ASSIGNMENT,
+            {"subject": "español", "class": "Spanish II"},
+        ),
+        (
+            "General Assignment",
+            GENERAL_ASSIGNMENT,
+            {"subject": "english", "class": "English Literature"},
+        ),
     ]
 
     for name, assignment, metadata in test_assignments:
@@ -162,15 +178,18 @@ async def test_orchestrator():
             print(f"Processing Results:")
             print(f"  Processor used: {result['classification']['subject']}")
             print(f"  Overall score: {result['overall_score']:.2f}")
-            print(f"  Specialized feedback items: {len(result['specialized_feedback'])}")
+            print(
+                f"  Specialized feedback items: {len(result['specialized_feedback'])}"
+            )
 
-            if result['specialized_feedback']:
+            if result["specialized_feedback"]:
                 print("  Sample feedback:")
-                for i, feedback in enumerate(result['specialized_feedback'][:2]):
+                for i, feedback in enumerate(result["specialized_feedback"][:2]):
                     print(f"    {i+1}. {feedback}")
 
         except Exception as e:
             print(f"  Processing failed: {str(e)}")
+
 
 async def test_individual_tools():
     """Test individual tools from the processors."""
@@ -185,7 +204,9 @@ async def test_individual_tools():
     for eq in equations:
         try:
             solution = math_processor.solve_equation(eq)
-            print(f"  {eq} → {solution.solution} (confidence: {solution.confidence:.2f})")
+            print(
+                f"  {eq} → {solution.solution} (confidence: {solution.confidence:.2f})"
+            )
         except Exception as e:
             print(f"  {eq} → Error: {str(e)}")
 
@@ -195,7 +216,7 @@ async def test_individual_tools():
     spanish_texts = [
         "El gato negro está en la mesa.",
         "La niña alto come manzanas.",  # Error: should be "alta"
-        "Me gusta mucho el paella."     # Error: should be "la paella"
+        "Me gusta mucho el paella.",  # Error: should be "la paella"
     ]
 
     for text in spanish_texts:
@@ -203,6 +224,7 @@ async def test_individual_tools():
         print(f"  '{text}' → {len(errors)} errors")
         for error in errors:
             print(f"    - {error['description']}")
+
 
 async def main():
     """Run all tests."""
@@ -220,7 +242,9 @@ async def main():
     except Exception as e:
         print(f"\n❌ Test failed: {str(e)}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

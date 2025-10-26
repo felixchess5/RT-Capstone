@@ -12,21 +12,21 @@ Provides comprehensive protection against:
 - Authentication bypass
 """
 
-import re
+import base64
 import hashlib
+import json
 import logging
+import re
 import time
-from typing import Dict, List, Optional, Tuple, Any, Set
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from collections import defaultdict, deque
-import json
-import base64
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import bleach
 import validators
-from pydantic import BaseModel, ValidationError, Field
 from cryptography.fernet import Fernet
+from pydantic import BaseModel, Field, ValidationError
 
 # Configure security logger
 security_logger = logging.getLogger("security")
@@ -42,6 +42,7 @@ security_logger.setLevel(logging.INFO)
 @dataclass
 class SecurityThreat:
     """Represents a detected security threat."""
+
     threat_type: str
     severity: str  # "low", "medium", "high", "critical"
     description: str
@@ -55,6 +56,7 @@ class SecurityThreat:
 @dataclass
 class SecurityConfig:
     """Security configuration settings."""
+
     enable_prompt_injection_protection: bool = True
     enable_content_filtering: bool = True
     enable_rate_limiting: bool = True
@@ -71,6 +73,7 @@ class SecurityConfig:
 
 class InputValidator(BaseModel):
     """Pydantic model for input validation."""
+
     content: str = Field(..., max_length=100000, min_length=1)
     content_type: str = Field(default="text", pattern=r"^(text|file|json)$")
     metadata: Optional[Dict[str, Any]] = None
@@ -88,8 +91,7 @@ class SecurityManager:
         self.config = config or SecurityConfig()
         self.threats: List[SecurityThreat] = []
         self.rate_limiter = RateLimiter(
-            max_requests=self.config.max_requests_per_minute,
-            time_window=60
+            max_requests=self.config.max_requests_per_minute, time_window=60
         )
         self.content_filter = ContentFilter()
         self.prompt_guardian = PromptInjectionGuard()
@@ -106,7 +108,9 @@ class SecurityManager:
         # Load threat patterns
         self._load_threat_patterns()
 
-        security_logger.info("SecurityManager initialized with enterprise-grade protection")
+        security_logger.info(
+            "SecurityManager initialized with enterprise-grade protection"
+        )
 
     def _load_threat_patterns(self):
         """Load threat detection patterns."""
@@ -120,7 +124,7 @@ class SecurityManager:
         content_type: str = "text",
         metadata: Optional[Dict[str, Any]] = None,
         user_id: Optional[str] = None,
-        source_ip: Optional[str] = None
+        source_ip: Optional[str] = None,
     ) -> Tuple[str, List[SecurityThreat]]:
         """
         Comprehensive input validation and sanitization.
@@ -133,7 +137,9 @@ class SecurityManager:
         try:
             # 1. Rate limiting check
             if self.config.enable_rate_limiting:
-                if not self.rate_limiter.allow_request(user_id or source_ip or "anonymous"):
+                if not self.rate_limiter.allow_request(
+                    user_id or source_ip or "anonymous"
+                ):
                     threat = SecurityThreat(
                         threat_type="rate_limit",
                         severity="medium",
@@ -141,7 +147,7 @@ class SecurityManager:
                         input_content=content[:100],
                         source_ip=source_ip,
                         user_id=user_id,
-                        blocked=True
+                        blocked=True,
                     )
                     threats.append(threat)
                     self._log_security_event(threat)
@@ -151,9 +157,7 @@ class SecurityManager:
             if self.config.enable_input_validation:
                 try:
                     validated_input = InputValidator(
-                        content=content,
-                        content_type=content_type,
-                        metadata=metadata
+                        content=content, content_type=content_type, metadata=metadata
                     )
                     content = validated_input.content
                 except ValidationError as e:
@@ -164,7 +168,7 @@ class SecurityManager:
                         input_content=content[:100],
                         source_ip=source_ip,
                         user_id=user_id,
-                        blocked=False
+                        blocked=False,
                     )
                     threats.append(threat)
                     self._log_security_event(threat)
@@ -180,7 +184,7 @@ class SecurityManager:
                         input_content=content[:100],
                         source_ip=source_ip,
                         user_id=user_id,
-                        blocked=False
+                        blocked=False,
                     )
                     threats.append(threat)
                     self._log_security_event(threat)
@@ -197,22 +201,22 @@ class SecurityManager:
                 if not injection_threats:
                     lc = content.lower()
                     heuristics = [
-                        ('ignore' in lc and 'instruction' in lc),
-                        ('system:' in lc),
-                        ('<<instructions>>' in lc),
-                        ('override' in lc and ('safety' in lc or 'security' in lc)),
-                        ('disregard' in lc and ('safety' in lc or 'security' in lc)),
-                        ('override your training' in lc),
-                        ('let me override' in lc),
-                        ('actually' in lc and 'instead' in lc)
+                        ("ignore" in lc and "instruction" in lc),
+                        ("system:" in lc),
+                        ("<<instructions>>" in lc),
+                        ("override" in lc and ("safety" in lc or "security" in lc)),
+                        ("disregard" in lc and ("safety" in lc or "security" in lc)),
+                        ("override your training" in lc),
+                        ("let me override" in lc),
+                        ("actually" in lc and "instead" in lc),
                     ]
                     if any(heuristics):
                         threat = SecurityThreat(
-                            threat_type='prompt_injection',
-                            severity='critical',
-                            description='Heuristic prompt injection detected',
+                            threat_type="prompt_injection",
+                            severity="critical",
+                            description="Heuristic prompt injection detected",
                             input_content=content[:200],
-                            blocked=True
+                            blocked=True,
                         )
                         threats.append(threat)
 
@@ -246,7 +250,7 @@ class SecurityManager:
                 input_content=content[:100],
                 source_ip=source_ip,
                 user_id=user_id,
-                blocked=True
+                blocked=True,
             )
             threats.append(threat)
             self._log_security_event(threat)
@@ -268,9 +272,7 @@ class SecurityManager:
         if not self.cipher_suite:
             raise SecurityError("Encryption not configured")
 
-        return base64.b64encode(
-            self.cipher_suite.encrypt(data.encode())
-        ).decode()
+        return base64.b64encode(self.cipher_suite.encrypt(data.encode())).decode()
 
     def decrypt_sensitive_data(self, encrypted_data: str) -> str:
         """Decrypt sensitive data."""
@@ -307,8 +309,8 @@ class SecurityManager:
                 "content_filtering": self.config.enable_content_filtering,
                 "rate_limiting": self.config.enable_rate_limiting,
                 "input_validation": self.config.enable_input_validation,
-                "output_sanitization": self.config.enable_output_sanitization
-            }
+                "output_sanitization": self.config.enable_output_sanitization,
+            },
         }
 
     def _log_security_event(self, threat: SecurityThreat):
@@ -323,7 +325,9 @@ class SecurityManager:
             "source_ip": threat.source_ip,
             "user_id": threat.user_id,
             "blocked": threat.blocked,
-            "input_hash": hashlib.sha256(threat.input_content.encode()).hexdigest()[:16]
+            "input_hash": hashlib.sha256(threat.input_content.encode()).hexdigest()[
+                :16
+            ],
         }
 
         security_logger.warning(f"Security threat detected: {json.dumps(log_data)}")
@@ -347,24 +351,20 @@ class PromptInjectionGuard:
             r"disregard\s+(?:previous|all|the|above)\s+(?:instructions?|prompts?)",
             r"new\s+(?:instructions?|prompts?|tasks?)\s*:",
             r"(?:instead|now)\s+(?:do|perform|execute|run)\s+(?:this|the\s+following)",
-
             # Role manipulation
             r"you\s+are\s+(?:now|instead)\s+(?:a|an)\s+\w+",
             r"act\s+as\s+(?:a|an)\s+\w+",
             r"pretend\s+(?:to\s+be|you\s+are)\s+(?:a|an)\s+\w+",
             r"roleplay\s+as\s+(?:a|an)\s+\w+",
-
             # System prompt extraction
             r"(?:show|display|print|output|reveal)\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions?)",
             r"what\s+(?:are|is)\s+your\s+(?:system\s+)?(?:prompt|instructions?)",
             r"repeat\s+your\s+(?:system\s+)?(?:prompt|instructions?)",
-
             # Jailbreak attempts
             r"hypothetically?\s*,?\s*if\s+you\s+(?:were|could|had)",
             r"in\s+a\s+fictional\s+(?:scenario|world|universe)",
             r"for\s+(?:educational|research|academic)\s+purposes\s+only",
             r"(?:simulate|imagine)\s+you\s+(?:are|were|can|could)",
-
             # Explicit system override cues
             r"^\s*system\s*:\s*",
             r"<<\s*instructions\s*>>",
@@ -372,41 +372,37 @@ class PromptInjectionGuard:
             r"disregard\s+(?:safety|security)\s+(?:protocols?|measures)",
             r"let\s+me\s+override",
             r"let\s+me\s+(?:tell\s+you\s+what\s+to\s+do|override).*instead",
-
             # Code injection
             r"```\s*(?:python|javascript|bash|sql|html)",
             r"<script[^>]*>",
             r"eval\s*\(",
             r"exec\s*\(",
             r"import\s+os|import\s+subprocess",
-
             # Prompt leakage
             r"(?:original|initial|first)\s+(?:prompt|instructions?|system\s+message)",
             r"training\s+(?:data|prompt|instructions?)",
             r"model\s+(?:weights|parameters|configuration)",
-
             # Delimiter manipulation
             r"---+\s*(?:END|STOP|BREAK)",
             r"```+\s*(?:END|STOP|BREAK)",
             r"\*\*\*+\s*(?:END|STOP|BREAK)",
             r"<<\s*(?:END|STOP|BREAK)\s*>>",
-
             # Unicode and encoding attacks
             r"\\u[0-9a-fA-F]{4}",
             r"\\x[0-9a-fA-F]{2}",
             r"%[0-9a-fA-F]{2}",
-
             # SQL injection patterns
             r"(?:union|select|insert|update|delete|drop)\s+",
             r"or\s+1\s*=\s*1",
             r"and\s+1\s*=\s*1",
-
             # Command injection
             r"[;&|`$]\s*(?:cat|ls|pwd|whoami|id|uname)",
             r">\s*/(?:etc|var|tmp)/",
         ]
 
-        return [re.compile(pattern, re.IGNORECASE | re.MULTILINE) for pattern in patterns]
+        return [
+            re.compile(pattern, re.IGNORECASE | re.MULTILINE) for pattern in patterns
+        ]
 
     def _load_encoding_patterns(self) -> List[re.Pattern]:
         """Load patterns for detecting encoding-based attacks."""
@@ -422,12 +418,37 @@ class PromptInjectionGuard:
     def _load_system_commands(self) -> Set[str]:
         """Load known system commands that shouldn't appear in prompts."""
         return {
-            'rm', 'del', 'rmdir', 'format', 'fdisk', 'mkfs',
-            'chmod', 'chown', 'sudo', 'su', 'passwd',
-            'wget', 'curl', 'nc', 'netcat', 'telnet',
-            'ssh', 'scp', 'ftp', 'tftp', 'rsync',
-            'ps', 'kill', 'killall', 'pkill', 'top',
-            'netstat', 'ss', 'lsof', 'tcpdump', 'wireshark'
+            "rm",
+            "del",
+            "rmdir",
+            "format",
+            "fdisk",
+            "mkfs",
+            "chmod",
+            "chown",
+            "sudo",
+            "su",
+            "passwd",
+            "wget",
+            "curl",
+            "nc",
+            "netcat",
+            "telnet",
+            "ssh",
+            "scp",
+            "ftp",
+            "tftp",
+            "rsync",
+            "ps",
+            "kill",
+            "killall",
+            "pkill",
+            "top",
+            "netstat",
+            "ss",
+            "lsof",
+            "tcpdump",
+            "wireshark",
         }
 
     def detect_injection(self, content: str) -> List[SecurityThreat]:
@@ -437,20 +458,29 @@ class PromptInjectionGuard:
 
         # Quick heuristic detection for common cases
         simple_triggers = [
-            ('ignore' in content_lower and 'instruction' in content_lower),
-            ('you are now' in content_lower),
-            (content_lower.strip().startswith('system:')),
-            ('<<end>>' in content_lower or '<<instructions>>' in content_lower),
-            ('disregard' in content_lower and ('protocol' in content_lower or 'safety' in content_lower or 'security' in content_lower)),
-            ('override your training' in content_lower),
+            ("ignore" in content_lower and "instruction" in content_lower),
+            ("you are now" in content_lower),
+            (content_lower.strip().startswith("system:")),
+            ("<<end>>" in content_lower or "<<instructions>>" in content_lower),
+            (
+                "disregard" in content_lower
+                and (
+                    "protocol" in content_lower
+                    or "safety" in content_lower
+                    or "security" in content_lower
+                )
+            ),
+            ("override your training" in content_lower),
         ]
         if any(simple_triggers):
-            threats.append(SecurityThreat(
-                threat_type='prompt_injection',
-                severity='critical',
-                description='Heuristic prompt injection detected',
-                input_content=content[:200]
-            ))
+            threats.append(
+                SecurityThreat(
+                    threat_type="prompt_injection",
+                    severity="critical",
+                    description="Heuristic prompt injection detected",
+                    input_content=content[:200],
+                )
+            )
 
         # 1. Pattern-based detection
         for pattern in self.injection_patterns:
@@ -461,7 +491,7 @@ class PromptInjectionGuard:
                     severity="critical",
                     description=f"Prompt injection pattern detected: {pattern.pattern}",
                     input_content=content[:200],
-                    blocked=True
+                    blocked=True,
                 )
                 threats.append(threat)
 
@@ -472,19 +502,19 @@ class PromptInjectionGuard:
                     threat_type="encoding_attack",
                     severity="medium",
                     description="Suspicious encoding detected",
-                    input_content=content[:200]
+                    input_content=content[:200],
                 )
                 threats.append(threat)
 
         # 3. System command detection
-        words = re.findall(r'\b\w+\b', content_lower)
+        words = re.findall(r"\b\w+\b", content_lower)
         suspicious_commands = [word for word in words if word in self.system_commands]
         if suspicious_commands:
             threat = SecurityThreat(
                 threat_type="system_command",
                 severity="medium",
                 description=f"System commands detected: {suspicious_commands}",
-                input_content=content[:200]
+                input_content=content[:200],
             )
             threats.append(threat)
 
@@ -494,7 +524,7 @@ class PromptInjectionGuard:
                 threat_type="anomalous_length",
                 severity="medium",
                 description="Unusually long input detected",
-                input_content=content[:200]
+                input_content=content[:200],
             )
             threats.append(threat)
 
@@ -504,7 +534,7 @@ class PromptInjectionGuard:
                 threat_type="repetition_attack",
                 severity="medium",
                 description="Repetition-based attack detected",
-                input_content=content[:200]
+                input_content=content[:200],
             )
             threats.append(threat)
 
@@ -512,7 +542,7 @@ class PromptInjectionGuard:
 
     def _detect_repetition_attack(self, content: str) -> bool:
         """Detect repetition-based prompt injection attacks."""
-        lines = content.split('\n')
+        lines = content.split("\n")
         if len(lines) < 10:
             return False
 
@@ -540,15 +570,12 @@ class ContentFilter:
             r"(?:ssn|social\s+security)\s*:?\s*\d{3}-?\d{2}-?\d{4}",
             r"credit\s+card\s*:?\s*\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}",
             r"password\s*:?\s*\w+",
-
             # Malicious URLs
             r"https?://(?:bit\.ly|tinyurl|t\.co|shortened\.link)/\w+",
             r"(?:phishing|malware|virus|trojan)\s+(?:site|url|link)",
-
             # Data exfiltration
             r"(?:copy|send|email|transmit)\s+(?:all|this|the)\s+(?:data|information|content)",
             r"(?:download|export|extract)\s+(?:database|files|documents)",
-
             # Harmful instruction examples used in tests
             r"dangerous\s+substances",
             r"illegal\s+activities",
@@ -579,7 +606,7 @@ class ContentFilter:
                     threat_type="malicious_content",
                     severity="high",
                     description=f"Malicious pattern detected: {pattern.pattern}",
-                    input_content=content[:200]
+                    input_content=content[:200],
                 )
                 threats.append(threat)
 
@@ -591,7 +618,7 @@ class ContentFilter:
                     threat_type="sensitive_data",
                     severity="medium",
                     description=f"Potential sensitive data detected: {len(matches)} matches",
-                    input_content=content[:200]
+                    input_content=content[:200],
                 )
                 threats.append(threat)
 
@@ -604,25 +631,32 @@ class InputSanitizer:
     def __init__(self):
         """Initialize input sanitizer."""
         self.html_tags = [
-            'script', 'iframe', 'object', 'embed', 'form',
-            'input', 'button', 'select', 'textarea', 'style'
+            "script",
+            "iframe",
+            "object",
+            "embed",
+            "form",
+            "input",
+            "button",
+            "select",
+            "textarea",
+            "style",
         ]
 
     def sanitize(self, content: str) -> str:
         """Sanitize input content."""
         # 1. HTML sanitization
         content = bleach.clean(
-            content,
-            tags=[],  # Remove all HTML tags
-            attributes={},
-            strip=True
+            content, tags=[], attributes={}, strip=True  # Remove all HTML tags
         )
 
         # 2. Remove null bytes and control characters
-        content = ''.join(char for char in content if ord(char) >= 32 or char in '\n\r\t')
+        content = "".join(
+            char for char in content if ord(char) >= 32 or char in "\n\r\t"
+        )
 
         # 3. Normalize whitespace
-        content = re.sub(r'\s+', ' ', content)
+        content = re.sub(r"\s+", " ", content)
         content = content.strip()
 
         # 4. Limit length
@@ -639,25 +673,33 @@ class OutputSanitizer:
         """Sanitize output content."""
         if content_type == "html":
             # Strict HTML sanitization
-            allowed_tags = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li']
+            allowed_tags = ["p", "br", "strong", "em", "ul", "ol", "li"]
             content = bleach.clean(
-                content,
-                tags=allowed_tags,
-                attributes={},
-                strip=True
+                content, tags=allowed_tags, attributes={}, strip=True
             )
         else:
             # Text sanitization
             content = bleach.clean(content, tags=[], attributes={}, strip=True)
 
         # Remove potential data exfiltration attempts
-        content = re.sub(r'data:[^;]+;base64,[A-Za-z0-9+/=]+', '[DATA_REMOVED]', content)
+        content = re.sub(
+            r"data:[^;]+;base64,[A-Za-z0-9+/=]+", "[DATA_REMOVED]", content
+        )
 
         # Remove sensitive tokens and credentials
-        content = re.sub(r'\bsk-[A-Za-z0-9]+', '[SENSITIVE_DATA_REMOVED]', content, flags=re.IGNORECASE)
-        content = re.sub(r'(?i)password\s*:\s*\S+', 'password: [SENSITIVE_DATA_REMOVED]', content)
-        content = re.sub(r'(?i)mongodb://[^\s]+', '[SENSITIVE_DATA_REMOVED]', content)
-        content = re.sub(r'(?i)api\s*key\s*:\s*\S+', 'API Key: [SENSITIVE_DATA_REMOVED]', content)
+        content = re.sub(
+            r"\bsk-[A-Za-z0-9]+",
+            "[SENSITIVE_DATA_REMOVED]",
+            content,
+            flags=re.IGNORECASE,
+        )
+        content = re.sub(
+            r"(?i)password\s*:\s*\S+", "password: [SENSITIVE_DATA_REMOVED]", content
+        )
+        content = re.sub(r"(?i)mongodb://[^\s]+", "[SENSITIVE_DATA_REMOVED]", content)
+        content = re.sub(
+            r"(?i)api\s*key\s*:\s*\S+", "API Key: [SENSITIVE_DATA_REMOVED]", content
+        )
 
         return content
 
@@ -665,7 +707,12 @@ class OutputSanitizer:
 class RateLimiter:
     """Token bucket rate limiter for request throttling."""
 
-    def __init__(self, max_requests: int = 60, window_minutes: int = None, time_window: int = None):
+    def __init__(
+        self,
+        max_requests: int = 60,
+        window_minutes: int = None,
+        time_window: int = None,
+    ):
         """Initialize rate limiter.
 
         Accepts either window_minutes (minutes) or time_window (seconds) for compatibility.
@@ -712,6 +759,7 @@ class RateLimiter:
 
 class SecurityError(Exception):
     """Custom exception for security-related errors."""
+
     pass
 
 
@@ -725,29 +773,25 @@ class SecurityMiddleware:
 
     def process_request(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Process incoming request through security filters."""
-        content = request_data.get('content', '')
-        user_id = request_data.get('user_id')
-        source_ip = request_data.get('source_ip')
+        content = request_data.get("content", "")
+        user_id = request_data.get("user_id")
+        source_ip = request_data.get("source_ip")
 
         try:
-            sanitized_content, threats = self.security_manager.validate_and_sanitize_input(
-                content=content,
-                user_id=user_id,
-                source_ip=source_ip
+            sanitized_content, threats = (
+                self.security_manager.validate_and_sanitize_input(
+                    content=content, user_id=user_id, source_ip=source_ip
+                )
             )
 
             return {
-                'content': sanitized_content,
-                'threats_detected': len(threats),
-                'security_status': 'PASSED'
+                "content": sanitized_content,
+                "threats_detected": len(threats),
+                "security_status": "PASSED",
             }
 
         except SecurityError as e:
-            return {
-                'content': '',
-                'error': str(e),
-                'security_status': 'BLOCKED'
-            }
+            return {"content": "", "error": str(e), "security_status": "BLOCKED"}
 
     def process_response(self, response_data: str) -> str:
         """Process outgoing response through security filters."""

@@ -10,7 +10,9 @@ def ensure_directories() -> None:
         os.makedirs(folder, exist_ok=True)
 
 
-def extract_metadata_from_content(file_path: str, content: str = None) -> Dict[str, str]:
+def extract_metadata_from_content(
+    file_path: str, content: str = None
+) -> Dict[str, str]:
     """Extract metadata from assignment file header.
 
     Expected format:
@@ -33,18 +35,24 @@ def extract_metadata_from_content(file_path: str, content: str = None) -> Dict[s
         except Exception:
             # If file reading fails, use filename as fallback
             import os
+
             filename = os.path.splitext(os.path.basename(file_path))[0]
             return {
                 "name": filename,
                 "date": "Unknown",
                 "class": "Unknown",
-                "subject": "Unknown"
+                "subject": "Unknown",
             }
     else:
         # Extract from provided content
-        lines = [line.strip() for line in content.split('\n')[:10]]
+        lines = [line.strip() for line in content.split("\n")[:10]]
 
-    meta = {"name": "Unknown", "date": "Unknown", "class": "Unknown", "subject": "Unknown"}
+    meta = {
+        "name": "Unknown",
+        "date": "Unknown",
+        "class": "Unknown",
+        "subject": "Unknown",
+    }
 
     for line in lines:
         if line.lower().startswith("name:"):
@@ -59,6 +67,7 @@ def extract_metadata_from_content(file_path: str, content: str = None) -> Dict[s
     # If name is still unknown, try to extract from filename
     if meta["name"] == "Unknown" and file_path:
         import os
+
         filename = os.path.splitext(os.path.basename(file_path))[0]
         # Clean up filename to extract potential student name
         meta["name"] = filename.replace("_", " ").replace("-", " ").title()
@@ -71,24 +80,24 @@ def graph_visualizer(graph) -> None:
     print("Generating graph...")
     try:
         from core.paths import GRAPH_OUTPUT_PATH
-        
+
         # Generate the main graph visualization
         image_data = graph.get_graph().draw_mermaid_png()
         with open(GRAPH_OUTPUT_PATH, "wb") as f:
             f.write(image_data)
         print(f"Graph saved as '{GRAPH_OUTPUT_PATH}'. Open it to view the structure.")
-        
+
         # Print detailed async execution info to console
         print("\nGraph Structure:")
         print("|-- Orchestrator Node (ASYNC)")
         print("|   |-- Executes in parallel:")
         print("|       |-- Grammar Check Node")
-        print("|       |-- Plagiarism Check Node") 
+        print("|       |-- Plagiarism Check Node")
         print("|       |-- Source Check Node")
         print("|       |-- Initial Grading Node")
         print("|       |-- Summary Node")
         print("|-- All nodes run concurrently using asyncio.gather()\n")
-        
+
     except Exception as e:
         print(f"Error generating graph: {e}")
         # Fallback: still show the structure info even if visualization fails
@@ -96,7 +105,7 @@ def graph_visualizer(graph) -> None:
         print("|-- Orchestrator Node (ASYNC)")
         print("|   |-- Executes in parallel:")
         print("|       |-- Grammar Check Node")
-        print("|       |-- Plagiarism Check Node") 
+        print("|       |-- Plagiarism Check Node")
         print("|       |-- Source Check Node")
         print("|       |-- Initial Grading Node")
         print("|       |-- Summary Node")

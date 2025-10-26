@@ -6,17 +6,18 @@ This script tests the multi-LLM configuration, failover mechanisms,
 and health monitoring capabilities.
 """
 
+import json
 import os
 import sys
-import json
 import time
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Add the current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
-    from llms import llm_manager, MultiLLMManager
+    from llms import MultiLLMManager, llm_manager
+
     print("✓ Successfully imported multi-LLM system")
 except ImportError as e:
     print(f"✗ Failed to import multi-LLM system: {e}")
@@ -25,9 +26,9 @@ except ImportError as e:
 
 def test_llm_initialization():
     """Test LLM provider initialization."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TESTING LLM PROVIDER INITIALIZATION")
-    print("="*60)
+    print("=" * 60)
 
     if not llm_manager:
         print("✗ LLM Manager failed to initialize")
@@ -46,9 +47,9 @@ def test_llm_initialization():
 
 def test_health_monitoring():
     """Test health monitoring system."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TESTING HEALTH MONITORING SYSTEM")
-    print("="*60)
+    print("=" * 60)
 
     if not llm_manager:
         return False
@@ -66,9 +67,9 @@ def test_health_monitoring():
 
 def test_basic_llm_invocation():
     """Test basic LLM invocation with simple prompt."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TESTING BASIC LLM INVOCATION")
-    print("="*60)
+    print("=" * 60)
 
     if not llm_manager:
         return False
@@ -94,18 +95,24 @@ def test_basic_llm_invocation():
 
 def test_specialized_routing():
     """Test specialized routing for different use cases."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TESTING SPECIALIZED ROUTING")
-    print("="*60)
+    print("=" * 60)
 
     if not llm_manager:
         return False
 
     test_cases = [
         ("math_problems", "Solve: 3x + 7 = 22"),
-        ("language_analysis", "Analyze the grammar in this sentence: 'The quick brown fox jumps.'"),
+        (
+            "language_analysis",
+            "Analyze the grammar in this sentence: 'The quick brown fox jumps.'",
+        ),
         ("creative_writing", "Write a haiku about programming."),
-        ("code_analysis", "def fibonacci(n): return n if n <= 1 else fibonacci(n-1) + fibonacci(n-2)")
+        (
+            "code_analysis",
+            "def fibonacci(n): return n if n <= 1 else fibonacci(n-1) + fibonacci(n-2)",
+        ),
     ]
 
     for use_case, prompt in test_cases:
@@ -128,9 +135,9 @@ def test_specialized_routing():
 
 def test_circuit_breaker():
     """Test circuit breaker functionality (simulation)."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TESTING CIRCUIT BREAKER (SIMULATION)")
-    print("="*60)
+    print("=" * 60)
 
     if not llm_manager:
         return False
@@ -141,16 +148,18 @@ def test_circuit_breaker():
         print(f"{provider_name}: State={cb.state}, Failures={cb.failure_count}")
 
     print("\nCircuit breaker thresholds and timeouts are configured.")
-    print("In production, circuit breakers will automatically open after consecutive failures.")
+    print(
+        "In production, circuit breakers will automatically open after consecutive failures."
+    )
 
     return True
 
 
 def test_fallback_mechanism():
     """Test fallback mechanism with invalid prompt (mild test)."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TESTING FALLBACK MECHANISM")
-    print("="*60)
+    print("=" * 60)
 
     if not llm_manager:
         return False
@@ -180,9 +189,9 @@ def test_fallback_mechanism():
 
 def test_configuration_loading():
     """Test configuration file loading."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TESTING CONFIGURATION LOADING")
-    print("="*60)
+    print("=" * 60)
 
     if not llm_manager:
         return False
@@ -191,7 +200,9 @@ def test_configuration_loading():
 
     print("Configuration loaded:")
     print(f"  Provider priority: {config.get('provider_priority', {})}")
-    print(f"  Enabled providers: {[p for p, c in config.get('providers', {}).items() if c.get('enabled', False)]}")
+    print(
+        f"  Enabled providers: {[p for p, c in config.get('providers', {}).items() if c.get('enabled', False)]}"
+    )
     print(f"  Failover enabled: {config.get('failover', {}).get('enabled', False)}")
     print(f"  Monitoring enabled: {config.get('monitoring', {}).get('enabled', False)}")
 
@@ -201,7 +212,7 @@ def test_configuration_loading():
 def run_comprehensive_test():
     """Run all tests and provide summary."""
     print("🚀 MULTI-LLM PROVIDER SYSTEM TEST SUITE")
-    print("="*80)
+    print("=" * 80)
 
     tests = [
         ("LLM Initialization", test_llm_initialization),
@@ -224,9 +235,9 @@ def run_comprehensive_test():
             results[test_name] = "CRASH"
 
     # Final summary
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("TEST SUMMARY")
-    print("="*80)
+    print("=" * 80)
 
     passed = sum(1 for r in results.values() if r == "PASS")
     total = len(results)
@@ -249,8 +260,10 @@ def run_comprehensive_test():
         print("\nFinal Provider Health Status:")
         health_status = llm_manager.get_health_status()
         for provider, status in health_status.items():
-            health_indicator = "🟢" if status['is_healthy'] else "🔴"
-            print(f"{health_indicator} {provider}: {status['success_rate']} success rate, {status['total_requests']} requests")
+            health_indicator = "🟢" if status["is_healthy"] else "🔴"
+            print(
+                f"{health_indicator} {provider}: {status['success_rate']} success rate, {status['total_requests']} requests"
+            )
 
 
 if __name__ == "__main__":

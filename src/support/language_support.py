@@ -2,24 +2,28 @@
 Multi-language support module for assignment grading system.
 Provides language detection, localization, and language-specific processing capabilities.
 """
-import os
+
 import json
 import logging
-from typing import Dict, List, Optional, Tuple, Any
-from enum import Enum
+import os
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
-    from langdetect import detect, detect_langs, LangDetectException
+    from langdetect import LangDetectException, detect, detect_langs
+
     LANGDETECT_AVAILABLE = True
 except ImportError:
     LANGDETECT_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
+
 class SupportedLanguage(Enum):
     """Supported languages with their ISO codes."""
+
     ENGLISH = "en"
     SPANISH = "es"
     FRENCH = "fr"
@@ -35,24 +39,29 @@ class SupportedLanguage(Enum):
     ARABIC = "ar"
     HINDI = "hi"
 
+
 @dataclass
 class LanguageDetectionResult:
     """Result of language detection."""
+
     primary_language: str
     confidence: float
     all_detected: List[Tuple[str, float]]
     is_supported: bool
     fallback_language: str = "en"
 
+
 @dataclass
 class LanguageConfig:
     """Configuration for a specific language."""
+
     code: str
     name: str
     tesseract_lang: str
     grammar_tool_code: str
     right_to_left: bool = False
     requires_special_handling: bool = False
+
 
 class LanguageManager:
     """Manages multi-language support for the assignment grading system."""
@@ -73,13 +82,40 @@ class LanguageManager:
             "it": LanguageConfig("it", "Italian", "ita", "it"),
             "pt": LanguageConfig("pt", "Portuguese", "por", "pt-PT"),
             "nl": LanguageConfig("nl", "Dutch", "nld", "nl"),
-            "ru": LanguageConfig("ru", "Russian", "rus", "ru", requires_special_handling=True),
-            "zh-cn": LanguageConfig("zh-cn", "Chinese (Simplified)", "chi_sim", "zh-CN", requires_special_handling=True),
-            "zh-tw": LanguageConfig("zh-tw", "Chinese (Traditional)", "chi_tra", "zh-TW", requires_special_handling=True),
-            "ja": LanguageConfig("ja", "Japanese", "jpn", "ja", requires_special_handling=True),
-            "ko": LanguageConfig("ko", "Korean", "kor", "ko", requires_special_handling=True),
-            "ar": LanguageConfig("ar", "Arabic", "ara", "ar", right_to_left=True, requires_special_handling=True),
-            "hi": LanguageConfig("hi", "Hindi", "hin", "hi", requires_special_handling=True),
+            "ru": LanguageConfig(
+                "ru", "Russian", "rus", "ru", requires_special_handling=True
+            ),
+            "zh-cn": LanguageConfig(
+                "zh-cn",
+                "Chinese (Simplified)",
+                "chi_sim",
+                "zh-CN",
+                requires_special_handling=True,
+            ),
+            "zh-tw": LanguageConfig(
+                "zh-tw",
+                "Chinese (Traditional)",
+                "chi_tra",
+                "zh-TW",
+                requires_special_handling=True,
+            ),
+            "ja": LanguageConfig(
+                "ja", "Japanese", "jpn", "ja", requires_special_handling=True
+            ),
+            "ko": LanguageConfig(
+                "ko", "Korean", "kor", "ko", requires_special_handling=True
+            ),
+            "ar": LanguageConfig(
+                "ar",
+                "Arabic",
+                "ara",
+                "ar",
+                right_to_left=True,
+                requires_special_handling=True,
+            ),
+            "hi": LanguageConfig(
+                "hi", "Hindi", "hin", "hi", requires_special_handling=True
+            ),
         }
         return configs
 
@@ -128,7 +164,7 @@ Return your response as a JSON object like:
   "grammar": float
 }}
 Only return the JSON. Do not include any explanation or formatting.""",
-                "summary_prompt": "IMPORTANT: Write ONLY a 2-3 sentence summary. Do NOT write any introduction, preamble, or phrases like 'Here is a summary' or 'This assignment'. Start your response immediately with the actual content summary.\n\nText to summarize:\n{text}"
+                "summary_prompt": "IMPORTANT: Write ONLY a 2-3 sentence summary. Do NOT write any introduction, preamble, or phrases like 'Here is a summary' or 'This assignment'. Start your response immediately with the actual content summary.\n\nText to summarize:\n{text}",
             },
             "es": {
                 "grammar_check": "Cuenta los errores gramaticales en el siguiente texto en español:\n{text}",
@@ -172,7 +208,7 @@ Devuelve tu respuesta como un objeto JSON así:
   "grammar": float
 }}
 Solo devuelve el JSON. No incluyas explicación o formato.""",
-                "summary_prompt": "IMPORTANTE: Escribe SOLO un resumen de 2-3 oraciones. NO escribas introducción, preámbulo o frases como 'Aquí está el resumen'. Comienza inmediatamente con el contenido del resumen.\n\nTexto a resumir:\n{text}"
+                "summary_prompt": "IMPORTANTE: Escribe SOLO un resumen de 2-3 oraciones. NO escribas introducción, preámbulo o frases como 'Aquí está el resumen'. Comienza inmediatamente con el contenido del resumen.\n\nTexto a resumir:\n{text}",
             },
             "fr": {
                 "grammar_check": "Comptez les erreurs grammaticales dans le texte français suivant:\n{text}",
@@ -216,8 +252,8 @@ Retournez votre réponse comme un objet JSON ainsi:
   "grammar": float
 }}
 Ne retournez que le JSON. N'incluez aucune explication ou formatage.""",
-                "summary_prompt": "IMPORTANT: Écrivez SEULEMENT un résumé de 2-3 phrases. N'écrivez PAS d'introduction, de préambule ou de phrases comme 'Voici le résumé'. Commencez immédiatement par le contenu du résumé.\n\nTexte à résumer:\n{text}"
-            }
+                "summary_prompt": "IMPORTANT: Écrivez SEULEMENT un résumé de 2-3 phrases. N'écrivez PAS d'introduction, de préambule ou de phrases comme 'Voici le résumé'. Commencez immédiatement par le contenu du résumé.\n\nTexte à résumer:\n{text}",
+            },
         }
 
     def detect_language(self, text: str) -> LanguageDetectionResult:
@@ -237,7 +273,7 @@ Ne retournez que le JSON. N'incluez aucune explication ou formatage.""",
                 confidence=0.5,
                 all_detected=[("en", 0.5)],
                 is_supported=True,
-                fallback_language="en"
+                fallback_language="en",
             )
 
         try:
@@ -251,7 +287,7 @@ Ne retournez que le JSON. N'incluez aucune explication ou formatage.""",
                     confidence=0.3,
                     all_detected=[("en", 0.3)],
                     is_supported=True,
-                    fallback_language="en"
+                    fallback_language="en",
                 )
 
             # Detect primary language
@@ -267,7 +303,9 @@ Ne retournez que le JSON. N'incluez aucune explication ou formatage.""",
             # Use fallback if not supported
             if not is_supported:
                 fallback_lang = self._find_best_fallback(primary_lang)
-                logger.info(f"Language {primary_lang} not supported, using fallback: {fallback_lang}")
+                logger.info(
+                    f"Language {primary_lang} not supported, using fallback: {fallback_lang}"
+                )
             else:
                 fallback_lang = primary_lang
 
@@ -276,7 +314,7 @@ Ne retournez que le JSON. N'incluez aucune explication ou formatage.""",
                 confidence=lang_probs[0].prob if lang_probs else 0.0,
                 all_detected=all_detected,
                 is_supported=is_supported,
-                fallback_language=fallback_lang
+                fallback_language=fallback_lang,
             )
 
         except LangDetectException as e:
@@ -286,7 +324,7 @@ Ne retournez que le JSON. N'incluez aucune explication ou formatage.""",
                 confidence=0.1,
                 all_detected=[("en", 0.1)],
                 is_supported=True,
-                fallback_language="en"
+                fallback_language="en",
             )
 
     def _clean_text_for_detection(self, text: str) -> str:
@@ -294,13 +332,19 @@ Ne retournez que le JSON. N'incluez aucune explication ou formatage.""",
         import re
 
         # Remove metadata headers (Name:, Date:, etc.)
-        text = re.sub(r'^(Name|Date|Class|Subject|Source):\s*.*$', '', text, flags=re.MULTILINE)
+        text = re.sub(
+            r"^(Name|Date|Class|Subject|Source):\s*.*$", "", text, flags=re.MULTILINE
+        )
 
         # Remove URLs
-        text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', text)
+        text = re.sub(
+            r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+            "",
+            text,
+        )
 
         # Remove excessive whitespace
-        text = re.sub(r'\s+', ' ', text).strip()
+        text = re.sub(r"\s+", " ", text).strip()
 
         return text
 
@@ -308,36 +352,38 @@ Ne retournez que le JSON. N'incluez aucune explication ou formatage.""",
         """Find the best supported fallback language."""
         # Language family mappings for better fallbacks
         fallback_map = {
-            'ca': 'es',  # Catalan -> Spanish
-            'gl': 'es',  # Galician -> Spanish
-            'eu': 'es',  # Basque -> Spanish
-            'ro': 'it',  # Romanian -> Italian
-            'da': 'de',  # Danish -> German
-            'no': 'de',  # Norwegian -> German
-            'sv': 'de',  # Swedish -> German
-            'fi': 'de',  # Finnish -> German
-            'pl': 'de',  # Polish -> German
-            'cs': 'de',  # Czech -> German
-            'sk': 'de',  # Slovak -> German
-            'hu': 'de',  # Hungarian -> German
-            'bg': 'ru',  # Bulgarian -> Russian
-            'uk': 'ru',  # Ukrainian -> Russian
-            'be': 'ru',  # Belarusian -> Russian
-            'sr': 'ru',  # Serbian -> Russian
-            'hr': 'de',  # Croatian -> German
-            'sl': 'de',  # Slovenian -> German
-            'th': 'en',  # Thai -> English
-            'vi': 'en',  # Vietnamese -> English
-            'id': 'en',  # Indonesian -> English
-            'ms': 'en',  # Malay -> English
-            'tl': 'en',  # Filipino -> English
+            "ca": "es",  # Catalan -> Spanish
+            "gl": "es",  # Galician -> Spanish
+            "eu": "es",  # Basque -> Spanish
+            "ro": "it",  # Romanian -> Italian
+            "da": "de",  # Danish -> German
+            "no": "de",  # Norwegian -> German
+            "sv": "de",  # Swedish -> German
+            "fi": "de",  # Finnish -> German
+            "pl": "de",  # Polish -> German
+            "cs": "de",  # Czech -> German
+            "sk": "de",  # Slovak -> German
+            "hu": "de",  # Hungarian -> German
+            "bg": "ru",  # Bulgarian -> Russian
+            "uk": "ru",  # Ukrainian -> Russian
+            "be": "ru",  # Belarusian -> Russian
+            "sr": "ru",  # Serbian -> Russian
+            "hr": "de",  # Croatian -> German
+            "sl": "de",  # Slovenian -> German
+            "th": "en",  # Thai -> English
+            "vi": "en",  # Vietnamese -> English
+            "id": "en",  # Indonesian -> English
+            "ms": "en",  # Malay -> English
+            "tl": "en",  # Filipino -> English
         }
 
         return fallback_map.get(detected_lang, self.default_language)
 
     def get_language_config(self, language_code: str) -> LanguageConfig:
         """Get configuration for a specific language."""
-        return self.supported_languages.get(language_code, self.supported_languages[self.default_language])
+        return self.supported_languages.get(
+            language_code, self.supported_languages[self.default_language]
+        )
 
     def get_prompt(self, prompt_type: str, language_code: str) -> str:
         """
@@ -350,8 +396,12 @@ Ne retournez que le JSON. N'incluez aucune explication ou formatage.""",
         Returns:
             Localized prompt string
         """
-        lang_prompts = self.prompts.get(language_code, self.prompts[self.default_language])
-        return lang_prompts.get(prompt_type, self.prompts[self.default_language].get(prompt_type, ""))
+        lang_prompts = self.prompts.get(
+            language_code, self.prompts[self.default_language]
+        )
+        return lang_prompts.get(
+            prompt_type, self.prompts[self.default_language].get(prompt_type, "")
+        )
 
     def get_tesseract_languages(self, language_codes: List[str]) -> str:
         """
@@ -369,7 +419,7 @@ Ne retournez que le JSON. N'incluez aucune explication ou formatage.""",
             if config.tesseract_lang not in tesseract_langs:
                 tesseract_langs.append(config.tesseract_lang)
 
-        return '+'.join(tesseract_langs)
+        return "+".join(tesseract_langs)
 
     def get_supported_languages_info(self) -> Dict[str, Dict[str, Any]]:
         """Get information about all supported languages."""
@@ -380,7 +430,7 @@ Ne retournez que le JSON. N'incluez aucune explication ou formatage.""",
                 "tesseract_support": config.tesseract_lang,
                 "grammar_tool_support": config.grammar_tool_code,
                 "right_to_left": config.right_to_left,
-                "requires_special_handling": config.requires_special_handling
+                "requires_special_handling": config.requires_special_handling,
             }
             for code, config in self.supported_languages.items()
         }
@@ -411,12 +461,16 @@ Ne retournez que le JSON. N'incluez aucune explication ou formatage.""",
         try:
             return prompt_template.format(**kwargs)
         except KeyError as e:
-            logger.warning(f"Missing parameter {e} for prompt formatting, using English fallback")
+            logger.warning(
+                f"Missing parameter {e} for prompt formatting, using English fallback"
+            )
             fallback_prompt = self.get_prompt(prompt_type, self.default_language)
             return fallback_prompt.format(**kwargs)
 
+
 # Global language manager instance
 language_manager = LanguageManager()
+
 
 def detect_text_language(text: str) -> LanguageDetectionResult:
     """
@@ -429,6 +483,7 @@ def detect_text_language(text: str) -> LanguageDetectionResult:
         LanguageDetectionResult
     """
     return language_manager.detect_language(text)
+
 
 def get_localized_prompt(prompt_type: str, language_code: str, **kwargs) -> str:
     """
@@ -444,9 +499,11 @@ def get_localized_prompt(prompt_type: str, language_code: str, **kwargs) -> str:
     """
     return language_manager.format_prompt(prompt_type, language_code, **kwargs)
 
+
 def get_supported_languages() -> Dict[str, Dict[str, Any]]:
     """Get information about supported languages."""
     return language_manager.get_supported_languages_info()
+
 
 def install_tesseract_language_pack(language_code: str) -> bool:
     """
@@ -460,23 +517,29 @@ def install_tesseract_language_pack(language_code: str) -> bool:
     """
     try:
         import subprocess
+
         config = language_manager.get_language_config(language_code)
 
         # Try to install via brew (macOS)
-        result = subprocess.run([
-            'brew', 'install', f'tesseract-lang'
-        ], capture_output=True, text=True)
+        result = subprocess.run(
+            ["brew", "install", f"tesseract-lang"], capture_output=True, text=True
+        )
 
         if result.returncode == 0:
-            logger.info(f"Successfully installed Tesseract language pack for {config.name}")
+            logger.info(
+                f"Successfully installed Tesseract language pack for {config.name}"
+            )
             return True
         else:
-            logger.warning(f"Failed to install Tesseract language pack for {config.name}: {result.stderr}")
+            logger.warning(
+                f"Failed to install Tesseract language pack for {config.name}: {result.stderr}"
+            )
             return False
 
     except Exception as e:
         logger.error(f"Error installing Tesseract language pack: {e}")
         return False
+
 
 if __name__ == "__main__":
     # Test language detection and support
@@ -493,12 +556,16 @@ if __name__ == "__main__":
     for lang_code, text in test_texts.items():
         result = detect_text_language(text)
         print(f"\nTest for {lang_code}:")
-        print(f"  Detected: {result.primary_language} (confidence: {result.confidence:.2f})")
+        print(
+            f"  Detected: {result.primary_language} (confidence: {result.confidence:.2f})"
+        )
         print(f"  Supported: {result.is_supported}")
         print(f"  Fallback: {result.fallback_language}")
 
         # Test prompt localization
-        prompt = get_localized_prompt("grammar_check", result.fallback_language, text=text[:50] + "...")
+        prompt = get_localized_prompt(
+            "grammar_check", result.fallback_language, text=text[:50] + "..."
+        )
         print(f"  Sample prompt: {prompt[:100]}...")
 
     print(f"\nSupported Languages: {len(get_supported_languages())}")

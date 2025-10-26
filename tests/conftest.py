@@ -7,32 +7,33 @@ for all test modules in the test suite.
 
 import asyncio
 import os
-import tempfile
 import sys
+import tempfile
 from pathlib import Path
-from typing import Dict, Any, List, Generator, AsyncGenerator
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from typing import Any, AsyncGenerator, Dict, Generator, List
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-import pytest
 import pandas as pd
+import pytest
 from freezegun import freeze_time
 
 # Add src to Python path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+from core.assignment_orchestrator import AssignmentOrchestrator
+
 # Import project modules
 from core.llms import MultiLLMManager
-from core.assignment_orchestrator import AssignmentOrchestrator
-from processors.math_processor import MathProcessor
-from processors.spanish_processor import SpanishProcessor
-from processors.science_processor import ScienceProcessor
 from processors.history_processor import HistoryProcessor
+from processors.math_processor import MathProcessor
+from processors.science_processor import ScienceProcessor
+from processors.spanish_processor import SpanishProcessor
 from support.file_processor import FileProcessor
 from support.language_support import LanguageManager
 from workflows.agentic_workflow import build_agentic_workflow
 
-
 # ========== PYTEST CONFIGURATION ==========
+
 
 def pytest_configure(config):
     """Configure pytest with custom settings."""
@@ -77,6 +78,7 @@ def pytest_collection_modifyitems(config, items):
 
 # ========== ENVIRONMENT FIXTURES ==========
 
+
 @pytest.fixture(scope="session")
 def test_env():
     """Set up test environment variables."""
@@ -84,7 +86,7 @@ def test_env():
         "GROQ_API_KEY": "test_groq_key",
         "GEMINI_API_KEY": "test_gemini_key",
         "LANGCHAIN_TRACING_V2": "false",
-        "TESTING": "true"
+        "TESTING": "true",
     }
 
     original_env = {}
@@ -173,6 +175,7 @@ def temp_files(temp_dir):
 
 # ========== MOCK FIXTURES ==========
 
+
 @pytest.fixture
 def mock_llm():
     """Mock LLM for testing without API calls."""
@@ -185,7 +188,7 @@ def mock_llm():
 @pytest.fixture
 def mock_multi_llm_manager(mock_llm):
     """Mock MultiLLMManager for testing."""
-    with patch('core.llms.MultiLLMManager') as mock_class:
+    with patch("core.llms.MultiLLMManager") as mock_class:
         mock_instance = Mock()
         mock_instance.get_llm.return_value = mock_llm
         mock_instance.get_available_llms.return_value = ["groq", "gemini"]
@@ -215,6 +218,7 @@ def mock_language_support():
 
 
 # ========== COMPONENT FIXTURES ==========
+
 
 @pytest.fixture
 def math_processor(mock_multi_llm_manager):
@@ -254,6 +258,7 @@ def file_processor():
 
 # ========== DATA FIXTURES ==========
 
+
 @pytest.fixture
 def sample_math_assignment():
     """Sample math assignment data."""
@@ -263,8 +268,8 @@ def sample_math_assignment():
             "name": "John Doe",
             "date": "2025-01-15",
             "class": "Algebra II",
-            "subject": "Mathematics"
-        }
+            "subject": "Mathematics",
+        },
     }
 
 
@@ -277,8 +282,8 @@ def sample_spanish_assignment():
             "name": "Maria Garcia",
             "date": "2025-01-15",
             "class": "Spanish III",
-            "subject": "Spanish"
-        }
+            "subject": "Spanish",
+        },
     }
 
 
@@ -290,7 +295,7 @@ def sample_results():
         "grammar": {"score": 8, "errors": 2},
         "plagiarism": {"score": 9, "percentage": 5},
         "relevance": {"score": 8, "alignment": 80},
-        "summary": "Good assignment with minor grammar issues"
+        "summary": "Good assignment with minor grammar issues",
     }
 
 
@@ -301,22 +306,23 @@ def sample_batch_data():
         {
             "file_path": "assignment1.txt",
             "content": "Math assignment content",
-            "subject": "Mathematics"
+            "subject": "Mathematics",
         },
         {
             "file_path": "assignment2.txt",
             "content": "Spanish assignment content",
-            "subject": "Spanish"
+            "subject": "Spanish",
         },
         {
             "file_path": "assignment3.txt",
             "content": "Science assignment content",
-            "subject": "Science"
-        }
+            "subject": "Science",
+        },
     ]
 
 
 # ========== ASYNC FIXTURES ==========
+
 
 @pytest.fixture
 async def async_workflow(mock_multi_llm_manager):
@@ -335,6 +341,7 @@ def event_loop():
 
 # ========== TIME FIXTURES ==========
 
+
 @pytest.fixture
 def fixed_time():
     """Freeze time for consistent testing."""
@@ -343,6 +350,7 @@ def fixed_time():
 
 
 # ========== GRADIO FIXTURES ==========
+
 
 @pytest.fixture
 def mock_gradio_interface():
@@ -354,6 +362,7 @@ def mock_gradio_interface():
 
 
 # ========== MCP FIXTURES ==========
+
 
 @pytest.fixture
 def mock_mcp_server():
@@ -367,6 +376,7 @@ def mock_mcp_server():
 
 # ========== UTILITY FUNCTIONS ==========
 
+
 def create_test_assignment(subject: str = "Mathematics", **kwargs) -> Dict[str, Any]:
     """Create a test assignment with default values."""
     defaults = {
@@ -375,14 +385,16 @@ def create_test_assignment(subject: str = "Mathematics", **kwargs) -> Dict[str, 
             "name": "Test Student",
             "date": "2025-01-15",
             "class": f"{subject} Class",
-            "subject": subject
-        }
+            "subject": subject,
+        },
     }
     defaults.update(kwargs)
     return defaults
 
 
-def assert_grading_result(result: Dict[str, Any], min_score: float = 0.0, max_score: float = 10.0):
+def assert_grading_result(
+    result: Dict[str, Any], min_score: float = 0.0, max_score: float = 10.0
+):
     """Assert that grading result has expected structure and values."""
     assert isinstance(result, dict)
     assert "overall_score" in result
@@ -405,10 +417,12 @@ def assert_classification_result(result: Dict[str, Any]):
 
 # ========== PERFORMANCE FIXTURES ==========
 
+
 @pytest.fixture
 def performance_monitor():
     """Monitor test performance."""
     import time
+
     start_time = time.time()
     yield
     end_time = time.time()
@@ -418,6 +432,7 @@ def performance_monitor():
 
 
 # ========== CLEANUP ==========
+
 
 @pytest.fixture(autouse=True)
 def cleanup_test_files():

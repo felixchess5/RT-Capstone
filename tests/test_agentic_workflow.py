@@ -2,33 +2,35 @@
 Comprehensive tests for the Agentic AI Workflow.
 Tests individual nodes, edge routing, error recovery, and full workflow execution.
 """
+
 import asyncio
-import pytest
-import tempfile
-import os
 import json
+import os
+import tempfile
 from typing import Dict
 from unittest.mock import Mock, patch
+
+import pytest
 
 # Import the workflow components
 from agentic_workflow import (
     WorkflowState,
     WorkflowStep,
-    initialize_workflow,
-    quality_check_agent,
-    grammar_analysis_agent,
-    plagiarism_detection_agent,
-    relevance_analysis_agent,
-    content_grading_agent,
-    summary_generation_agent,
-    quality_validation_agent,
-    error_recovery_agent,
-    results_aggregation_agent,
-    finalize_workflow,
-    route_workflow,
     build_agentic_workflow,
+    content_grading_agent,
+    error_recovery_agent,
+    finalize_workflow,
+    get_letter_grade,
+    grammar_analysis_agent,
+    initialize_workflow,
+    plagiarism_detection_agent,
+    quality_check_agent,
+    quality_validation_agent,
+    relevance_analysis_agent,
+    results_aggregation_agent,
+    route_workflow,
     run_agentic_workflow,
-    get_letter_grade
+    summary_generation_agent,
 )
 
 
@@ -54,7 +56,12 @@ class TestWorkflowComponents:
         """Test workflow initialization."""
         state = WorkflowState(
             content="This is a test assignment with sufficient content to trigger all processing requirements.",
-            metadata={"name": "Test Student", "date": "2025-01-15", "class": "10", "subject": "English"},
+            metadata={
+                "name": "Test Student",
+                "date": "2025-01-15",
+                "class": "10",
+                "subject": "English",
+            },
             source_text="Renaissance information",
             requires_grammar_check=False,
             requires_plagiarism_check=False,
@@ -71,7 +78,7 @@ class TestWorkflowComponents:
             errors=[],
             retry_count=0,
             quality_score=0.0,
-            final_results=None
+            final_results=None,
         )
 
         result_state = initialize_workflow(state)
@@ -105,7 +112,7 @@ class TestWorkflowComponents:
             errors=[],
             retry_count=0,
             quality_score=0.0,
-            final_results=None
+            final_results=None,
         )
 
         result_state = quality_check_agent(state)
@@ -117,13 +124,25 @@ class TestWorkflowComponents:
     def test_route_workflow(self):
         """Test workflow routing logic."""
         state = WorkflowState(
-            content="", metadata={}, source_text="",
-            requires_grammar_check=False, requires_plagiarism_check=False,
-            requires_relevance_check=False, requires_grading=False,
-            requires_summary=False, grammar_result=None, plagiarism_result=None,
-            relevance_result=None, grading_result=None, summary_result=None,
-            current_step=WorkflowStep.GRAMMAR_ANALYSIS.value, completed_steps=[],
-            errors=[], retry_count=0, quality_score=0.0, final_results=None
+            content="",
+            metadata={},
+            source_text="",
+            requires_grammar_check=False,
+            requires_plagiarism_check=False,
+            requires_relevance_check=False,
+            requires_grading=False,
+            requires_summary=False,
+            grammar_result=None,
+            plagiarism_result=None,
+            relevance_result=None,
+            grading_result=None,
+            summary_result=None,
+            current_step=WorkflowStep.GRAMMAR_ANALYSIS.value,
+            completed_steps=[],
+            errors=[],
+            retry_count=0,
+            quality_score=0.0,
+            final_results=None,
         )
 
         assert route_workflow(state) == "grammar_analysis"
@@ -141,7 +160,7 @@ class TestWorkflowComponents:
 class TestWorkflowNodesWithMocks:
     """Test workflow nodes with mocked dependencies."""
 
-    @patch('agentic_workflow.groq_llm')
+    @patch("agentic_workflow.groq_llm")
     def test_grammar_analysis_agent_success(self, mock_llm):
         """Test grammar analysis agent with successful LLM response."""
         # Mock LLM response
@@ -168,7 +187,7 @@ class TestWorkflowNodesWithMocks:
             errors=[],
             retry_count=0,
             quality_score=0.0,
-            final_results=None
+            final_results=None,
         )
 
         result_state = grammar_analysis_agent(state)
@@ -178,7 +197,7 @@ class TestWorkflowNodesWithMocks:
         assert result_state["current_step"] == WorkflowStep.PLAGIARISM_DETECTION.value
         assert WorkflowStep.GRAMMAR_ANALYSIS.value in result_state["completed_steps"]
 
-    @patch('agentic_workflow.groq_llm', None)
+    @patch("agentic_workflow.groq_llm", None)
     def test_grammar_analysis_agent_no_llm(self):
         """Test grammar analysis agent when LLM is not available."""
         state = WorkflowState(
@@ -200,7 +219,7 @@ class TestWorkflowNodesWithMocks:
             errors=[],
             retry_count=0,
             quality_score=0.0,
-            final_results=None
+            final_results=None,
         )
 
         result_state = grammar_analysis_agent(state)
@@ -209,14 +228,18 @@ class TestWorkflowNodesWithMocks:
         assert result_state["grammar_result"]["error_count"] == -1
         assert "LLM not available" in result_state["errors"][0]
 
-    @patch('agentic_workflow.groq_llm')
-    @patch('os.makedirs')
-    @patch('builtins.open')
-    def test_plagiarism_detection_agent_success(self, mock_open, mock_makedirs, mock_llm):
+    @patch("agentic_workflow.groq_llm")
+    @patch("os.makedirs")
+    @patch("builtins.open")
+    def test_plagiarism_detection_agent_success(
+        self, mock_open, mock_makedirs, mock_llm
+    ):
         """Test plagiarism detection agent with successful operation."""
         # Mock LLM response
         mock_response = Mock()
-        mock_response.content = '{"plagiarism_likelihood": "low", "analysis": "Original content"}'
+        mock_response.content = (
+            '{"plagiarism_likelihood": "low", "analysis": "Original content"}'
+        )
         mock_llm.invoke.return_value = mock_response
 
         # Mock file operations
@@ -242,21 +265,26 @@ class TestWorkflowNodesWithMocks:
             errors=[],
             retry_count=0,
             quality_score=0.0,
-            final_results=None
+            final_results=None,
         )
 
         result_state = plagiarism_detection_agent(state)
 
         assert result_state["plagiarism_result"]["status"] == "success"
-        assert "Test_Student_workflow_report.json" in result_state["plagiarism_result"]["report_file"]
+        assert (
+            "Test_Student_workflow_report.json"
+            in result_state["plagiarism_result"]["report_file"]
+        )
         assert result_state["current_step"] == WorkflowStep.RELEVANCE_ANALYSIS.value
 
-    @patch('agentic_workflow.groq_llm')
+    @patch("agentic_workflow.groq_llm")
     def test_content_grading_agent_success(self, mock_llm):
         """Test content grading agent with successful grading."""
         # Mock LLM response with JSON scores
         mock_response = Mock()
-        mock_response.content = '{"factuality": 8.5, "relevance": 7.8, "coherence": 8.2, "grammar": 9.0}'
+        mock_response.content = (
+            '{"factuality": 8.5, "relevance": 7.8, "coherence": 8.2, "grammar": 9.0}'
+        )
         mock_llm.invoke.return_value = mock_response
 
         state = WorkflowState(
@@ -278,7 +306,7 @@ class TestWorkflowNodesWithMocks:
             errors=[],
             retry_count=0,
             quality_score=0.0,
-            final_results=None
+            final_results=None,
         )
 
         result_state = content_grading_agent(state)
@@ -314,7 +342,7 @@ class TestWorkflowValidationAndRecovery:
             errors=[],
             retry_count=0,
             quality_score=0.0,
-            final_results=None
+            final_results=None,
         )
 
         result_state = quality_validation_agent(state)
@@ -343,7 +371,7 @@ class TestWorkflowValidationAndRecovery:
             errors=[],
             retry_count=0,
             quality_score=0.0,
-            final_results=None
+            final_results=None,
         )
 
         result_state = quality_validation_agent(state)
@@ -372,7 +400,7 @@ class TestWorkflowValidationAndRecovery:
             errors=[],
             retry_count=0,
             quality_score=0.0,
-            final_results=None
+            final_results=None,
         )
 
         result_state = error_recovery_agent(state)
@@ -385,7 +413,12 @@ class TestWorkflowValidationAndRecovery:
         """Test results aggregation with mixed success/failure results."""
         state = WorkflowState(
             content="Test content",
-            metadata={"name": "Test Student", "date": "2025-01-15", "class": "10", "subject": "English"},
+            metadata={
+                "name": "Test Student",
+                "date": "2025-01-15",
+                "class": "10",
+                "subject": "English",
+            },
             source_text="",
             requires_grammar_check=False,
             requires_plagiarism_check=False,
@@ -395,14 +428,19 @@ class TestWorkflowValidationAndRecovery:
             grammar_result={"status": "success", "error_count": 3},
             plagiarism_result={"status": "error", "error": "Analysis failed"},
             relevance_result={"status": "success", "analysis": "Good relevance"},
-            grading_result={"status": "success", "individual_scores": {"factuality": 8.0}, "overall_score": 8.0, "grade_letter": "A-"},
+            grading_result={
+                "status": "success",
+                "individual_scores": {"factuality": 8.0},
+                "overall_score": 8.0,
+                "grade_letter": "A-",
+            },
             summary_result={"status": "success", "summary": "Test summary"},
             current_step=WorkflowStep.RESULTS_AGGREGATION.value,
             completed_steps=["initialize", "quality_check"],
             errors=["Some error"],
             retry_count=1,
             quality_score=0.8,
-            final_results=None
+            final_results=None,
         )
 
         result_state = results_aggregation_agent(state)
@@ -437,7 +475,7 @@ class TestWorkflowValidationAndRecovery:
             errors=["Test error"],
             retry_count=1,
             quality_score=0.0,
-            final_results=None
+            final_results=None,
         )
 
         result_state = finalize_workflow(state)
@@ -457,7 +495,7 @@ class TestFullWorkflowIntegration:
         # Note: This is a basic test - more detailed graph structure testing
         # would require access to internal LangGraph APIs
 
-    @patch('agentic_workflow.groq_llm')
+    @patch("agentic_workflow.groq_llm")
     async def test_run_agentic_workflow_integration(self, mock_llm):
         """Test full workflow execution with mocked LLM."""
         # Mock LLM responses for different calls
@@ -465,8 +503,12 @@ class TestFullWorkflowIntegration:
             Mock(content="Grammar analysis: 2 errors found"),
             Mock(content='{"plagiarism": "low risk"}'),
             Mock(content="Relevance: Good alignment with source material"),
-            Mock(content='{"factuality": 7.5, "relevance": 8.0, "coherence": 7.8, "grammar": 8.5}'),
-            Mock(content="Summary: This assignment discusses Renaissance art effectively.")
+            Mock(
+                content='{"factuality": 7.5, "relevance": 8.0, "coherence": 7.8, "grammar": 8.5}'
+            ),
+            Mock(
+                content="Summary: This assignment discusses Renaissance art effectively."
+            ),
         ]
 
         mock_llm.invoke.side_effect = mock_responses
@@ -476,11 +518,11 @@ class TestFullWorkflowIntegration:
             "name": "Integration Test Student",
             "date": "2025-01-15",
             "class": "10",
-            "subject": "Art History"
+            "subject": "Art History",
         }
         source_text = "The Renaissance was a period of cultural flourishing..."
 
-        with patch('os.makedirs'), patch('builtins.open', create=True):
+        with patch("os.makedirs"), patch("builtins.open", create=True):
             result = await run_agentic_workflow(content, metadata, source_text)
 
         assert result is not None
@@ -490,7 +532,12 @@ class TestFullWorkflowIntegration:
     async def test_run_agentic_workflow_with_errors(self):
         """Test workflow execution with simulated errors."""
         content = "Short test"
-        metadata = {"name": "Error Test Student", "date": "2025-01-15", "class": "10", "subject": "English"}
+        metadata = {
+            "name": "Error Test Student",
+            "date": "2025-01-15",
+            "class": "10",
+            "subject": "English",
+        }
         source_text = ""
 
         # This should handle errors gracefully and return a fallback result
@@ -524,7 +571,7 @@ class TestWorkflowStateManagement:
             errors=["error1"],
             retry_count=0,
             quality_score=0.5,
-            final_results=None
+            final_results=None,
         )
 
         assert state["content"] == "Test content"
@@ -561,11 +608,11 @@ class TestPerformanceAndStress:
             "name": "Performance Test Student",
             "date": "2025-01-15",
             "class": "10",
-            "subject": "English"
+            "subject": "English",
         }
 
         # This should handle large content without issues
-        with patch('agentic_workflow.groq_llm') as mock_llm:
+        with patch("agentic_workflow.groq_llm") as mock_llm:
             mock_llm.invoke.side_effect = Exception("Simulated LLM failure")
 
             result = await run_agentic_workflow(large_content, metadata, "")
@@ -594,7 +641,7 @@ class TestPerformanceAndStress:
             errors=[],
             retry_count=0,
             quality_score=0.0,
-            final_results=None
+            final_results=None,
         )
 
         result_state = initialize_workflow(state)
@@ -623,27 +670,39 @@ if __name__ == "__main__":
         (component_tests.test_initialize_workflow, "Workflow Initialization"),
         (component_tests.test_quality_check_agent, "Quality Check Agent"),
         (component_tests.test_route_workflow, "Workflow Routing"),
-
         # State tests
         (state_tests.test_workflow_state_initialization, "State Initialization"),
         (state_tests.test_workflow_step_enum, "Workflow Step Enum"),
-
         # Validation tests
-        (validation_tests.test_quality_validation_agent_success, "Quality Validation Success"),
-        (validation_tests.test_quality_validation_agent_with_failures, "Quality Validation with Failures"),
+        (
+            validation_tests.test_quality_validation_agent_success,
+            "Quality Validation Success",
+        ),
+        (
+            validation_tests.test_quality_validation_agent_with_failures,
+            "Quality Validation with Failures",
+        ),
         (validation_tests.test_error_recovery_agent, "Error Recovery Agent"),
         (validation_tests.test_results_aggregation_agent, "Results Aggregation"),
         (validation_tests.test_finalize_workflow, "Workflow Finalization"),
-
         # Integration tests
         (integration_tests.test_build_agentic_workflow, "Build Workflow Graph"),
     ]
 
     # Async test methods
     async_test_methods = [
-        (integration_tests.test_run_agentic_workflow_integration, "Full Workflow Integration"),
-        (integration_tests.test_run_agentic_workflow_with_errors, "Workflow Error Handling"),
-        (performance_tests.test_workflow_with_large_content, "Large Content Performance"),
+        (
+            integration_tests.test_run_agentic_workflow_integration,
+            "Full Workflow Integration",
+        ),
+        (
+            integration_tests.test_run_agentic_workflow_with_errors,
+            "Workflow Error Handling",
+        ),
+        (
+            performance_tests.test_workflow_with_large_content,
+            "Large Content Performance",
+        ),
     ]
 
     passed = 0
@@ -715,13 +774,17 @@ if __name__ == "__main__":
         failed += 1
 
     # Print summary
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("TEST SUMMARY")
-    print("="*50)
+    print("=" * 50)
     print(f"Passed: {passed}")
     print(f"Failed: {failed}")
     print(f"Total: {passed + failed}")
-    print(f"Success Rate: {(passed / (passed + failed) * 100):.1f}%" if (passed + failed) > 0 else "No tests run")
+    print(
+        f"Success Rate: {(passed / (passed + failed) * 100):.1f}%"
+        if (passed + failed) > 0
+        else "No tests run"
+    )
 
     if failed == 0:
         print("🎉 All tests passed!")

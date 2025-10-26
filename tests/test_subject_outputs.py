@@ -5,8 +5,9 @@ Test script for subject-specific output functionality.
 import asyncio
 import json
 import os
-from subject_output_manager import create_subject_output_manager
+
 from assignment_orchestrator import create_assignment_orchestrator
+from subject_output_manager import create_subject_output_manager
 
 # Sample assignment results with different subjects
 SAMPLE_ASSIGNMENTS = [
@@ -24,7 +25,7 @@ SAMPLE_ASSIGNMENTS = [
             "subject": "mathematics",
             "complexity": "high_school",
             "specific_type": "algebra",
-            "confidence": 0.95
+            "confidence": 0.95,
         },
         "specialized_processing": {
             "classification": {"subject": "mathematics"},
@@ -34,19 +35,19 @@ SAMPLE_ASSIGNMENTS = [
                     "problem_solving_approach": 9.0,
                     "notation_clarity": 7.0,
                     "step_by_step_work": 8.0,
-                    "overall_score": 8.5
+                    "overall_score": 8.5,
                 },
                 "analysis": {
                     "equations_found": ["2x + 5 = 13", "f'(x) = 2x + 3"],
                     "problem_types": ["algebra", "calculus"],
-                    "step_by_step_present": True
-                }
-            }
+                    "step_by_step_present": True,
+                },
+            },
         },
         "specialized_grades": {
             "mathematical_accuracy": 8.5,
-            "problem_solving_approach": 9.0
-        }
+            "problem_solving_approach": 9.0,
+        },
     },
     # Spanish assignment result
     {
@@ -62,7 +63,7 @@ SAMPLE_ASSIGNMENTS = [
             "subject": "spanish",
             "complexity": "middle_school",
             "specific_type": "culture",
-            "confidence": 0.92
+            "confidence": 0.92,
         },
         "specialized_processing": {
             "classification": {"subject": "spanish"},
@@ -72,16 +73,16 @@ SAMPLE_ASSIGNMENTS = [
                     "vocabulary_usage": 8.0,
                     "fluency_communication": 7.5,
                     "cultural_understanding": 8.5,
-                    "overall_score": 7.8
+                    "overall_score": 7.8,
                 },
                 "analysis": {
                     "vocabulary_level": "intermediate",
                     "grammar_errors_count": 1,
                     "cultural_references_count": 5,
-                    "assignment_type": "culture"
-                }
-            }
-        }
+                    "assignment_type": "culture",
+                },
+            },
+        },
     },
     # English assignment result
     {
@@ -97,8 +98,8 @@ SAMPLE_ASSIGNMENTS = [
             "subject": "english",
             "complexity": "high_school",
             "specific_type": "analysis",
-            "confidence": 0.88
-        }
+            "confidence": 0.88,
+        },
     },
     # Another Math assignment
     {
@@ -114,7 +115,7 @@ SAMPLE_ASSIGNMENTS = [
             "subject": "mathematics",
             "complexity": "college",
             "specific_type": "calculus",
-            "confidence": 0.98
+            "confidence": 0.98,
         },
         "specialized_processing": {
             "classification": {"subject": "mathematics"},
@@ -124,15 +125,15 @@ SAMPLE_ASSIGNMENTS = [
                     "problem_solving_approach": 7.0,
                     "notation_clarity": 6.5,
                     "step_by_step_work": 6.0,
-                    "overall_score": 6.5
+                    "overall_score": 6.5,
                 },
                 "analysis": {
                     "equations_found": ["∫(x² + 1)dx", "dy/dx = 2x"],
                     "problem_types": ["calculus"],
-                    "step_by_step_present": False
-                }
-            }
-        }
+                    "step_by_step_present": False,
+                },
+            },
+        },
     },
     # General assignment
     {
@@ -148,10 +149,11 @@ SAMPLE_ASSIGNMENTS = [
             "subject": "history",
             "complexity": "high_school",
             "specific_type": "chronological",
-            "confidence": 0.75
-        }
-    }
+            "confidence": 0.75,
+        },
+    },
 ]
+
 
 async def test_subject_output_manager():
     """Test the subject output manager functionality."""
@@ -194,19 +196,29 @@ async def test_subject_output_manager():
     # Test math export
     print("   Testing Math export...")
     from subject_output_manager import OutputSubject
-    math_csv = output_manager.export_subject_csv(SAMPLE_ASSIGNMENTS, OutputSubject.MATHEMATICS)
-    math_json = output_manager.export_subject_json(SAMPLE_ASSIGNMENTS, OutputSubject.MATHEMATICS)
+
+    math_csv = output_manager.export_subject_csv(
+        SAMPLE_ASSIGNMENTS, OutputSubject.MATHEMATICS
+    )
+    math_json = output_manager.export_subject_json(
+        SAMPLE_ASSIGNMENTS, OutputSubject.MATHEMATICS
+    )
     print(f"      Math CSV: {math_csv}")
     print(f"      Math JSON: {math_json}")
 
     # Test Spanish export
     print("   Testing Spanish export...")
-    spanish_csv = output_manager.export_subject_csv(SAMPLE_ASSIGNMENTS, OutputSubject.SPANISH)
-    spanish_json = output_manager.export_subject_json(SAMPLE_ASSIGNMENTS, OutputSubject.SPANISH)
+    spanish_csv = output_manager.export_subject_csv(
+        SAMPLE_ASSIGNMENTS, OutputSubject.SPANISH
+    )
+    spanish_json = output_manager.export_subject_json(
+        SAMPLE_ASSIGNMENTS, OutputSubject.SPANISH
+    )
     print(f"      Spanish CSV: {spanish_csv}")
     print(f"      Spanish JSON: {spanish_json}")
 
     return export_results
+
 
 async def test_subject_classification():
     """Test subject classification for different assignment types."""
@@ -217,11 +229,20 @@ async def test_subject_classification():
     output_manager = create_subject_output_manager()
 
     test_texts = [
-        ("Math: Solve 2x + 5 = 13 and show your work step by step.", {"subject": "algebra"}),
-        ("Escribe sobre la cultura española y sus tradiciones.", {"subject": "español"}),
-        ("Analyze the themes in Romeo and Juliet by Shakespeare.", {"subject": "english"}),
+        (
+            "Math: Solve 2x + 5 = 13 and show your work step by step.",
+            {"subject": "algebra"},
+        ),
+        (
+            "Escribe sobre la cultura española y sus tradiciones.",
+            {"subject": "español"},
+        ),
+        (
+            "Analyze the themes in Romeo and Juliet by Shakespeare.",
+            {"subject": "english"},
+        ),
         ("Explain the process of photosynthesis in plants.", {"subject": "biology"}),
-        ("Discuss the causes of World War I.", {"subject": "history"})
+        ("Discuss the causes of World War I.", {"subject": "history"}),
     ]
 
     for text, metadata in test_texts:
@@ -229,16 +250,17 @@ async def test_subject_classification():
 
         # Classify with orchestrator
         classification = orchestrator.classify_assignment(text, metadata)
-        print(f"   Classification: {classification.subject.value} ({classification.confidence:.2f})")
+        print(
+            f"   Classification: {classification.subject.value} ({classification.confidence:.2f})"
+        )
 
         # Determine output subject
         mock_assignment = {
-            "assignment_classification": {
-                "subject": classification.subject.value
-            }
+            "assignment_classification": {"subject": classification.subject.value}
         }
         output_subject = output_manager.determine_subject(mock_assignment)
         print(f"   Output files: {output_subject.value}_assignments.csv/json")
+
 
 async def test_file_content():
     """Test the content of generated files."""
@@ -250,7 +272,7 @@ async def test_file_content():
         "./test_output/math_assignments.csv",
         "./test_output/spanish_assignments.csv",
         "./test_output/english_assignments.csv",
-        "./test_output/export_summary.txt"
+        "./test_output/export_summary.txt",
     ]
 
     for file_path in test_files:
@@ -259,8 +281,8 @@ async def test_file_content():
             print(f"   ✅ {os.path.basename(file_path)}: {file_size} bytes")
 
             # Show first few lines for CSV files
-            if file_path.endswith('.csv'):
-                with open(file_path, 'r', encoding='utf-8') as f:
+            if file_path.endswith(".csv"):
+                with open(file_path, "r", encoding="utf-8") as f:
                     lines = f.readlines()[:3]  # First 3 lines
                     print(f"      Preview: {len(lines)} lines")
                     for i, line in enumerate(lines):
@@ -268,6 +290,7 @@ async def test_file_content():
 
         else:
             print(f"   ❌ {os.path.basename(file_path)}: Not found")
+
 
 async def main():
     """Run all tests."""
@@ -289,7 +312,9 @@ async def main():
     except Exception as e:
         print(f"\n❌ Test failed: {str(e)}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     asyncio.run(main())
