@@ -1,133 +1,47 @@
-# LLM Configuration and Priority Settings
-# Configure multiple LLM providers with automatic failover
+# LLM provider configuration for RT-Capstone backend
 
-# Provider priority order (1 = highest priority)
-# The system will try providers in order until one succeeds
+# Order in which providers are attempted when no explicit provider is chosen
 provider_priority:
-  1: "groq"
-  2: "gemini"
-  3: "anthropic"
-  4: "openai"
-  5: "local"
+  1: groq
+  2: openai
+  3: anthropic
+  4: gemini
 
-# Provider-specific configurations
+# Providers: set enabled: true only for those you have API keys for
 providers:
   groq:
-    enabled: true
+    enabled: false  # set true if GROQ_API_KEY is set
     models:
-      default: "llama-3.1-8b-instant"
-      alternatives:
-        - "llama-3.1-70b-versatile"
-        - "llama-3.2-90b-text-preview"
-        - "mixtral-8x7b-32768"
+      default: llama-3.1-8b-instant
     temperature: 0.7
     max_tokens: 4096
     timeout: 60
-    retry_attempts: 3
-    retry_delay: 2
 
   openai:
-    enabled: true
+    enabled: false  # set true if OPENAI_API_KEY is set
     models:
-      default: "gpt-4o-mini"
-      alternatives:
-        - "gpt-4o"
-        - "gpt-4-turbo"
-        - "gpt-3.5-turbo"
+      default: gpt-4o-mini
     temperature: 0.7
     max_tokens: 4096
     timeout: 60
-    retry_attempts: 3
-    retry_delay: 2
 
   anthropic:
-    enabled: true
+    enabled: false  # set true if ANTHROPIC_API_KEY is set
     models:
-      default: "claude-3-5-sonnet-20241022"
-      alternatives:
-        - "claude-3-5-haiku-20241022"
-        - "claude-3-opus-20240229"
-        - "claude-3-sonnet-20240229"
+      default: claude-3-5-sonnet-20241022
     temperature: 0.7
     max_tokens: 4096
     timeout: 60
-    retry_attempts: 3
-    retry_delay: 2
 
   gemini:
-    enabled: true
+    enabled: false  # set true if GEMINI_API_KEY is set
     models:
-      default: "gemini-1.5-pro"
-      alternatives:
-        - "gemini-1.5-flash"
-        - "gemini-pro"
+      default: gemini-1.5-pro
     temperature: 0.7
     max_tokens: 4096
     timeout: 60
-    retry_attempts: 3
-    retry_delay: 2
 
-  local:
-    enabled: false
-    base_url: "http://localhost:11434"  # Ollama default
-    models:
-      default: "llama3.1:8b"
-      alternatives:
-        - "llama3.1:70b"
-        - "mistral:7b"
-        - "codellama:13b"
-    temperature: 0.7
-    max_tokens: 4096
-    timeout: 120
-    retry_attempts: 2
-    retry_delay: 5
-
-# Failover settings
+# Failover / circuit breaker settings
 failover:
-  enabled: true
-  max_total_attempts: 10
-  circuit_breaker_threshold: 5  # Number of consecutive failures before marking provider as down
-  circuit_breaker_timeout: 300  # Seconds before retrying a failed provider
-  health_check_interval: 60     # Seconds between health checks
-
-# Performance monitoring
-monitoring:
-  enabled: true
-  log_response_times: true
-  log_token_usage: true
-  track_provider_success_rates: true
-
-# Cost optimization
-cost_optimization:
-  prefer_cheaper_models: false
-  max_cost_per_request: 0.10  # USD
-  cost_tracking: true
-
-# Special use case routing
-specialized_routing:
-  math_problems:
-    preferred_providers: ["openai", "anthropic", "groq"]
-    models:
-      openai: "gpt-4o"
-      anthropic: "claude-3-5-sonnet-20241022"
-      groq: "llama-3.1-70b-versatile"
-
-  language_analysis:
-    preferred_providers: ["anthropic", "openai", "groq"]
-    models:
-      anthropic: "claude-3-5-sonnet-20241022"
-      openai: "gpt-4o"
-      groq: "llama-3.1-8b-instant"
-
-  creative_writing:
-    preferred_providers: ["anthropic", "openai"]
-    models:
-      anthropic: "claude-3-opus-20240229"
-      openai: "gpt-4o"
-
-  code_analysis:
-    preferred_providers: ["openai", "anthropic", "local"]
-    models:
-      openai: "gpt-4o"
-      anthropic: "claude-3-5-sonnet-20241022"
-      local: "codellama:13b"
+  circuit_breaker_threshold: 5
+  circuit_breaker_timeout: 300
