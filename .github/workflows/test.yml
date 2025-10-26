@@ -192,7 +192,7 @@ jobs:
         safety check
 
     - name: 📤 Upload security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-reports
@@ -232,7 +232,7 @@ jobs:
           --benchmark-json=benchmark.json
 
     - name: 📊 Upload benchmark results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: benchmark-results
         path: benchmark.json
@@ -369,7 +369,7 @@ jobs:
         cat test-report.md
 
     - name: 📤 Upload test report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-report
         path: test-report.md
