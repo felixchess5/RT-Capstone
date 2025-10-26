@@ -70,7 +70,8 @@ class HistoryAnalysis:
 class HistoryProcessor:
     """Specialized processor for history assignments."""
 
-    def __init__(self):
+    def __init__(self, llm_manager: Any = None):
+        self.llm_manager = llm_manager
         # Historical period patterns
         self.period_patterns = {
             HistoryPeriod.ANCIENT: [

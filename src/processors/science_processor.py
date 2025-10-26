@@ -53,7 +53,8 @@ class ScienceAnalysis:
 class ScienceProcessor:
     """Specialized processor for science assignments."""
 
-    def __init__(self):
+    def __init__(self, llm_manager: Any = None):
+        self.llm_manager = llm_manager
         # Science subject patterns
         self.subject_patterns = {
             ScienceSubject.PHYSICS: [

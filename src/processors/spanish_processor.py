@@ -62,7 +62,7 @@ class SpanishAnalysis:
 class SpanishProcessor:
     """Comprehensive Spanish assignment processor."""
 
-    def __init__(self):
+    def __init__(self, llm_manager: Any = None):
         # Try to load Spanish spaCy model
         try:
             self.nlp = spacy.load("es_core_news_sm")
@@ -72,6 +72,7 @@ class SpanishProcessor:
             self.spacy_available = False
             self.nlp = None
 
+        self.llm_manager = llm_manager
         self.spanish_vocabulary = self._load_spanish_vocabulary()
         self.grammar_rules = self._load_grammar_rules()
         self.verb_conjugations = self._load_verb_conjugations()

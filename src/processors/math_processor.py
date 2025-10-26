@@ -10,8 +10,11 @@ import sympy as sp
 from sympy import symbols, solve, simplify, latex, sympify, diff, integrate
 from sympy.parsing.latex import parse_latex
 from sympy.parsing.sympy_parser import parse_expr
-import numpy as np
-import matplotlib.pyplot as plt
+"""
+NOTE: Heavy visualization libraries are intentionally not imported at module
+load time to keep unit tests lightweight and avoid optional binary deps.
+Import plotting tools lazily inside functions if needed.
+"""
 import io
 import base64
 
@@ -44,8 +47,9 @@ class MathSolution:
 class MathProcessor:
     """Comprehensive math assignment processor."""
 
-    def __init__(self):
+    def __init__(self, llm_manager: Any = None):
         self.variables = {}
+        self.llm_manager = llm_manager
         self.equation_patterns = {
             MathProblemType.ALGEBRA: [
                 r'solve.*for.*[xyz]',

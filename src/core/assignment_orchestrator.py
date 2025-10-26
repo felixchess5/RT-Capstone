@@ -47,11 +47,28 @@ class AssignmentClassification:
 class AssignmentOrchestrator:
     """Intelligent orchestrator for routing assignments to specialized processors."""
 
-    def __init__(self):
-        self.math_processor = create_math_processor()
-        self.spanish_processor = create_spanish_processor()
-        self.science_processor = create_science_processor()
-        self.history_processor = create_history_processor()
+    def __init__(self, llm_manager: Any = None):
+        self.llm_manager = llm_manager
+        # Prefer direct constructors with dependency injection; fall back to factories
+        try:
+            self.math_processor = MathProcessor(llm_manager)
+        except Exception:
+            self.math_processor = create_math_processor()
+
+        try:
+            self.spanish_processor = SpanishProcessor(llm_manager)
+        except Exception:
+            self.spanish_processor = create_spanish_processor()
+
+        try:
+            self.science_processor = ScienceProcessor(llm_manager)
+        except Exception:
+            self.science_processor = create_science_processor()
+
+        try:
+            self.history_processor = HistoryProcessor(llm_manager)
+        except Exception:
+            self.history_processor = create_history_processor()
 
         # Subject identification patterns
         self.subject_patterns = {
