@@ -2,7 +2,6 @@ datasets
 langchain-groq
 langchain-openai
 langchain-anthropic
-langchain-google-genai
 langchain-community
 langgraph
 langsmith
