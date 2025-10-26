@@ -1,4 +1,5 @@
 datasets==4.3.0
+packaging==24.1
 langchain-groq>=0.3.6; python_version >= "3.11"
 langchain-openai>=1.0.1; python_version >= "3.11"
 langchain-anthropic>=1.0.0; python_version >= "3.11"
@@ -49,6 +50,8 @@ opencv-python==4.12.0.88
 pillow==11.3.0
 pytesseract==0.3.13
 pdf2image==1.17.0
+typing-extensions==4.12.2
+tqdm==4.67.1
 
 # Networking/runtime pins to help pip resolver (Python 3.11)
 aiohttp==3.12.15
@@ -71,6 +74,11 @@ protobuf==4.25.3
 proto-plus==1.24.0
 grpcio==1.62.2
 grpcio-status==1.62.2
+requests==2.32.3
+urllib3==2.2.3
+certifi==2025.8.3
+charset-normalizer==3.4.2
+huggingface-hub==0.33.5
 
 # Testing dependencies
 pytest==8.4.2
