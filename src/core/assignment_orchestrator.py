@@ -189,6 +189,16 @@ class AssignmentOrchestrator:
                 score += matches
             subject_scores[subject] = score
 
+        # Heuristic boosts for ambiguous common phrases
+        if 'photosynthesis' in text_lower or 'lab report' in text_lower or 'laboratory' in text_lower or 'velocity' in text_lower:
+            subject_scores[SubjectType.SCIENCE] = subject_scores.get(SubjectType.SCIENCE, 0) + 2
+        if 'world war' in text_lower or 'timeline' in text_lower:
+            subject_scores[SubjectType.HISTORY] = subject_scores.get(SubjectType.HISTORY, 0) + 2
+        if 'ensayo' in text_lower or 'escriba' in text_lower or 'conjugar' in text_lower:
+            subject_scores[SubjectType.SPANISH] = subject_scores.get(SubjectType.SPANISH, 0) + 2
+        if re.search(r'[áéíóúñ]', text) or '¿' in text or '¡' in text:
+            subject_scores[SubjectType.SPANISH] = subject_scores.get(SubjectType.SPANISH, 0) + 3
+
         # Consider metadata hints
         if metadata:
             subject_hint = metadata.get('subject', '').lower()
@@ -200,10 +210,16 @@ class AssignmentOrchestrator:
             if any(spanish_term in subject_hint + class_hint for spanish_term in ['spanish', 'español', 'language']):
                 subject_scores[SubjectType.SPANISH] = subject_scores.get(SubjectType.SPANISH, 0) + 5
 
-        # Determine primary subject
-        best_subject = max(subject_scores.items(), key=lambda x: x[1]) if subject_scores else (SubjectType.UNKNOWN, 0)
+        # Determine primary subject (prefer domain subjects on ties)
+        def _subject_bias(item):
+            subject, score = item
+            # Slightly prefer non-English academic domains
+            bias = 0.1 if subject in (SubjectType.SCIENCE, SubjectType.HISTORY, SubjectType.MATHEMATICS, SubjectType.SPANISH) else 0.0
+            return score + bias
+
+        best_subject = max(subject_scores.items(), key=_subject_bias) if subject_scores else (SubjectType.UNKNOWN, 0)
         primary_subject = best_subject[0] if best_subject[1] > 0 else SubjectType.GENERAL
-        confidence = min(best_subject[1] / 10.0, 1.0) if best_subject[1] > 0 else 0.1
+        confidence = self._calculate_confidence(subject_scores, best_subject)
 
         # Determine complexity using improved algorithm
         assignment_complexity = self._determine_complexity_advanced(text_lower, metadata, primary_subject)
@@ -226,6 +242,11 @@ class AssignmentOrchestrator:
             tools_needed=tools_needed,
             processing_approach=processing_approach
         )
+
+    def _calculate_confidence(self, subject_scores: Dict[SubjectType, int], best_subject_item) -> float:
+        """Calculates confidence score; can be patched in tests."""
+        _, score = best_subject_item
+        return min(score / 10.0, 1.0) if score > 0 else 0.1
 
     def _determine_specific_type(self, subject: SubjectType, text: str) -> str:
         """Determine the specific assignment type within a subject."""
@@ -398,7 +419,7 @@ class AssignmentOrchestrator:
 
         if classification.subject == SubjectType.MATHEMATICS:
             if classification.specific_type in ['algebra', 'calculus']:
-                steps.append("Practice more equation-solving problems")
+                steps.append("Focus on algebra techniques and equation-solving")
             elif classification.specific_type == 'geometry':
                 steps.append("Work on visual-spatial reasoning exercises")
 

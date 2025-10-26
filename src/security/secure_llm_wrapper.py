@@ -419,6 +419,7 @@ class ResponseValidator:
             r"(?:database|db)[_\s]?(?:connection|conn)[_\s]?string",
             r"(?:private|secret)[_\s]?key\s*[:=]",
             r"credential[s]?\s*[:=]",
+            r"(?:mongodb|postgresql|mysql)://[^\s]+",
         ]
 
         self.system_info_patterns = [
