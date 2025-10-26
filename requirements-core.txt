@@ -1,16 +1,20 @@
 datasets==4.3.0
-packaging==24.1
-langchain-groq>=0.3.6; python_version >= "3.11"
-langchain-openai>=1.0.1; python_version >= "3.11"
-langchain-anthropic>=1.0.0; python_version >= "3.11"
+
+# LangChain family (Python 3.11+)
 langchain-core>=0.3.41,<0.4.0; python_version >= "3.11"
 langchain>=0.3.7,<0.4.0; python_version >= "3.11"
 langchain-community>=0.3.7,<0.4.0; python_version >= "3.11"
+langchain-groq==0.3.6; python_version >= "3.11"
+langchain-openai==1.0.1; python_version >= "3.11"
+langchain-anthropic==1.0.0; python_version >= "3.11"
+langgraph==1.0.1; python_version >= "3.11"
+langsmith==0.4.8
+
+# Serialization helpers used by langchain-community
 dataclasses-json==0.6.6
 typing-inspection==0.4.1
 marshmallow==3.21.3
-langgraph>=1.0.1; python_version >= "3.11"
-langsmith==0.4.8
+
 python-dotenv==1.0.1
 ragas==0.3.7
 mcp==1.19.0
@@ -29,8 +33,9 @@ sympy==1.14.0
 langdetect==1.0.9
 matplotlib==3.10.7
 antlr4-python3-runtime==4.13.2
+
+# SpaCy (3.8.x) and compiled deps (Py3.11, Windows-friendly)
 spacy==3.8.7
-# SpaCy dependency pins to avoid deep resolver backtracking on Py3.11/Windows
 cymem==2.0.11
 preshed==3.0.10
 thinc==8.3.6
@@ -44,31 +49,31 @@ language-data==1.3.0
 confection==0.1.5
 smart-open==7.4.1
 cloudpathlib==0.23.0
+typer==0.9.0
+
+# Numeric/vision/OCR
 numpy==2.2.2
 opencv-python==4.12.0.88
 pillow==10.4.0
 pytesseract==0.3.13
 pdf2image==1.17.0
+
+# Resolver helpers / core HTTP stack
+packaging==24.1
 typing-extensions==4.12.2
 tqdm==4.67.1
-
-# Align CLI dependencies across spaCy/weasel
-typer==0.9.0
-
-# Networking/runtime pins to help pip resolver (Python 3.11)
 aiohttp==3.12.15
 yarl==1.20.1
 frozenlist==1.5.0
 multidict==6.1.0
 aiosignal==1.4.0
-aiofiles==23.1.0
 httpx==0.28.1
 httpcore==1.0.9
 anyio==4.6.2.post1
 sniffio==1.3.1
 fsspec==2024.10.0
 
-# Google client stack pins to reduce resolver backtracking
+# Google client stack
 google-api-core[grpc]==2.19.1
 google-auth==2.35.0
 googleapis-common-protos==1.63.1
@@ -76,30 +81,14 @@ protobuf==4.25.3
 proto-plus==1.24.0
 grpcio==1.62.2
 grpcio-status==1.62.2
+
+# Requests family
 requests==2.32.3
 urllib3==2.2.3
 certifi==2025.8.3
 charset-normalizer==3.4.2
+
+# Hugging Face
 huggingface-hub==0.33.5
 
-# Testing dependencies
-pytest==8.4.2
-pytest-asyncio==1.2.0
-pytest-mock==3.15.1
-pytest-cov==7.0.0
-pytest-xdist==3.8.0
-pytest-html==4.1.1
-pytest-json-report==1.5.0
-freezegun==1.5.5
-responses==0.24.0
-factory-boy==3.3.0
-
-# Security dependencies
-bleach==6.2.0
-html5lib==1.1
-validators==0.35.0
-cryptography==46.0.3
-pydantic==2.11.7
-ratelimit==2.2.1
-python-jose==3.3.0
-# NOTE: hashlib is part of Python's standard library; no external compat package needed
+# NOTE: Testing/security/dev tools are intentionally omitted
