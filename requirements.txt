@@ -7,7 +7,7 @@ langgraph
 langsmith
 python-dotenv
 ragas
-mcp[cli]
+mcp
 language-tool-python
 PyPDF2
 python-docx
