@@ -237,9 +237,9 @@ class GradioAssignmentGrader:
     # Backend-driven implementations (UI-only env)
     def process_single_file_v2(
         self, file_path: str, requirements: Dict[str, bool]
-    ) -> Tuple[str, str, Optional[str], str]:
+    ) -> Tuple[str, str, Optional[str], Dict[str, Any], str]:
         if not file_path:
-            return "? No file uploaded", "", None, "No file provided"
+            return "? No file uploaded", "", None, {}, "No file provided"
         try:
             # size guard
             try:
@@ -248,6 +248,7 @@ class GradioAssignmentGrader:
                         f"? File too large (> {self.max_upload_mb} MB)",
                         "",
                         None,
+                        {},
                         "File exceeds upload size limit",
                     )
             except Exception:
@@ -258,6 +259,7 @@ class GradioAssignmentGrader:
                     "? Backend URL not configured",
                     "",
                     None,
+                    {},
                     "Set BACKEND_URL for demo UI",
                 )
 
@@ -277,11 +279,12 @@ class GradioAssignmentGrader:
                     f"? Processing failed: {resp.status_code}",
                     "",
                     None,
+                    {},
                     resp.text,
                 )
             result = resp.json()
             if isinstance(result, dict) and "error" in result:
-                return f"? Processing failed: {result['error']}", "", None, result["error"]
+                return f"? Processing failed: {result['error']}", "", None, result, result["error"]
 
             summary = self._format_results(result)
             download_path = self._create_download_files(
@@ -291,10 +294,11 @@ class GradioAssignmentGrader:
                 f"? Processing completed successfully!",
                 summary,
                 download_path if download_path else None,
+                result,
                 "",
             )
         except Exception as e:
-            return f"? Backend error: {e}", "", None, str(e)
+            return f"? Backend error: {e}", "", None, {}, str(e)
 
     def process_multiple_files_v2(
         self, files: List[str], requirements: Dict[str, bool]
@@ -304,7 +308,7 @@ class GradioAssignmentGrader:
         results = []
         errors = []
         for p in files:
-            status, result_summary, _, error = self.process_single_file_v2(p, requirements)
+            status, result_summary, _, _, error = self.process_single_file_v2(p, requirements)
             if error:
                 errors.append(f"{os.path.basename(p)}: {error}")
             else:
@@ -824,7 +828,7 @@ def create_interface():
                 summary_check,
                 specialized_check,
             ],
-            outputs=[single_status, single_results, single_download, single_errors],
+            outputs=[single_status, single_results, single_download, single_json, single_errors],
         )
 
         # Batch processing
