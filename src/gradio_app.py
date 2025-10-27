@@ -17,10 +17,10 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-import httpx
 import mimetypes
 
 import gradio as gr
+import httpx
 import pandas as pd
 
 # Add src to path for imports
