@@ -17,7 +17,8 @@ typing-inspection==0.4.1
 marshmallow==3.21.3
 
 python-dotenv==1.0.1
-ragas==0.3.7
+# Optional: RAG evaluation (pin removed to avoid datasets resolver conflicts on CI)
+# ragas==0.3.7
 mcp==1.19.0
 language-tool-python==2.9.4
 PyPDF2==3.0.1

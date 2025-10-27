@@ -12,7 +12,8 @@ marshmallow==3.21.3
 langgraph>=1.0.1; python_version >= "3.11"
 langsmith==0.4.8
 python-dotenv==1.0.1
-ragas==0.3.7
+# Optional RAG evaluation library (conflicts with available datasets versions on CI)
+# ragas==0.3.7
 mcp==1.19.0
 language-tool-python==2.9.4
 PyPDF2==3.0.1
