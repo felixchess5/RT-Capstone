@@ -19,7 +19,6 @@ from core.llms import llm_manager
 from support.file_processor import FileProcessor
 from workflows.agentic_workflow import run_agentic_workflow
 
-
 app = FastAPI(title="RT-Capstone Backend", version="1.0.0")
 
 # CORS settings: allow UI origin via env BACKEND_CORS_ORIGINS (comma-separated)
