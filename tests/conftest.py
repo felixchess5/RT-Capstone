@@ -30,7 +30,7 @@ from processors.science_processor import ScienceProcessor
 from processors.spanish_processor import SpanishProcessor
 from support.file_processor import FileProcessor
 from support.language_support import LanguageManager
-from workflows.agentic_workflow import build_agentic_workflow
+from workflows.agentic_workflow import build_agentic_workflow, create_workflow
 
 # ========== PYTEST CONFIGURATION ==========
 
