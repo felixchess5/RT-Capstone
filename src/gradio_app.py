@@ -882,7 +882,8 @@ def main():
         # Resolve host/port from env with safe fallbacks
         server_name = os.getenv("GRADIO_SERVER_NAME", "127.0.0.1").strip() or "127.0.0.1"
         port_env = (os.getenv("GRADIO_SERVER_PORT", "7860") or "").strip().lower()
-        share = os.getenv("GRADIO_SHARE", "false").lower() in ("1", "true", "yes")
+        # Default to share enabled unless explicitly disabled
+        share = os.getenv("GRADIO_SHARE", "true").lower() in ("1", "true", "yes")
 
         # Determine desired port: None lets Gradio pick a free port
         requested_port = None if port_env in ("", "0", "auto", "random") else int(port_env)
