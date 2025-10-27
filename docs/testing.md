@@ -70,3 +70,11 @@ Tips
 - Start with unit tests; then run the full suite once dependencies and keys are set
 - Use `-n auto` to parallelize on larger machines: `pytest -n auto tests`
 
+Code formatting and import order
+- This repo uses Black + isort (Black profile). To format locally:
+  ```powershell
+  python -m pip install black isort
+  black src tests
+  isort src tests
+  ```
+- CI auto-formats with Black and checks import order with isort. If you see "would reformat" or import diffs in CI, run the above commands before pushing.
