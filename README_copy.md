@@ -590,58 +590,6 @@ For a comprehensive list of planned features and enhancements, see our detailed 
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
-## Running Backend and Frontend (Recommended Two-Env Setup)
-
-To avoid dependency conflicts and keep the UI fast, run the Demo UI (Gradio) and Backend (FastAPI + LangChain + spaCy) in separate virtual environments.
-
-Windows PowerShell quickstart:
-
-```powershell
-# 1) Demo UI (Gradio)
-.\\scripts\\setup-demo.ps1
-.\\.venv-demo\\Scripts\\Activate.ps1
-
-# 2) Backend (FastAPI + LangChain + spaCy)
-.\\scripts\\setup-backend.ps1
-.\\venv\\Scripts\\Activate.ps1
-```
-
-Start the backend (in backend env):
-
-```powershell
-.\\venv\\Scripts\\Activate.ps1
-python -m uvicorn --app-dir src server.main:app --host 127.0.0.1 --port 8000
-```
-
-Launch the demo UI (in demo env):
-
-```powershell
-.\\.venv-demo\\Scripts\\Activate.ps1
-$env:BACKEND_URL='http://127.0.0.1:8000'
-# Optional: choose a port or auto-pick a free one
-$env:GRADIO_SERVER_PORT='0'   # or '7861'
-# Optional: public share link (enabled by default here)
-# $env:GRADIO_SHARE='true'
-python launch_gradio.py
-```
-
-Notes
-- The single-file tab includes a “Detailed Results” JSON viewer.
-- The batch tab includes “Detailed Batch Results” JSON plus a summary table.
-- The UI falls back to a free port if the preferred one is busy.
-
-Environment variables
-- `BACKEND_URL`: FastAPI URL for the demo UI, e.g. `http://127.0.0.1:8000`.
-- `GRADIO_SERVER_PORT`: UI port; use `0` (or `auto`) to auto-pick a free port.
-- `GRADIO_SERVER_NAME`: UI host bind (default `127.0.0.1`).
-- `GRADIO_SHARE`: `true` to create a shareable link (default true in this repo).
-- `DEMO_INBROWSER`: `true` to auto-open the browser.
-
-Visualize the agentic workflow
-- Simplified graph: `python simple_graph_viz.py` → `simple_workflow.png`
-- Detailed graph: `python visualize_graph.py` → `workflow_graph.png`
-- Combined demo: `python test_graph_visualization.py`
-
 ---
 
 **Built with ❤️ for educators and students**

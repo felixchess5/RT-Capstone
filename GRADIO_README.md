@@ -198,6 +198,32 @@ For issues specific to the Gradio interface:
 For system-level issues, refer to the main project documentation.
 
 ## 🔄 Updates
+### Two-Environment Setup (Recommended)
+- Keep the Demo UI (Gradio) and Backend (FastAPI + LangChain + spaCy) in separate virtual environments to avoid dependency conflicts.
+- Windows PowerShell quickstart:
+  - Demo UI: `.\scripts\setup-demo.ps1` then `.\.venv-demo\Scripts\Activate.ps1`
+  - Backend: `.\scripts\setup-backend.ps1` then `.\venv\Scripts\Activate.ps1`
+
+### Running
+- Backend: `python -m uvicorn --app-dir src server.main:app --host 127.0.0.1 --port 8000`
+- Demo UI:
+  - Set `BACKEND_URL=http://127.0.0.1:8000`
+  - Optional port: `GRADIO_SERVER_PORT=0` (auto) or a fixed port
+  - Optional share link: `GRADIO_SHARE=true` (default enabled here)
+  - Launch: `python launch_gradio.py`
+
+### New UI Panels
+- Single tab: “Detailed Results” JSON viewer for the full backend response.
+- Batch tab: “Detailed Batch Results” JSON list with per-file results.
+
+### Troubleshooting
+- Port busy: set `GRADIO_SERVER_PORT='0'` to auto-pick a free port.
+- Windows console encoding: use `python -X utf8 launch_gradio.py` if you see UnicodeEncodeError.
+- Typer vs Gradio: keep demo and backend in separate venvs.
+
+### Visualize Agentic Workflow
+- Simplified graph: `python simple_graph_viz.py` → `simple_workflow.png`
+- Detailed graph: `python visualize_graph.py` → `workflow_graph.png`
 
 The Gradio interface automatically reflects updates to:
 - Core processing system
