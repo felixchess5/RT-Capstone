@@ -562,7 +562,8 @@ class SpanishProcessor:
                 + fluency_communication * 0.3
                 + cultural_understanding * 0.15
             ),
-            "analysis": analysis,
+            # Ensure JSON/msgpack serializable analysis payload
+            "analysis": analysis.to_dict() if hasattr(analysis, "to_dict") else str(analysis),
             "feedback": self._generate_spanish_feedback(analysis),
         }
 
