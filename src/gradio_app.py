@@ -302,16 +302,25 @@ class GradioAssignmentGrader:
 
     def process_multiple_files_v2(
         self, files: List[str], requirements: Dict[str, bool]
-    ) -> Tuple[str, str, Optional[str], str]:
+    ) -> Tuple[str, str, Optional[str], List[Dict[str, Any]], str]:
         if not files:
-            return "? No files uploaded", "", None, "No files provided"
+            return "? No files uploaded", "", None, [], "No files provided"
         results = []
         errors = []
+        detailed_results: List[Dict[str, Any]] = []
         for p in files:
-            status, result_summary, _, _, error = self.process_single_file_v2(p, requirements)
+            status, result_summary, _, result_json, error = self.process_single_file_v2(
+                p, requirements
+            )
             if error:
                 errors.append(f"{os.path.basename(p)}: {error}")
             else:
+                try:
+                    detailed_results.append(
+                        {"filename": os.path.basename(p), "result": result_json}
+                    )
+                except Exception:
+                    pass
                 results.append(
                     {
                         "filename": os.path.basename(p),
@@ -333,7 +342,7 @@ class GradioAssignmentGrader:
         status_message = f"?? Processed {len(files)} files: {len(results)} successful, {len(errors)} failed"
         # optional CSV download
         download_path = self._create_batch_download(results)
-        return status_message, summary_table, download_path, error_summary
+        return status_message, summary_table, download_path, detailed_results, error_summary
 
     def _format_results(self, result: Dict[str, Any]) -> str:
         """Format processing results for display."""
@@ -730,6 +739,7 @@ def create_interface():
                         )
                         batch_summary_table = gr.HTML(label="Results Summary")
                         batch_download = gr.File(label="Download Batch Results")
+                        batch_json = gr.JSON(label="Detailed Batch Results")
                         batch_errors = gr.Textbox(
                             label="Errors", lines=5, interactive=False, visible=False
                         )
@@ -845,7 +855,13 @@ def create_interface():
                 batch_summary,
                 batch_specialized,
             ],
-            outputs=[batch_status, batch_summary_table, batch_download, batch_errors],
+            outputs=[
+                batch_status,
+                batch_summary_table,
+                batch_download,
+                batch_json,
+                batch_errors,
+            ],
         )
 
         # Status refresh
