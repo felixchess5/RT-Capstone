@@ -63,7 +63,7 @@ pdf2image==1.17.0
 
 # Resolver helpers / core HTTP stack
 packaging==24.1
-typing-extensions==4.12.2
+typing-extensions==4.13.2
 tqdm==4.67.1
 aiohttp==3.12.15
 yarl==1.20.1
