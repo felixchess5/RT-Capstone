@@ -11,13 +11,13 @@ import os
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from core.llms import llm_manager
 from support.file_processor import FileProcessor
 from workflows.agentic_workflow import run_agentic_workflow
-from core.llms import llm_manager
 
 
 app = FastAPI(title="RT-Capstone Backend", version="1.0.0")
@@ -58,8 +58,8 @@ async def process_file(
     """
     try:
         # Read file content to a temp path as our processor expects a path
-        import tempfile
         import shutil
+        import tempfile
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename or "")[1] or ".bin") as tmp:
             content = await file.read()
