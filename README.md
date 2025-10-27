@@ -642,6 +642,13 @@ Visualize the agentic workflow
 - Detailed graph: `python visualize_graph.py` → `workflow_graph.png`
 - Combined demo: `python test_graph_visualization.py`
 
+## Further Documentation
+- Code Inventory: [docs/code_inventory.md](docs/code_inventory.md)
+- Agentic Workflow Nodes: [docs/workflow_nodes.md](docs/workflow_nodes.md)
+- MCP Tools Reference: [docs/mcp_tools.md](docs/mcp_tools.md)
+- Gradio UI Guide: [GRADIO_README.md](GRADIO_README.md)
+- Testing Guide: [docs/testing.md](docs/testing.md)
+
 ---
 
 **Built with ❤️ for educators and students**

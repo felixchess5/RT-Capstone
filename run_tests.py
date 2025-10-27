@@ -106,7 +106,7 @@ class TestRunner:
 
         # Add max failures
         if args.maxfail:
-            pytest_cmd.extend([["--maxfail", str(args.maxfail)])
+            pytest_cmd.extend(["--maxfail", str(args.maxfail)])
 
         # Add durations
         if args.durations:
