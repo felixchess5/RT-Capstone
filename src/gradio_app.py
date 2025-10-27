@@ -321,10 +321,12 @@ class GradioAssignmentGrader:
                     )
                 except Exception:
                     pass
+                # Clean status value for table display
+                status_text = "Success"
                 results.append(
                     {
                         "filename": os.path.basename(p),
-                        "status": ("? Success" if "?" in status else "? Failed"),
+                        "status": status_text,
                         "summary": (
                             result_summary[:300] + "..."
                             if len(result_summary) > 300
@@ -335,7 +337,10 @@ class GradioAssignmentGrader:
         # summary text/html
         if results:
             df = pd.DataFrame(results)
-            summary_table = df.to_html(index=False, classes="gradio-table")
+            # Force black header text for readability
+            table_html = df.to_html(index=False, classes="gradio-table")
+            header_style = "<style>.gradio-table th { color: #000 !important; }</style>"
+            summary_table = header_style + table_html
         else:
             summary_table = "No successful results to display"
         error_summary = "\n".join(errors) if errors else ""
