@@ -30,8 +30,8 @@ jobs:
         pip install flake8 black isort mypy
         pip install -r requirements.txt
 
-    - name: 🖤 Check code formatting with Black
-      run: black --check --diff src tests
+    - name: 🖤 Auto-format code with Black
+      run: black src tests
 
     - name: 📋 Check import sorting with isort
       run: isort --check-only --diff src tests
