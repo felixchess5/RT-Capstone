@@ -1,4 +1,4 @@
-datasets==4.3.0
+datasets==3.1.0
 packaging==24.1
 langchain-groq==0.3.6; python_version >= "3.11"
 langchain-openai==0.3.12; python_version >= "3.11"
