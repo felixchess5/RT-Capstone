@@ -10,7 +10,7 @@ provider_priority:
 # Providers: set enabled: true only for those you have API keys for
 providers:
   groq:
-    enabled: false  # set true if GROQ_API_KEY is set
+    enabled: true  # set true if GROQ_API_KEY is set
     models:
       default: llama-3.1-8b-instant
     temperature: 0.7
