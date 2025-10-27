@@ -879,16 +879,37 @@ def main():
 
         inbrowser = os.getenv("DEMO_INBROWSER", "false").lower() in ("1", "true", "yes")
 
-        # Launch the interface
-        interface.launch(
-            server_name="127.0.0.1",
-            server_port=7860,
-            share=False,
-            debug=False,
-            show_error=True,
-            inbrowser=inbrowser,
-            auth=auth,
-        )
+        # Resolve host/port from env with safe fallbacks
+        server_name = os.getenv("GRADIO_SERVER_NAME", "127.0.0.1").strip() or "127.0.0.1"
+        port_env = os.getenv("GRADIO_SERVER_PORT", "7860").strip().lower()
+        server_port = 0 if port_env in ("0", "auto", "random") else int(port_env or 7860)
+        share = os.getenv("GRADIO_SHARE", "false").lower() in ("1", "true", "yes")
+
+        # Launch the interface with a retry on random port if the chosen one is busy
+        try:
+            interface.launch(
+                server_name=server_name,
+                server_port=server_port,
+                share=share,
+                debug=False,
+                show_error=True,
+                inbrowser=inbrowser,
+                auth=auth,
+            )
+        except Exception as launch_err:
+            if "Cannot find empty port" in str(launch_err) or "port" in str(launch_err).lower():
+                print("! Preferred port unavailable; retrying on a random open port...")
+                interface.launch(
+                    server_name=server_name,
+                    server_port=0,  # choose any free port
+                    share=share,
+                    debug=False,
+                    show_error=True,
+                    inbrowser=inbrowser,
+                    auth=auth,
+                )
+            else:
+                raise
 
     except Exception as e:
         print(f"❌ Failed to start Gradio interface: {e}")
