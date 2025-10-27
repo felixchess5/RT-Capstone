@@ -14,7 +14,10 @@ langsmith==0.4.8
 python-dotenv==1.0.1
 # Optional RAG evaluation library (conflicts with available datasets versions on CI)
 # ragas==0.3.7
-mcp==1.19.0
+# Optional: Model Context Protocol (MCP) server/CLI
+# Note: Package availability and wheels vary by platform; omit from default CI install.
+# Install separately when needed, e.g.: pip install "mcp[cli]"
+# mcp
 language-tool-python==2.9.4
 PyPDF2==3.0.1
 python-docx==1.2.0
