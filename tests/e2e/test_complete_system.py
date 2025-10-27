@@ -129,7 +129,7 @@ spark could ignite a global conflagration.
     @pytest.mark.e2e
     @pytest.mark.slow
     def test_command_line_processing_workflow(
-        self, sample_assignments_dir, output_dir, mock_multi_llm_manager
+        self, sample_assignments_dir, output_dir, mock_multi_llm_manager, temp_dir
     ):
         """Test the complete command-line processing workflow."""
         # Mock LLM responses for different assignment types
