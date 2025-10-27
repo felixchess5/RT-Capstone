@@ -9,6 +9,7 @@ subject-specific processing.
 
 import asyncio
 import json
+import mimetypes
 import os
 import shutil
 import sys
@@ -17,7 +18,6 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-import mimetypes
 
 import gradio as gr
 import httpx
