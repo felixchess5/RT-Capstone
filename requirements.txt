@@ -9,7 +9,7 @@ langchain-community>=0.3.7,<0.4.0; python_version >= "3.11"
 dataclasses-json==0.6.6
 typing-inspection==0.4.1
 marshmallow==3.21.3
-langgraph>=1.0.1; python_version >= "3.11"
+langgraph>=1.0.1; python_version >= "3.10"
 langsmith==0.4.8
 python-dotenv==1.0.1
 # Optional RAG evaluation library (conflicts with available datasets versions on CI)
