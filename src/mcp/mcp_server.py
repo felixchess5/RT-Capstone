@@ -40,6 +40,7 @@ from core.subject_output_manager import OutputSubject, create_subject_output_man
 from processors.history_processor import (
     HistoryAssignmentType,
     HistoryPeriod,
+    RegionFocus,
     create_history_processor,
 )
 from processors.math_processor import MathProblemType, create_math_processor

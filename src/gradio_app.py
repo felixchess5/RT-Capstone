@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import gradio as gr
 import httpx
 import pandas as pd
+from workflows.agentic_workflow import run_agentic_workflow
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))

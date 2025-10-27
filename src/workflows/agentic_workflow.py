@@ -960,6 +960,16 @@ def build_agentic_workflow() -> StateGraph:
     return compiled_workflow
 
 
+# Backward-compatible alias for tests/legacy imports
+def create_workflow(*args, **kwargs) -> StateGraph:
+    """Compatibility wrapper returning the compiled workflow.
+
+    Some tests import `create_workflow`; forward to `build_agentic_workflow`.
+    Any provided args are ignored for compatibility.
+    """
+    return build_agentic_workflow()
+
+
 @traceable(name="run_agentic_workflow")
 async def run_agentic_workflow(
     content: str, metadata: Dict, source_text: str = ""
