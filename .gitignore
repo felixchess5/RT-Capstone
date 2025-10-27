@@ -29,6 +29,8 @@ env/
 ENV/
 env.bak/
 venv.bak/
+demo_env/
+.venv-demo/
 
 # Environment variables
 .env
