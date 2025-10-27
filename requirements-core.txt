@@ -1,12 +1,13 @@
 datasets==4.3.0
 
 # LangChain family (Python 3.11+)
-langchain-core>=0.3.41,<0.4.0; python_version >= "3.11"
+langchain-core>=0.3.68,<0.4.0; python_version >= "3.11"
 langchain>=0.3.7,<0.4.0; python_version >= "3.11"
 langchain-community>=0.3.7,<0.4.0; python_version >= "3.11"
 langchain-groq==0.3.6; python_version >= "3.11"
-langchain-openai==1.0.1; python_version >= "3.11"
-langchain-anthropic==1.0.0; python_version >= "3.11"
+# Use provider packages compatible with langchain-core 0.3.x
+langchain-openai==0.3.12; python_version >= "3.11"
+langchain-anthropic==0.3.0; python_version >= "3.11"
 langgraph==1.0.1; python_version >= "3.11"
 langsmith==0.4.8
 
@@ -84,7 +85,7 @@ grpcio-status==1.62.2
 
 # FastAPI backend
 fastapi==0.115.0
-uvicorn==0.30.6
+uvicorn==0.31.1
 python-multipart==0.0.9
 
 # Requests family
