@@ -37,3 +37,7 @@ huggingface-hub==0.33.5
 # NOTE: No spaCy/weasel/typer pins here to avoid conflicts.
 # The demo should call backend APIs rather than import NLP processors directly.
 pandas==2.3.3
+
+# Math processing dependencies used transitively by the workflow
+sympy==1.14.0
+antlr4-python3-runtime==4.13.2

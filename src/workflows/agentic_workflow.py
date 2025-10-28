@@ -3,7 +3,10 @@ Agentic AI Workflow using LangGraph with proper nodes and edges.
 This refactors the async running functionality into a full-fledged workflow orchestration system.
 """
 
+from __future__ import annotations
+
 import asyncio
+import inspect
 import json
 from enum import Enum
 from typing import Dict, List, Literal, Optional, TypedDict
@@ -22,8 +25,18 @@ except ImportError:
 
     LANGSMITH_AVAILABLE = False
 
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import END, StateGraph
+try:
+    from langgraph.checkpoint.memory import MemorySaver
+    from langgraph.graph import END, StateGraph
+    LANGGRAPH_AVAILABLE = True
+except ImportError:  # Make LangGraph optional for demo/local runs
+    MemorySaver = None  # type: ignore[assignment]
+    END = "__end__"
+    # Placeholder so annotations don't break when using postponed evaluation
+    class StateGraph:  # type: ignore[no-redef]
+        ...
+
+    LANGGRAPH_AVAILABLE = False
 
 from core.assignment_orchestrator import SubjectType, create_assignment_orchestrator
 from core.llms import gemini_llm, groq_llm, invoke_with_fallback
@@ -911,11 +924,64 @@ def route_workflow(
 
 
 def build_agentic_workflow() -> StateGraph:
-    """Build the comprehensive agentic workflow graph."""
+    """Build the comprehensive agentic workflow graph.
+
+    If LangGraph is not installed, return a lightweight sequential fallback
+    that executes the same agent functions without graph features.
+    """
     print("🏗️ Building agentic AI workflow...")
 
+    if not LANGGRAPH_AVAILABLE:
+        print("⚠️ LangGraph not installed; using sequential fallback runner.")
+
+        async def _maybe_call(func, state):
+            result = func(state)
+            if inspect.isawaitable(result):
+                return await result
+            return result
+
+        class _SequentialWorkflow:
+            async def ainvoke(self, initial_state: WorkflowState, config=None):
+                state = initialize_workflow(initial_state)
+                # Simple loop guided by route_workflow decisions
+                while True:
+                    step = route_workflow(state)
+                    if step in ("__end__", "finalize"):
+                        if step == "finalize":
+                            state = finalize_workflow(state)
+                        break
+
+                    step_map = {
+                        "quality_check": quality_check_agent,
+                        "subject_classification": subject_classification_agent,
+                        "specialized_processing": specialized_processing_agent,
+                        "grammar_analysis": grammar_analysis_agent,
+                        "plagiarism_detection": plagiarism_detection_agent,
+                        "relevance_analysis": relevance_analysis_agent,
+                        "content_grading": content_grading_agent,
+                        "summary_generation": summary_generation_agent,
+                        "quality_validation": quality_validation_agent,
+                        "error_recovery": error_recovery_agent,
+                        "results_aggregation": results_aggregation_agent,
+                    }
+
+                    func = step_map.get(step)
+                    if func is None:
+                        # Unknown step; attempt to finalize and exit
+                        state = finalize_workflow(state)
+                        break
+                    state = await _maybe_call(func, state)
+
+                return state
+
+        print("✅ Fallback runner ready.")
+        return _SequentialWorkflow()  # type: ignore[return-value]
+
+    # LangGraph path
+    from langgraph.graph import StateGraph as _StateGraph  # local alias for clarity
+
     # Create the state graph
-    workflow = StateGraph(WorkflowState)
+    workflow = _StateGraph(WorkflowState)
 
     # Add all agent nodes
     workflow.add_node("initialize", initialize_workflow)
