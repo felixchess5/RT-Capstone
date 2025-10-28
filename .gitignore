@@ -31,6 +31,12 @@ env.bak/
 venv.bak/
 demo_env/
 .venv-demo/
+.venv*/
+.tmp-venv*/
+.tmp-venv/
+.tmp-venv2/
+.tmp-venv3/
+.tmp-venv4/
 
 # Environment variables
 .env
