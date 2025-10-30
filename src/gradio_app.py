@@ -347,8 +347,8 @@ class GradioAssignmentGrader:
             summary_table = "No successful results to display"
         error_summary = "\n".join(errors) if errors else ""
         status_message = f"?? Processed {len(files)} files: {len(results)} successful, {len(errors)} failed"
-        # optional CSV download
-        download_path = self._create_batch_download(results)
+        # optional CSV download (use full detailed results for CSV)
+        download_path = self._create_batch_download(detailed_results or results)
         return status_message, summary_table, download_path, detailed_results, error_summary
 
     def _format_results(self, result: Dict[str, Any]) -> str:
@@ -488,7 +488,40 @@ class GradioAssignmentGrader:
 
             # Create batch summary CSV
             if results:
-                df = pd.DataFrame(results)
+                # Prefer full JSON results if available (from process_multiple_files_v2)
+                # Each item may be {"filename": str, "result": dict}
+                try:
+                    import json as _json
+
+                    if any(isinstance(item.get("result"), dict) for item in results):
+                        rows: List[Dict[str, Any]] = []
+                        for item in results:
+                            if isinstance(item, dict) and isinstance(item.get("result"), dict):
+                                res = item["result"]
+                                row: Dict[str, Any] = {
+                                    "filename": item.get("filename", ""),
+                                    # Include helpful top-level fields if present
+                                    "subject": (
+                                        (res.get("classification", {}) or {}).get("subject")
+                                        if isinstance(res.get("classification"), dict)
+                                        else ""
+                                    ),
+                                    "overall_score": res.get("overall_score", ""),
+                                    # Full JSON payload for downstream use
+                                    "result_json": _json.dumps(res, ensure_ascii=False),
+                                }
+                                rows.append(row)
+                            else:
+                                # Fallback to original entry
+                                rows.append(item)
+                        df = pd.DataFrame(rows)
+                    else:
+                        # Legacy path: results already a flat preview list
+                        df = pd.DataFrame(results)
+                except Exception:
+                    # On any error, fallback to basic DataFrame construction
+                    df = pd.DataFrame(results)
+
                 csv_path = os.path.join(self.temp_dir, f"batch_results_{timestamp}.csv")
                 df.to_csv(csv_path, index=False)
                 return csv_path
