@@ -4,6 +4,16 @@ Demonstration of subject-specific output functionality.
 Shows how assignments are automatically classified and exported to appropriate files.
 """
 import asyncio
+import os
+import sys
+
+# Ensure repo root and src/ are on sys.path so imports work when running this file directly
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_SRC = os.path.join(_ROOT, "src")
+for _p in (_ROOT, _SRC):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
 from subject_output_manager import create_subject_output_manager
 from assignment_orchestrator import create_assignment_orchestrator
 
