@@ -112,8 +112,8 @@ async def process_file(
             except Exception:
                 req_dict = {}
 
-        # Run agentic workflow
-        result = await run_agentic_workflow(extracted_text, metadata, "")
+        # Run agentic workflow with requested feature toggles
+        result = await run_agentic_workflow(extracted_text, metadata, "", req_dict)
 
         if isinstance(result, dict) and "error" in result:
             return JSONResponse(status_code=500, content=result)

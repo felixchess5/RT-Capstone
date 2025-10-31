@@ -109,7 +109,8 @@ class GradioAssignmentGrader:
                         pass  # Use defaults if extraction fails
 
                     # Process assignment with agentic workflow
-                    result = await run_agentic_workflow(content, metadata, "")
+                    # Pass UI requirements to the workflow to enable/disable steps
+                    result = await run_agentic_workflow(content, metadata, "", requirements)
                     return result
 
                 except Exception as e:
@@ -209,7 +210,7 @@ class GradioAssignmentGrader:
             total_count = len(files)
             error_count = len(errors)
 
-            status_message = f"📊 Processed {total_count} files: {success_count} successful, {error_count} failed"
+            status_message = f"Processed {total_count} files: {success_count} successful, {error_count} failed"
 
             # Create summary table
             if results:
@@ -241,13 +242,13 @@ class GradioAssignmentGrader:
         self, file_path: str, requirements: Dict[str, bool]
     ) -> Tuple[str, str, Optional[str], Dict[str, Any], str]:
         if not file_path:
-            return "? No file uploaded", "", None, {}, "No file provided"
+            return "No file uploaded", "", None, {}, "No file provided"
         try:
             # size guard
             try:
                 if os.path.getsize(file_path) > self.max_upload_mb * 1024 * 1024:
                     return (
-                        f"? File too large (> {self.max_upload_mb} MB)",
+                        f"File too large (> {self.max_upload_mb} MB)",
                         "",
                         None,
                         {},
@@ -258,7 +259,7 @@ class GradioAssignmentGrader:
 
             if not self.backend_url:
                 return (
-                    "? Backend URL not configured",
+                    "Backend URL not configured",
                     "",
                     None,
                     {},
@@ -278,7 +279,7 @@ class GradioAssignmentGrader:
                     )
             if resp.status_code != 200:
                 return (
-                    f"? Processing failed: {resp.status_code}",
+                    f"Processing failed: {resp.status_code}",
                     "",
                     None,
                     {},
@@ -286,27 +287,27 @@ class GradioAssignmentGrader:
                 )
             result = resp.json()
             if isinstance(result, dict) and "error" in result:
-                return f"? Processing failed: {result['error']}", "", None, result, result["error"]
+                return f"Processing failed: {result['error']}", "", None, result, result["error"]
 
             summary = self._format_results(result)
             download_path = self._create_download_files(
                 result, os.path.basename(file_path)
             )
             return (
-                f"? Processing completed successfully!",
+                f"Processing completed successfully!",
                 summary,
                 download_path if download_path else None,
                 result,
                 "",
             )
         except Exception as e:
-            return f"? Backend error: {e}", "", None, {}, str(e)
+            return f"Backend error: {e}", "", None, {}, str(e)
 
     def process_multiple_files_v2(
         self, files: List[str], requirements: Dict[str, bool]
     ) -> Tuple[str, str, Optional[str], List[Dict[str, Any]], str]:
         if not files:
-            return "? No files uploaded", "", None, [], "No files provided"
+            return "No files uploaded", "", None, [], "No files provided"
         results = []
         errors = []
         detailed_results: List[Dict[str, Any]] = []
@@ -346,7 +347,7 @@ class GradioAssignmentGrader:
         else:
             summary_table = "No successful results to display"
         error_summary = "\n".join(errors) if errors else ""
-        status_message = f"?? Processed {len(files)} files: {len(results)} successful, {len(errors)} failed"
+        status_message = f"Processed {len(files)} files: {len(results)} successful, {len(errors)} failed"
         # optional CSV download (use full detailed results for CSV)
         download_path = self._create_batch_download(detailed_results or results)
         return status_message, summary_table, download_path, detailed_results, error_summary
@@ -542,15 +543,21 @@ class GradioAssignmentGrader:
                     with httpx.Client(timeout=5.0) as client:
                         r = client.get(f"{self.backend_url.rstrip('/')}/status")
                     if r.status_code == 200:
-                        status_parts.append("?? Backend: reachable")
+                        status_parts.append("Backend: reachable")
                     else:
-                        status_parts.append(f"? Backend: HTTP {r.status_code}")
+                        status_parts.append(f"Backend: HTTP {r.status_code}")
                 except Exception as e:
-                    status_parts.append(f"? Backend: unreachable ({e})")
+                    status_parts.append(f"Backend: unreachable ({e})")
 
             # Detailed LLM status
             if llm_manager:
                 health = llm_manager.get_health_status()
+                # Consider only initialized providers for display to avoid misleading totals
+                try:
+                    _available = list(llm_manager.providers.keys())
+                    health = {k: v for k, v in health.items() if k in _available}
+                except Exception:
+                    pass
                 healthy_providers = sum(
                     1
                     for provider_status in health.values()
@@ -581,9 +588,14 @@ class GradioAssignmentGrader:
                     if not isinstance(avg_time, (int, float)):
                         avg_time = 0
 
-                    status_parts.append(
-                        f"  {status_icon} {provider_name.title()}: {success_rate:.1f}% success, {avg_time:.2f}s avg"
-                    )
+                    if isinstance(total_requests, (int, float)) and total_requests > 0:
+                        status_parts.append(
+                            f"  {provider_name.title()}: {success_rate:.1f}% success, {avg_time:.2f}s avg"
+                        )
+                    else:
+                        status_parts.append(
+                            f"  {provider_name.title()}: idle (no requests yet)"
+                        )
 
                 # Show priority order
                 try:
@@ -909,7 +921,11 @@ def create_interface():
 
         # Show/hide error displays based on content
         single_status.change(
-            fn=lambda status: gr.update(visible="?" in str(status or "")),
+            fn=lambda status: gr.update(
+                visible=(lambda s: any(k in s for k in ["failed", "error", "not configured"]))(
+                    str(status or "").lower()
+                )
+            ),
             inputs=[single_status],
             outputs=[single_errors],
         )
@@ -986,4 +1002,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
 

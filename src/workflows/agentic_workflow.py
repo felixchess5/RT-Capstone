@@ -64,6 +64,8 @@ class WorkflowState(TypedDict):
     requires_relevance_check: bool
     requires_grading: bool
     requires_summary: bool
+    # Optional UI-requested feature toggles
+    requested_features: Optional[Dict[str, bool]]
 
     # Processing results
     grammar_result: Optional[Dict]
@@ -124,6 +126,29 @@ def initialize_workflow(state: WorkflowState) -> WorkflowState:
     state["requires_grading"] = True
     state["requires_summary"] = content_length > 200
     state["requires_specialized_processing"] = True  # Always try specialized processing
+
+    # Override with explicit requested features from UI/backend if provided
+    try:
+        req = state.get("requested_features") or {}
+        if isinstance(req, dict):
+            if "grammar" in req:
+                state["requires_grammar_check"] = bool(req.get("grammar"))
+            if "plagiarism" in req:
+                state["requires_plagiarism_check"] = bool(req.get("plagiarism"))
+            if "relevance" in req:
+                # Only allow relevance when source text is provided
+                state["requires_relevance_check"] = bool(req.get("relevance")) and bool(
+                    state.get("source_text")
+                )
+            if "grading" in req:
+                state["requires_grading"] = bool(req.get("grading"))
+            if "summary" in req:
+                state["requires_summary"] = bool(req.get("summary"))
+            if "specialized" in req:
+                state["requires_specialized_processing"] = bool(req.get("specialized"))
+    except Exception:
+        # If anything goes wrong, fall back to defaults above
+        pass
 
     # Initialize workflow control
     state["current_step"] = WorkflowStep.QUALITY_CHECK.value
@@ -372,9 +397,8 @@ def plagiarism_detection_agent(state: WorkflowState) -> WorkflowState:
 
     try:
         # Use the language detected from grammar analysis if available
-        detected_language = state.get("grammar_result", {}).get(
-            "detected_language", "en"
-        )
+        grammar_info = state.get("grammar_result") or {}
+        detected_language = grammar_info.get("detected_language", "en")
 
         # Use localized plagiarism check prompt
         prompt = get_localized_prompt(
@@ -443,9 +467,8 @@ def relevance_analysis_agent(state: WorkflowState) -> WorkflowState:
 
     try:
         # Use the language detected from grammar analysis if available
-        detected_language = state.get("grammar_result", {}).get(
-            "detected_language", "en"
-        )
+        grammar_info = state.get("grammar_result") or {}
+        detected_language = grammar_info.get("detected_language", "en")
 
         # Use localized relevance check prompt
         prompt = get_localized_prompt(
@@ -1038,7 +1061,10 @@ def create_workflow(*args, **kwargs) -> StateGraph:
 
 @traceable(name="run_agentic_workflow")
 async def run_agentic_workflow(
-    content: str, metadata: Dict, source_text: str = ""
+    content: str,
+    metadata: Dict,
+    source_text: str = "",
+    requested_features: Optional[Dict[str, bool]] = None,
 ) -> Dict:
     """Run the complete agentic workflow on a single assignment."""
     print(f"🚀 Starting agentic workflow for: {metadata.get('name', 'Unknown')}")
@@ -1051,6 +1077,7 @@ async def run_agentic_workflow(
         content=content,
         metadata=metadata,
         source_text=source_text,
+        requested_features=requested_features,
         requires_grammar_check=False,  # Will be set by initializer
         requires_plagiarism_check=False,
         requires_relevance_check=False,
