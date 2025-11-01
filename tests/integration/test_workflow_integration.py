@@ -122,6 +122,7 @@ class TestWorkflowIntegration:
         assert all("overall_score" in r["result"] for r in results)
 
     @pytest.mark.integration
+    @pytest.mark.asyncio
     async def test_error_propagation_through_workflow(self, workflow_system, temp_dir):
         """Test how errors propagate through the workflow."""
         # Create an invalid file
