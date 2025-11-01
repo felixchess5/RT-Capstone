@@ -116,8 +116,13 @@ An advanced academic assignment grading system with subject-specific processing,
    cp .env.example .env
 
    # Edit .env file and add your API keys
-   # Required:
-   GROQ_API_KEY=your_groq_api_key_here
+   ## Required:
+GROQ_API_KEY=your_groq_api_key_here
+
+## Optional (enable providers in config/llm_config.yaml):
+OPENAI_API_KEY=your_openai_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 
    # Optional (for LLM redundancy):
    GEMINI_API_KEY=your_gemini_api_key_here
@@ -129,7 +134,7 @@ An advanced academic assignment grading system with subject-specific processing,
    ```
 
 6. **Configure paths** (Optional)
-   - Edit `paths.py` to customize file locations
+   -   - Edit `src/core/paths.py` to customize file locations
    - Default folders will be created automatically
 
 ### Usage
@@ -237,7 +242,7 @@ An advanced academic assignment grading system with subject-specific processing,
 - **Historical Context**: Understanding of time period and circumstances
 - **Argument Assessment**: Historical reasoning and evidence usage
 
-#### 📊 Subject Output Manager (`subject_output_manager.py`)
+#### 📊 Subject Output Manager (`src/core/subject_output_manager.py`)
 - **Automatic Classification**: Routes results to appropriate output files
 - **Specialized Fields**: Subject-specific CSV columns and data extraction
 - **Multiple Formats**: CSV for analysis, JSON for detailed data
@@ -416,12 +421,12 @@ RT-Capstone/
 │   ├── spanish_processor.py      # Spanish language assessment
 │   ├── science_processor.py      # Scientific analysis & experimental design
 │   ├── history_processor.py      # Historical analysis & chronological assessment
-│   └── subject_output_manager.py # Subject-specific file generation
+│   └── src/core/subject_output_manager.py # Subject-specific file generation
 │
 ├── 🌍 Multi-Language & OCR
-│   ├── language_support.py       # 14+ language support system
-│   ├── ocr_processor.py          # Tesseract OCR integration
-│   └── file_processor.py         # Multi-format file processing
+│   ├── src/support/language_support.py       # 14+ language support system
+│   ├── src/support/ocr_processor.py          # Tesseract OCR integration
+│   └── src/support/file_processor.py         # Multi-format file processing
 │
 ├── 🔧 Integration & Tools
 │   ├── mcp_server.py             # 30+ MCP tools for external integration
@@ -443,7 +448,7 @@ RT-Capstone/
 │   │   ├── test_security.py       # Comprehensive security tests (400+ lines)
 │   │   ├── test_assignment_orchestrator.py # Orchestrator testing
 │   │   ├── test_math_processor.py # Math processor validation
-│   │   └── test_file_processor.py # File processing tests
+│   │   └── test_src/support/file_processor.py # File processing tests
 │   ├── tests/integration/         # Integration & workflow tests
 │   ├── tests/e2e/                 # End-to-end system tests
 │   ├── conftest.py                # Pytest configuration & fixtures
@@ -469,7 +474,7 @@ RT-Capstone/
    - Initialize specialized processors and orchestrator
    - Build LangGraph workflow with intelligent routing
 
-2. **File Processing** (`file_processor.py`)
+2. **File Processing** (`src/support/file_processor.py`)
    - **Multi-format support**: PDF, DOCX, DOC, MD, TXT, images
    - **OCR processing**: Automatic detection and processing of scanned documents
    - **Language detection**: Automatic language identification for 14+ languages
@@ -496,7 +501,7 @@ RT-Capstone/
    - **Specialized Grading**: Subject-specific criteria and advanced scoring
    - **Summary Generation**: Intelligent summarization with language awareness
 
-6. **Subject-Specific Export** (`subject_output_manager.py`)
+6. **Subject-Specific Export** (`src/core/subject_output_manager.py`)
    - **Automatic classification**: Route results to appropriate subject files
    - **Specialized CSV files**: Math, Spanish, English, Science, History with subject-specific columns
    - **Detailed JSON exports**: Complete assignment data with full analysis
@@ -530,14 +535,20 @@ Enable tracing by setting `LANGCHAIN_TRACING_V2=true` in your `.env` file.
    cp .env.example .env
    ```
 
-2. Edit `.env` and add your API key:
+2. Edit `.env` and add your API keys (set the ones you use):
    ```env
+   # Required for default setup
    GROQ_API_KEY=your_actual_groq_api_key_here
+
+   # Optional providers (enable in YAML and set keys)
+   OPENAI_API_KEY=your_openai_api_key_here
+   ANTHROPIC_API_KEY=your_anthropic_api_key_here
+   GEMINI_API_KEY=your_gemini_api_key_here
    ```
 
 ### Path Configuration
 
-Edit `paths.py` to customize:
+Edit `src/core/paths.py` to customize:
 ```python
 ASSIGNMENTS_FOLDER = "Assignments"
 PLAGIARISM_REPORTS_FOLDER = "plagiarism_reports"  
@@ -547,11 +558,43 @@ GRAPH_OUTPUT_PATH = "graph.png"
 
 ### LLM Configuration
 
-Modify `llms.py` to adjust:
-```python
-def create_groq_llm(model="llama-3.1-8b-instant", temperature=0.7):
-    # Customize model and parameters
+The multi‑LLM providers and priority are configured in `config/llm_config.yaml`.
+
+Key settings:
+- `provider_priority`: order in which providers are attempted
+- `providers.*.enabled`: set to `true` for providers you’ve set API keys for
+- `providers.*.models.default`: default model names per provider
+- `failover`: circuit breaker thresholds/timeouts
+
+Example:
+```yaml
+provider_priority:
+  1: groq
+  2: openai
+  3: anthropic
+  4: gemini
+
+providers:
+  groq:
+    enabled: true
+    models:
+      default: llama-3.1-8b-instant
+  openai:
+    enabled: false
+    models:
+      default: gpt-4o-mini
+  anthropic:
+    enabled: false
+    models:
+      default: claude-3-5-sonnet-20241022
+  gemini:
+    enabled: true
+    models:
+      default: gemini-1.5-pro
 ```
+
+Notes:
+- You can also customize runtime behavior in `src/core/llms.py`, but most setup is handled by the YAML.
 
 ## 📋 Feature Roadmap
 
@@ -651,5 +694,9 @@ Visualize the agentic workflow
 ---
 
 **Built with ❤️ for educators and students**
+
+
+
+
 
 
