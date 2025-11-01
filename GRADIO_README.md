@@ -20,6 +20,14 @@ pip install -r requirements.txt
 
 ### Launch the Interface
 ```bash
+# Start backend API (required by UI)
+python -m uvicorn --app-dir src server.main:app --host 127.0.0.1 --port 8000
+
+# Set backend URL for UI and launch
+# PowerShell: $env:BACKEND_URL='http://127.0.0.1:8000'
+# bash/zsh: export BACKEND_URL=http://127.0.0.1:8000
+python launch_gradio.py
+```bash
 # Simple launch
 python launch_gradio.py
 
@@ -97,9 +105,9 @@ The interface will automatically open in your browser at `http://localhost:7860`
 - System architecture overview
 
 ### Status Indicators
-- 🔗 **LLM Providers**: Shows healthy vs total providers
-- 📄 **File Processor**: Processing engine status
-- 🔧 **Workflow Engine**: Agentic workflow status
+- LLM Providers: Shows healthy vs total providers
+- File Processor: Processing engine status
+- Workflow Engine: Agentic workflow status
 
 ## 🔧 Technical Details
 
@@ -236,3 +244,4 @@ No additional configuration needed when updating the backend system.
 ---
 
 **🎯 Ready to grade assignments with AI? Launch the interface and start processing!**
+

@@ -141,7 +141,7 @@ This document tracks all features and functionality in the Capstone project.
 - `spanish_processor.py` - Spanish language assessment and cultural analysis
 - `science_processor.py` - Science subjects (Physics, Chemistry, Biology, etc.)
 - `history_processor.py` - Historical analysis across 9 time periods
-- `english_processor.py` - Writing analysis and literary assessment
+  (English is handled in the orchestrator; no dedicated `english_processor.py` module)
 
 ### Support Systems (`src/support/`)
 - `file_processor.py` - Multi-format file processing with OCR integration
@@ -151,9 +151,7 @@ This document tracks all features and functionality in the Capstone project.
 - `prompts.py` - Prompt templates
 
 ### MCP Integration (`src/mcp/`)
-- `mcp_server.py` - MCP server with 25+ specialized tools
-- `main_mcp.py` - MCP application entry point
-- `test_mcp.py` - MCP testing suite
+- `mcp_server.py` - MCP server with 25+ specialized tools (server entry point)
 
 ### Testing Suite (`tests/`)
 - `test_agentic_workflow.py` - Comprehensive workflow tests
@@ -163,9 +161,20 @@ This document tracks all features and functionality in the Capstone project.
 - `test_subject_outputs.py` - Subject-specific output validation
 
 ### Configuration (`config/`)
-- `llm_config.yaml` - Multi-LLM provider configuration with priority ordering
+- `llm_config.yaml` - Multi-LLM provider configuration with priority ordering (providers enabled flags, default models, failover)
 - `requirements.txt` - Python dependencies
 - `.env.example` - Environment variables template
+
+### Gradio Web UI Enhancements
+- Batch download ZIP includes an English-only CSV and JSON when English assignments are present.
+- System Status displays clean text (no emoji markers) and shows providers as "idle" until requests are made.
+- Processing Options (Grammar, Plagiarism, Relevance, Grading, Summary, Specialized) directly control which workflow steps run.
+- Requires backend API (`src/server/main.py`) to be running; set `BACKEND_URL` for the UI.
+
+### Multi-LLM Configuration
+- Providers and priority are configured in `config/llm_config.yaml`.
+- Supported providers: Groq, OpenAI, Anthropic, Gemini (optional local via Ollama in code).
+- Circuit breaker and failover tunables are set in the same YAML.
 
 ## Planned Features
 

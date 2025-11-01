@@ -139,27 +139,27 @@ GEMINI_API_KEY=your_gemini_api_key_here
 
 ### Usage
 
-#### 🌐 Web Interface (Recommended)
+#### Web Interface (Recommended)
 
-1. **Launch the Gradio web interface**
-   ```bash
-   python launch_gradio.py
-   ```
-   - Opens automatically at `http://localhost:7860`
-   - Drag & drop assignment files
-   - Real-time processing with progress updates
-   - Download results as ZIP files (batch ZIP includes an English-only CSV/JSON if present)\r\n   - Batch processing support
-   - System status monitoring
+1. **Start the backend API** (required for the demo UI)
+```bash
+python -m uvicorn --app-dir src server.main:app --host 127.0.0.1 --port 8000
+```
+- Exposes `/status` and `/process_file` endpoints used by the UI.
 
-#### 📁 Command Line Interface
+2. **Launch the Gradio web interface**
+```bash
+# Set the backend URL if needed
+# PowerShell: $env:BACKEND_URL='http://127.0.0.1:8000'
+# bash/zsh: export BACKEND_URL=http://127.0.0.1:8000
+python launch_gradio.py
+```
+- Opens at `http://localhost:7860` (or a free port)
+- Drag & drop assignment files; real-time progress
+- Download results as ZIP files (batch ZIP includes an English-only CSV/JSON if present)
+- Batch processing support; system status panel
 
-1. **Place assignment files**
-   - Add assignment files to the `Assignments/` folder
-   - **Supported formats**: PDF, DOCX, DOC, MD, TXT, PNG, JPEG, TIFF, BMP
-   - Use this format for text files:
-     ```
-     Name: John Doe
-     Date: 2025-08-25
+#### Command Line Interface
      Class: Algebra II
      Subject: Mathematics
 
@@ -384,85 +384,66 @@ pytest --cov=src --cov-report=html
 
 ### 🎯 Security Validation Results
 
+### Security Validation Results
 ```
-🔒 Intelligent-Assignment-Grading-System Security Status
-══════════════════════════════
-✅ Enterprise Security: ACTIVE
-✅ LLM Providers: 2 (Groq + Gemini)
-✅ Secure Wrappers: Enabled
-✅ Threat Detection: WORKING
+Security Status
+Enterprise Security: ACTIVE
+LLM Providers: Configured (see config/llm_config.yaml)
+Secure Wrappers: Enabled
+Threat Detection: WORKING
 
-🧪 Security Test Results:
-   Test 1: 🟢 SAFE - ✅ PASS
-   Test 2: 🔴 BLOCKED - ✅ PASS
-   Test 3: 🟢 SAFE - ✅ PASS
-
-🚀 SYSTEM STATUS: PRODUCTION READY
+Security Test Results:
+  Test 1: SAFE - PASS
+  Test 2: BLOCKED - PASS
+  Test 3: SAFE - PASS
 ```
+
 
 ## 📁 Project Structure
 
 ```
-Intelligent-Assignment-Grading-System/
-├── 🌐 Web Interface
-│   ├── launch_gradio.py          # Gradio web interface launcher
-│   ├── src/gradio_app.py         # Complete web interface implementation
-│   └── GRADIO_README.md          # Web interface documentation
-│
-├── 🔧 Core System
-│   ├── main_agentic.py           # Enhanced agentic workflow entry point
-│   ├── agentic_workflow.py       # LangGraph-based intelligent workflow
-│   ├── assignment_orchestrator.py # Subject classification & routing
-│   ├── llms.py                   # Multi-LLM configuration (Groq + Gemini)
-│   └── paths.py                  # Comprehensive path configurations
-│
-├── 🎯 Specialized Processors
-│   ├── math_processor.py         # Mathematical analysis & equation solving
-│   ├── spanish_processor.py      # Spanish language assessment
-│   ├── science_processor.py      # Scientific analysis & experimental design
-│   ├── history_processor.py      # Historical analysis & chronological assessment
-│   └── src/core/subject_output_manager.py # Subject-specific file generation
-│
-├── 🌍 Multi-Language & OCR
-│   ├── src/support/language_support.py       # 14+ language support system
-│   ├── src/support/ocr_processor.py          # Tesseract OCR integration
-│   └── src/support/file_processor.py         # Multi-format file processing
-│
-├── 🔧 Integration & Tools
-│   ├── mcp_server.py             # 30+ MCP tools for external integration
-│   ├── prompts.py                # Localized prompt templates
-│   └── utils.py                  # Utilities & visualization
-│
-├── 📁 Data Directories
-│   ├── Assignments/              # Input files (PDF, DOCX, TXT, images)
-│   ├── output/                   # Subject-specific CSV & JSON files
-│   └── plagiarism_reports/       # Detailed analysis reports
-│
-├── 🔒 Security Components
-│   ├── security_manager.py        # Central security orchestration (800+ lines)
-│   ├── secure_llm_wrapper.py      # Secure LLM interaction wrapper (400+ lines)
-│   └── security_config.py         # Security configuration & policies
-│
-├── 🧪 Testing & Demo
-│   ├── tests/unit/                # Unit tests for core components
-│   │   ├── test_security.py       # Comprehensive security tests (400+ lines)
-│   │   ├── test_assignment_orchestrator.py # Orchestrator testing
-│   │   ├── test_math_processor.py # Math processor validation
-│   │   └── test_src/support/file_processor.py # File processing tests
-│   ├── tests/integration/         # Integration & workflow tests
-│   ├── tests/e2e/                 # End-to-end system tests
-│   ├── conftest.py                # Pytest configuration & fixtures
-│   ├── pytest.ini                # Pytest settings & markers
-│   ├── test_specialized_processors.py # Legacy test suite
-│   ├── test_subject_outputs.py    # Output system testing
-│   ├── test_new_subjects.py       # Science & History processor tests
-│   └── demo_subject_outputs.py    # Quick demonstration
-│
-└── 📋 Configuration
-    ├── requirements.txt          # Python dependencies
-    ├── .env.example             # Environment variables template
-    ├── .gitignore              # Git ignore patterns
-    └── README.md               # This documentation
+```
+
+├── launch_gradio.py                 # Gradio web interface launcher
+├── GRADIO_README.md                 # Web interface documentation
+├── config/
+│   └── llm_config.yaml              # Multi-LLM provider configuration
+├── src/
+│   ├── gradio_app.py                # Complete web interface implementation
+│   ├── core/
+│   │   ├── assignment_orchestrator.py  # Subject classification & routing
+│   │   ├── llms.py                      # Multi-LLM provider system
+│   │   ├── paths.py                     # Path configuration and constants
+│   │   └── subject_output_manager.py    # Subject-specific file generation
+│   ├── processors/
+│   │   ├── math_processor.py
+│   │   ├── spanish_processor.py
+│   │   ├── science_processor.py
+│   │   └── history_processor.py
+│   ├── support/
+│   │   ├── language_support.py
+│   │   ├── ocr_processor.py
+│   │   ├── file_processor.py
+│   │   ├── prompts.py
+│   │   └── utils.py
+│   ├── mcp/
+│   │   └── mcp_server.py
+│   ├── security/
+│   │   ├── security_manager.py
+│   │   ├── secure_llm_wrapper.py
+│   │   └── security_config.py
+│   ├── server/
+│   │   └── main.py
+│   └── workflows/
+│       └── agentic_workflow.py
+├── examples/
+│   └── demo_subject_outputs.py
+├── tests/
+│   ├── unit/ …
+│   ├── integration/ …
+│   └── e2e/ …
+├── output/                           # Generated CSV/JSON
+└── plagiarism_reports/               # Generated analysis reports
 ```
 
 ## 🔄 Processing Workflow
@@ -694,6 +675,10 @@ Visualize the agentic workflow
 ---
 
 **Built with ❤️ for educators and students**
+
+
+
+
 
 
 
