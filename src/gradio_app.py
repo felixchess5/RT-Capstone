@@ -30,7 +30,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 
 from core.llms import llm_manager
 from core.paths import ASSIGNMENTS_FOLDER, OUTPUT_FOLDER
-from core.subject_output_manager import create_subject_output_manager
+from core.subject_output_manager import (
+    create_subject_output_manager,
+    OutputSubject,
+)
 
 
 class GradioAssignmentGrader:
@@ -483,9 +486,15 @@ class GradioAssignmentGrader:
             return None
 
     def _create_batch_download(self, results: List[Dict[str, Any]]) -> str:
-        """Create batch download for multiple results."""
+        """Create batch download archive with CSV and English subject files."""
         try:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+            # Prepare batch folder
+            batch_dir = os.path.join(self.temp_dir, f"batch_{timestamp}")
+            os.makedirs(batch_dir, exist_ok=True)
+
+            english_files: List[str] = []
 
             # Create batch summary CSV
             if results:
@@ -494,17 +503,24 @@ class GradioAssignmentGrader:
                 try:
                     import json as _json
 
-                    if any(isinstance(item.get("result"), dict) for item in results):
+                    have_full = any(
+                        isinstance(item, dict) and isinstance(item.get("result"), dict)
+                        for item in results
+                    )
+
+                    if have_full:
                         rows: List[Dict[str, Any]] = []
+                        assignments: List[Dict[str, Any]] = []
                         for item in results:
                             if isinstance(item, dict) and isinstance(item.get("result"), dict):
                                 res = item["result"]
+                                assignments.append(res)
                                 row: Dict[str, Any] = {
                                     "filename": item.get("filename", ""),
                                     # Include helpful top-level fields if present
                                     "subject": (
-                                        (res.get("classification", {}) or {}).get("subject")
-                                        if isinstance(res.get("classification"), dict)
+                                        (res.get("assignment_classification", {}) or {}).get("subject")
+                                        if isinstance(res.get("assignment_classification"), dict)
                                         else ""
                                     ),
                                     "overall_score": res.get("overall_score", ""),
@@ -513,19 +529,42 @@ class GradioAssignmentGrader:
                                 }
                                 rows.append(row)
                             else:
-                                # Fallback to original entry
                                 rows.append(item)
+
+                        # Save English-only CSV/JSON using SubjectOutputManager
+                        try:
+                            mgr = create_subject_output_manager(batch_dir)
+                            eng_csv = mgr.export_subject_csv(assignments, OutputSubject.ENGLISH)
+                            eng_json = mgr.export_subject_json(assignments, OutputSubject.ENGLISH)
+                            if eng_csv:
+                                english_files.append(eng_csv)
+                            if eng_json:
+                                english_files.append(eng_json)
+                        except Exception as e:
+                            print(f"? Error exporting English subject files: {e}")
+
                         df = pd.DataFrame(rows)
                     else:
                         # Legacy path: results already a flat preview list
                         df = pd.DataFrame(results)
-                except Exception:
-                    # On any error, fallback to basic DataFrame construction
+                except Exception as e:
+                    print(f"? Error preparing batch CSV rows: {e}")
                     df = pd.DataFrame(results)
 
-                csv_path = os.path.join(self.temp_dir, f"batch_results_{timestamp}.csv")
+                csv_path = os.path.join(batch_dir, f"batch_results_{timestamp}.csv")
                 df.to_csv(csv_path, index=False)
-                return csv_path
+
+                # Package everything into a single ZIP
+                zip_path = os.path.join(self.temp_dir, f"batch_results_{timestamp}.zip")
+                with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+                    # Add batch CSV
+                    if os.path.exists(csv_path):
+                        zipf.write(csv_path, os.path.basename(csv_path))
+                    # Add English subject exports (if any)
+                    for f in english_files:
+                        if f and os.path.exists(f):
+                            zipf.write(f, os.path.basename(f))
+                return zip_path
 
             return None
 
