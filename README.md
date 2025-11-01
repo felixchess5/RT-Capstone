@@ -143,8 +143,7 @@ An advanced academic assignment grading system with subject-specific processing,
    - Opens automatically at `http://localhost:7860`
    - Drag & drop assignment files
    - Real-time processing with progress updates
-   - Download results as ZIP files
-   - Batch processing support
+   - Download results as ZIP files (batch ZIP includes an English-only CSV/JSON if present)\r\n   - Batch processing support
    - System status monitoring
 
 #### 📁 Command Line Interface
@@ -652,3 +651,5 @@ Visualize the agentic workflow
 ---
 
 **Built with ❤️ for educators and students**
+
+
