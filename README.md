@@ -438,11 +438,14 @@ Security Test Results:
 │       └── agentic_workflow.py
 ├── examples/
 │   └── demo_subject_outputs.py
-├── tests/
+��� tests/
 │   ├── unit/ …
 │   ├── integration/ …
 │   └── e2e/ …
 ├── output/                           # Generated CSV/JSON
+��� slides/
+�   ��� Intelligent-Assignment-Grading-System-Demo.md
+�   ��� Intelligent Assignment Grading System Presentation.pptx
 └── plagiarism_reports/               # Generated analysis reports
 ```
 
@@ -671,10 +674,14 @@ Visualize the agentic workflow
 - MCP Tools Reference: [docs/mcp_tools.md](docs/mcp_tools.md)
 - Gradio UI Guide: [GRADIO_README.md](GRADIO_README.md)
 - Testing Guide: [docs/testing.md](docs/testing.md)
+ - Slides: [slides/Intelligent-Assignment-Grading-System-Demo.md](slides/Intelligent-Assignment-Grading-System-Demo.md)
 
 ---
 
 **Built with ❤️ for educators and students**
+
+
+
 
 
 
