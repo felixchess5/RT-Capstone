@@ -1,6 +1,6 @@
-# 🧪 RT-Capstone Testing Documentation
+# 🧪 Intelligent-Assignment-Grading-System Testing Documentation
 
-Comprehensive testing guide for the RT-Capstone Assignment Grading System.
+Comprehensive testing guide for the Intelligent-Assignment-Grading-System Assignment Grading System.
 
 ## 📋 Table of Contents
 
@@ -16,7 +16,7 @@ Comprehensive testing guide for the RT-Capstone Assignment Grading System.
 
 ## 🎯 Overview
 
-The RT-Capstone project uses **pytest** as the primary testing framework with comprehensive test coverage across:
+The Intelligent-Assignment-Grading-System project uses **pytest** as the primary testing framework with comprehensive test coverage across:
 
 - **Unit Tests**: Individual component testing
 - **Integration Tests**: Component interaction testing
@@ -70,7 +70,7 @@ tests/
 pip install -r requirements.txt
 
 # Ensure you're in the project root
-cd RT-Capstone
+cd Intelligent-Assignment-Grading-System
 ```
 
 ### Basic Test Execution

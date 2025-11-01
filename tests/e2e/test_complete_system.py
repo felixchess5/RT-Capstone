@@ -1,5 +1,5 @@
 """
-End-to-end tests for the complete RT-Capstone system.
+End-to-end tests for the complete Intelligent-Assignment-Grading-System system.
 
 Tests the entire system from file upload to final graded results,
 including all major workflows and user scenarios.

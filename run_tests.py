@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-RT-Capstone Test Runner
+Intelligent-Assignment-Grading-System Test Runner
 
-A comprehensive test runner script for the RT-Capstone project with advanced features:
+A comprehensive test runner script for the Intelligent-Assignment-Grading-System project with advanced features:
 - Test category selection
 - Coverage reporting
 - Performance monitoring
@@ -21,7 +21,7 @@ import json
 
 
 class TestRunner:
-    """Advanced test runner for RT-Capstone project."""
+    """Advanced test runner for Intelligent-Assignment-Grading-System project."""
 
     def __init__(self):
         self.project_root = Path(__file__).parent
@@ -303,7 +303,7 @@ class TestRunner:
 def main():
     """Main entry point for the test runner."""
     parser = argparse.ArgumentParser(
-        description="RT-Capstone Test Runner",
+        description="Intelligent-Assignment-Grading-System Test Runner",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

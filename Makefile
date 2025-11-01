@@ -1,11 +1,11 @@
-# 🧪 RT-Capstone Testing Makefile
+# 🧪 Intelligent-Assignment-Grading-System Testing Makefile
 # Simplified commands for running tests and development tasks
 
 .PHONY: help install test test-unit test-integration test-e2e test-all test-cov test-fast lint format security clean docs setup
 
 # Default target
 help: ## 📋 Show this help message
-	@echo "🧪 RT-Capstone Testing Commands"
+	@echo "🧪 Intelligent-Assignment-Grading-System Testing Commands"
 	@echo "================================"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple launcher for the RT-Capstone Gradio Web Interface.
+Simple launcher for the Intelligent-Assignment-Grading-System Gradio Web Interface.
 
 Run this script to start the web interface for assignment grading.
 """
@@ -18,7 +18,7 @@ try:
 
     if __name__ == "__main__":
         # ASCII-only output for Windows consoles that aren't UTF-8
-        print("RT-Capstone Assignment Grading System")
+        print("Intelligent-Assignment-Grading-System Assignment Grading System")
         print("=" * 50)
         print("Starting Gradio web interface...")
         print("The interface will open in your browser automatically")

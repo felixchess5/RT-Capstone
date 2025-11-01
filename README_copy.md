@@ -78,8 +78,8 @@ An advanced academic assignment grading system with subject-specific processing,
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/felixchess5/RT-Capstone.git
-   cd RT-Capstone
+   git clone https://github.com/felixchess5/Intelligent-Assignment-Grading-System.git
+   cd Intelligent-Assignment-Grading-System
    ```
 
 2. **Create virtual environment**
@@ -284,7 +284,7 @@ An advanced academic assignment grading system with subject-specific processing,
 
 ### 🛡️ Security Features
 
-The RT-Capstone system implements **enterprise-grade security protection** to ensure safe and secure operation in educational environments:
+The Intelligent-Assignment-Grading-System system implements **enterprise-grade security protection** to ensure safe and secure operation in educational environments:
 
 #### **Prompt Injection Protection**
 - **Advanced Detection**: Multi-layer pattern recognition for instruction override attempts
@@ -381,7 +381,7 @@ pytest --cov=src --cov-report=html
 ### 🎯 Security Validation Results
 
 ```
-🔒 RT-Capstone Security Status
+🔒 Intelligent-Assignment-Grading-System Security Status
 ══════════════════════════════
 ✅ Enterprise Security: ACTIVE
 ✅ LLM Providers: 2 (Groq + Gemini)
@@ -399,7 +399,7 @@ pytest --cov=src --cov-report=html
 ## 📁 Project Structure
 
 ```
-RT-Capstone/
+Intelligent-Assignment-Grading-System/
 ├── 🌐 Web Interface
 │   ├── launch_gradio.py          # Gradio web interface launcher
 │   ├── src/gradio_app.py         # Complete web interface implementation

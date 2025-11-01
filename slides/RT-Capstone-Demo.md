@@ -1,4 +1,4 @@
-# RT-Capstone — Intelligent Assignment Grading System
+# Intelligent-Assignment-Grading-System — Intelligent Assignment Grading System
 
 Subtitle: Agentic AI workflow, subject‑specific processors, MCP tools, and Gradio UI
 

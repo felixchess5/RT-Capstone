@@ -1,5 +1,5 @@
 """
-Secure LLM Wrapper for RT-Capstone.
+Secure LLM Wrapper for Intelligent-Assignment-Grading-System.
 
 Provides a security layer around LLM interactions to prevent:
 - Prompt injection attacks

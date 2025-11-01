@@ -1,6 +1,6 @@
-# 🎓 RT-Capstone Gradio Web Interface
+# 🎓 Intelligent-Assignment-Grading-System Gradio Web Interface
 
-A comprehensive web interface for the RT-Capstone Assignment Grading System built with Gradio.
+A comprehensive web interface for the Intelligent-Assignment-Grading-System Assignment Grading System built with Gradio.
 
 ## 🚀 Quick Start
 
@@ -105,7 +105,7 @@ The interface will automatically open in your browser at `http://localhost:7860`
 
 ### Architecture
 - **Frontend**: Gradio web interface
-- **Backend**: RT-Capstone agentic workflow system
+- **Backend**: Intelligent-Assignment-Grading-System agentic workflow system
 - **Processing**: Multi-LLM provider system with automatic failover
 - **Storage**: Temporary file handling with automatic cleanup
 
@@ -157,7 +157,7 @@ The interface can be customized by modifying:
 #### Import Errors
 ```bash
 # Ensure you're in the correct directory
-cd /path/to/RT-Capstone
+cd /path/to/Intelligent-Assignment-Grading-System
 
 # Verify Python path
 python -c "import sys; print(sys.path)"

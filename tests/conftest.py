@@ -1,5 +1,5 @@
 """
-Pytest configuration and shared fixtures for RT-Capstone tests.
+Pytest configuration and shared fixtures for Intelligent-Assignment-Grading-System tests.
 
 This module provides common fixtures, test utilities, and configuration
 for all test modules in the test suite.

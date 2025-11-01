@@ -3,7 +3,7 @@
 Gradio Web Interface for Assignment Grading System
 
 This module provides a comprehensive web interface using Gradio for the
-RT-Capstone assignment grading system with multi-LLM support and
+Intelligent-Assignment-Grading-System assignment grading system with multi-LLM support and
 subject-specific processing.
 """
 
@@ -702,12 +702,12 @@ def create_interface():
     }
     """
 
-    with gr.Blocks(css=custom_css, title="RT-Capstone Assignment Grader") as interface:
+    with gr.Blocks(css=custom_css, title="Intelligent-Assignment-Grading-System Assignment Grader") as interface:
 
         # Header
         gr.Markdown(
             """
-        # 🎓 RT-Capstone Assignment Grading System
+        # 🎓 Intelligent-Assignment-Grading-System Assignment Grading System
 
         **Advanced AI-powered assignment grading with multi-LLM support and subject-specific analysis**
 
@@ -980,7 +980,7 @@ def create_interface():
 def main():
     """Main entry point for the Gradio application."""
 
-    print("🚀 Starting RT-Capstone Assignment Grading System")
+    print("🚀 Starting Intelligent-Assignment-Grading-System Assignment Grading System")
     print("📊 Initializing Gradio interface...")
 
     try:

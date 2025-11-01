@@ -1,4 +1,4 @@
-# LLM provider configuration for RT-Capstone backend
+# LLM provider configuration for Intelligent-Assignment-Grading-System backend
 
 # Order in which providers are attempted when no explicit provider is chosen
 provider_priority:

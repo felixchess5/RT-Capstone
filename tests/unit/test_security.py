@@ -1,5 +1,5 @@
 """
-Comprehensive Security Tests for RT-Capstone.
+Comprehensive Security Tests for Intelligent-Assignment-Grading-System.
 
 Tests all security components including:
 - Prompt injection detection and prevention

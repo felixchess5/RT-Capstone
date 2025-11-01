@@ -1,5 +1,5 @@
 """
-Enterprise-grade Security Manager for RT-Capstone.
+Enterprise-grade Security Manager for Intelligent-Assignment-Grading-System.
 
 Provides comprehensive protection against:
 - Prompt injection attacks
@@ -84,7 +84,7 @@ class InputValidator(BaseModel):
 
 
 class SecurityManager:
-    """Enterprise-grade security manager for RT-Capstone."""
+    """Enterprise-grade security manager for Intelligent-Assignment-Grading-System."""
 
     def __init__(self, config: SecurityConfig = None):
         """Initialize security manager with configuration."""
