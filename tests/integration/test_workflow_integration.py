@@ -21,8 +21,8 @@ class TestWorkflowIntegration:
     """Integration tests for the complete workflow."""
 
     @pytest.fixture
-    async def workflow_system(self, mock_multi_llm_manager):
-        """Create a complete workflow system for testing."""
+    def workflow_system(self, mock_multi_llm_manager):
+        """Create a complete workflow system for testing (sync fixture)."""
         orchestrator = AssignmentOrchestrator(mock_multi_llm_manager)
         file_processor = FileProcessor()
         workflow = create_workflow(mock_multi_llm_manager)
