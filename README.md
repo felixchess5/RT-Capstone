@@ -399,54 +399,53 @@ Security Test Results:
 ```
 
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-```
-
-├── launch_gradio.py                 # Gradio web interface launcher
-├── GRADIO_README.md                 # Web interface documentation
-├── config/
-│   └── llm_config.yaml              # Multi-LLM provider configuration
-├── src/
-│   ├── gradio_app.py                # Complete web interface implementation
-│   ├── core/
-│   │   ├── assignment_orchestrator.py  # Subject classification & routing
-│   │   ├── llms.py                      # Multi-LLM provider system
-│   │   ├── paths.py                     # Path configuration and constants
-│   │   └── subject_output_manager.py    # Subject-specific file generation
-│   ├── processors/
-│   │   ├── math_processor.py
-│   │   ├── spanish_processor.py
-│   │   ├── science_processor.py
-│   │   └── history_processor.py
-│   ├── support/
-│   │   ├── language_support.py
-│   │   ├── ocr_processor.py
-│   │   ├── file_processor.py
-│   │   ├── prompts.py
-│   │   └── utils.py
-│   ├── mcp/
-│   │   └── mcp_server.py
-│   ├── security/
-│   │   ├── security_manager.py
-│   │   ├── secure_llm_wrapper.py
-│   │   └── security_config.py
-│   ├── server/
-│   │   └── main.py
-│   └── workflows/
-│       └── agentic_workflow.py
-├── examples/
-│   └── demo_subject_outputs.py
-��� tests/
-│   ├── unit/ …
-│   ├── integration/ …
-│   └── e2e/ …
-├── output/                           # Generated CSV/JSON
-��� slides/
-�   ��� Intelligent-Assignment-Grading-System-Demo.md
-�   ��� Intelligent Assignment Grading System Presentation.pptx
-└── plagiarism_reports/               # Generated analysis reports
+Intelligent-Assignment-Grading-System/
+- launch_gradio.py                 # Gradio web interface launcher
+- GRADIO_README.md                 # Web interface documentation
+- config/
+  - llm_config.yaml               # Multi-LLM provider configuration
+- src/
+  - gradio_app.py                 # Complete web interface implementation
+  - core/
+    - assignment_orchestrator.py  # Subject classification & routing
+    - llms.py                     # Multi-LLM provider system
+    - paths.py                    # Path configuration and constants
+    - subject_output_manager.py   # Subject-specific file generation
+  - processors/
+    - math_processor.py
+    - spanish_processor.py
+    - science_processor.py
+    - history_processor.py
+  - support/
+    - language_support.py
+    - ocr_processor.py
+    - file_processor.py
+    - prompts.py
+    - utils.py
+  - mcp/
+    - mcp_server.py
+  - security/
+    - security_manager.py
+    - secure_llm_wrapper.py
+    - security_config.py
+  - server/
+    - main.py
+  - workflows/
+    - agentic_workflow.py
+- examples/
+  - demo_subject_outputs.py
+- slides/
+  - Intelligent-Assignment-Grading-System-Demo.md
+  - Intelligent Assignment Grading System Presentation.pptx
+- tests/
+  - unit/ ...
+  - integration/ ...
+  - e2e/ ...
+- output/                        # Generated CSV/JSON
+- plagiarism_reports/            # Generated analysis reports
 ```
 
 ## 🔄 Processing Workflow
