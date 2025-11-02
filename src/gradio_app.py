@@ -8,6 +8,7 @@ subject-specific processing.
 """
 
 import asyncio
+import inspect
 import json
 import mimetypes
 import os
@@ -37,6 +38,7 @@ from core.subject_output_manager import (
     create_subject_output_manager,
     OutputSubject,
 )
+from support.file_processor import FileProcessor
 
 
 class GradioAssignmentGrader:
@@ -48,6 +50,7 @@ class GradioAssignmentGrader:
         self.temp_dir = tempfile.mkdtemp()
         self.backend_url = os.getenv("BACKEND_URL", "").strip()
         self.max_upload_mb = int(os.getenv("DEMO_MAX_UPLOAD_MB", "20"))
+        self.file_processor = FileProcessor()
 
     def process_single_file(
         self, file_path: str, requirements: Dict[str, bool]
@@ -116,7 +119,14 @@ class GradioAssignmentGrader:
 
                     # Process assignment with agentic workflow
                     # Pass UI requirements to the workflow to enable/disable steps
-                    result = await run_agentic_workflow(content, metadata, "", requirements)
+                    maybe_result = run_agentic_workflow(
+                        content, metadata, "", requirements
+                    )
+                    result = (
+                        await maybe_result
+                        if inspect.isawaitable(maybe_result)
+                        else maybe_result
+                    )
                     return result
 
                 except Exception as e:
@@ -332,6 +342,12 @@ class GradioAssignmentGrader:
             "summary": enable_summary,
             "specialized": enable_specialized,
         }
+        # If no backend URL is configured, fall back to the in-process path
+        # which calls run_agentic_workflow (used by tests that patch it).
+        if not self.backend_url:
+            status, _, _, error = self.process_single_file(file_path, requirements)
+            return status
+        # Otherwise, use the backend-driven v2 path
         status, _, _, _, _ = self.process_single_file_v2(file_path, requirements)
         return status
 

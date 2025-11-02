@@ -2,6 +2,11 @@
 
 An advanced academic assignment grading system with subject-specific processing, multi-language support, and intelligent orchestration for comprehensive student evaluation.
 
+##  ▶️ Demos 
+- ** Single Assignment Processing**: https://youtu.be/Vevqv8qYHDA
+- ** Batch Processing**: https://youtu.be/Rie9CbNSenc
+- ** LangSmith Integration**: https://youtu.be/Ve_aiJIHlxM
+
 ## 🌟 Core Features
 
 - **🌐 Web Interface**: Modern Gradio-based web UI with drag & drop, real-time processing, and batch support
