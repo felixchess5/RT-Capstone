@@ -689,6 +689,7 @@ Visualize the agentic workflow
 - Gradio UI Guide: https://github.com/felixchess5/Intelligent-Assignment-Grading-System/blob/main/GRADIO_README.md
 - Testing Guide: https://github.com/felixchess5/Intelligent-Assignment-Grading-System/blob/main/docs/testing.md
 - Slides: https://github.com/felixchess5/Intelligent-Assignment-Grading-System/blob/main/slides/Intelligent-Assignment-Grading-System-Demo.md
+- PPT Slides: https://github.com/felixchess5/Intelligent-Assignment-Grading-System/blob/main/slides/Intelligent%20Assignment%20Grading%20System%20Presentation.pptx
 
 ---
 
