@@ -692,29 +692,28 @@ async def run_workflow_demo():
 
 async def _main_entry():
     """Main entry point with enhanced mode selection."""
+    valid_modes = {"mcp", "agentic", "traditional", "demo", "compare", "help"}
+    # Pick the first valid CLI mode, ignore unrelated args (e.g., pytest cwd paths)
+    mode = None
     if len(sys.argv) > 1:
-        mode = sys.argv[1].lower()
+        for arg in sys.argv[1:]:
+            a = str(arg).lower()
+            if a in valid_modes:
+                mode = a
+                break
 
-        if mode == "mcp":
-            # Run as MCP server
-            await run_mcp_server()
-        elif mode == "agentic":
-            # Use agentic workflow
-            await process_assignments_batch(processing_mode="agentic")
-        elif mode == "traditional":
-            # Force traditional processing
-            await process_assignments_batch(processing_mode="traditional")
-        elif mode == "demo":
-            # Run workflow demonstration
-            await run_workflow_demo()
-        elif mode == "compare":
-            # Run comparison between different methods
-            await run_comparison_analysis()
-        elif mode == "help":
-            print_help()
-        else:
-            print(f"Unknown mode: {mode}")
-            print_help()
+    if mode == "mcp":
+        await run_mcp_server()
+    elif mode == "agentic":
+        await process_assignments_batch(processing_mode="agentic")
+    elif mode == "traditional":
+        await process_assignments_batch(processing_mode="traditional")
+    elif mode == "demo":
+        await run_workflow_demo()
+    elif mode == "compare":
+        await run_comparison_analysis()
+    elif mode == "help":
+        print_help()
     else:
         # Default: auto-select best available processing method
         # Prefer agentic during tests to satisfy E2E expectations

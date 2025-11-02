@@ -74,11 +74,11 @@ class GradioAssignmentGrader:
 
             # Extract content from file
             content_result = self.file_processor.extract_text_content(file_path)
-            if not content_result.success:
+            if not (isinstance(content_result, str) or getattr(content_result, "success", False)):
                 error_msg = content_result.error or "Unknown file processing error"
                 return f"❌ File processing failed: {error_msg}", "", None, error_msg
 
-            content = content_result.content
+            content = content_result if isinstance(content_result, str) else content_result.content
             if not content.strip():
                 return (
                     "❌ No content extracted from file",
