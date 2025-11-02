@@ -678,7 +678,7 @@ async def run_workflow_demo():
     )
 
 
-async def main():
+async def _main_entry():
     """Main entry point with enhanced mode selection."""
     if len(sys.argv) > 1:
         mode = sys.argv[1].lower()
@@ -706,6 +706,15 @@ async def main():
     else:
         # Default: auto-select best available processing method
         await process_assignments_batch(processing_mode="auto")
+
+
+def main():
+    """Synchronous entry point wrapper for the async main.
+
+    Some tests invoke main() without awaiting; this wrapper ensures
+    the async workflow runs to completion.
+    """
+    return asyncio.run(_main_entry())
 
 
 async def run_comparison_analysis():

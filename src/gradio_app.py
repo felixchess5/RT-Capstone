@@ -31,7 +31,7 @@ from workflows.agentic_workflow import run_agentic_workflow
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 
-from core.llms import llm_manager
+from core.llms import llm_manager, MultiLLMManager
 from core.paths import ASSIGNMENTS_FOLDER, OUTPUT_FOLDER
 from core.subject_output_manager import (
     create_subject_output_manager,
