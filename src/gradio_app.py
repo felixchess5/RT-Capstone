@@ -19,7 +19,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import gradio as gr
+try:
+    import gradio as gr
+except Exception:  # Make Gradio optional for non-UI test environments
+    gr = None  # type: ignore
 import httpx
 import pandas as pd
 
@@ -305,6 +308,32 @@ class GradioAssignmentGrader:
             )
         except Exception as e:
             return f"Backend error: {e}", "", None, {}, str(e)
+
+    # Compatibility for tests expecting this method name
+    def process_single_assignment(
+        self,
+        file_path: str,
+        enable_grammar: bool = True,
+        enable_plagiarism: bool = True,
+        enable_relevance: bool = False,
+        enable_grading: bool = True,
+        enable_summary: bool = True,
+        enable_specialized: bool = True,
+    ) -> str:
+        """Compatibility wrapper that mirrors expected test signature.
+
+        Returns a status string similar to process_single_file_v2.
+        """
+        requirements = {
+            "grammar": enable_grammar,
+            "plagiarism": enable_plagiarism,
+            "relevance": enable_relevance,
+            "grading": enable_grading,
+            "summary": enable_summary,
+            "specialized": enable_specialized,
+        }
+        status, _, _, _, _ = self.process_single_file_v2(file_path, requirements)
+        return status
 
     def process_multiple_files_v2(
         self, files: List[str], requirements: Dict[str, bool]
