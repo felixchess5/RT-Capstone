@@ -35,6 +35,25 @@ from workflows.agentic_workflow import build_agentic_workflow, create_workflow
 # ========== PYTEST CONFIGURATION ==========
 
 
+def pytest_addoption(parser):
+    """Accept benchmark flags even if pytest-benchmark is not installed.
+
+    This prevents CI runners that pass these flags from failing option parsing.
+    The options are ignored by the suite unless the real plugin is active.
+    """
+    try:
+        parser.addoption("--benchmark-only", action="store_true", help="noop")
+        parser.addoption(
+            "--benchmark-json",
+            action="store",
+            dest="benchmark_json",
+            default=None,
+            help="noop",
+        )
+    except Exception:
+        # Be conservative; option registration should never break test discovery
+        pass
+
 def pytest_configure(config):
     """Configure pytest with custom settings."""
     # Create reports directory
