@@ -17,8 +17,12 @@ import pandas as pd
 import pytest
 from freezegun import freeze_time
 
-# Add src to Python path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# Ensure repo root and src are on the import path so tests can import
+# both top-level shims (e.g., `agentic_workflow.py`) and real modules under src.
+REPO_ROOT = Path(__file__).parent.parent
+SRC_DIR = REPO_ROOT / "src"
+sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(SRC_DIR))
 
 from core.assignment_orchestrator import AssignmentOrchestrator
 
