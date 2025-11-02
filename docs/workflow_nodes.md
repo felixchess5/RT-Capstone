@@ -22,6 +22,7 @@ Key graph construction (node names):
 See also:
 - Graph builders: `visualize_graph.py`, `simple_graph_viz.py`
 - Quick visual: run `python visualize_graph.py` to generate `workflow_graph.png`
+- Cross‑link: README.md has a "Generate Workflow Graphs" section with commands for simplified and detailed graphs.
 
 ## Shared State (WorkflowState)
 The nodes operate on a shared, evolving dictionary-like state with keys including:
@@ -151,4 +152,3 @@ All nodes should only place JSON-serializable values into state (for msgpack che
 - Keep `completed_steps`, `current_step`, and `errors` updated to improve UI status and recovery.
 - Specialized processors may supply grading directly; set `requires_grading = False` when appropriate.
 - Use environment configuration (via `config/llm_config.yaml`) to control provider priorities and timeouts.
-

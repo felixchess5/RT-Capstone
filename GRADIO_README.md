@@ -37,6 +37,8 @@ python src/gradio_app.py
 
 The interface will automatically open in your browser at `http://localhost:7860`
 
+Tip: To visualize the agentic workflow, see the "Generate Workflow Graphs" section in README.md for quick commands.
+
 ## 🌟 Features
 
 ### 📄 Single Assignment Processing

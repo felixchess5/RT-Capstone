@@ -475,7 +475,7 @@ Intelligent-Assignment-Grading-System/
    - **🔬 Science Assignments**: Scientific method evaluation, formula recognition, experimental design
    - **📚 History Assignments**: Chronological analysis, source evaluation, historical context assessment
    - **📝 General Assignments**: Standard grading criteria with multi-language support
-   - **Fallback processing**: Graceful degradation if specialized processing fails
+- **Fallback processing**: Graceful degradation if specialized processing fails
 
 5. **Parallel Analysis** (Agentic Workflow)
    - **Grammar Analysis**: Multi-language grammar checking with localized prompts
@@ -488,7 +488,24 @@ Intelligent-Assignment-Grading-System/
    - **Automatic classification**: Route results to appropriate subject files
    - **Specialized CSV files**: Math, Spanish, English, Science, History with subject-specific columns
    - **Detailed JSON exports**: Complete assignment data with full analysis
-   - **Export statistics**: Summary reports with processing metrics and averages
+- **Export statistics**: Summary reports with processing metrics and averages
+
+### Generate Workflow Graphs
+
+Use the helper scripts to visualize the agentic workflow graph:
+
+```bash
+# From the repo root
+
+# Simplified graph (quick overview)
+python simple_graph_viz.py     # outputs simple_workflow.png
+
+# Detailed graph (full node/edge view)
+python visualize_graph.py      # outputs workflow_graph.png
+
+# Combined demo (runs multiple visualizations)
+python test_graph_visualization.py
+```
 
 ## 📊 LangSmith Integration
 
@@ -580,7 +597,7 @@ Notes:
 - You can also customize runtime behavior in `src/core/llms.py`, but most setup is handled by the YAML.
 
 ## 📋 Feature Roadmap
-
+## Feature Roadmap
 For a comprehensive list of planned features and enhancements, see our detailed [Feature List](FEATURES.md). This document tracks all current capabilities and future development plans organized by category:
 
 - **Core Functionality**: Web interfaces, analytics, OCR/ICR, additional subjects
@@ -592,17 +609,17 @@ For a comprehensive list of planned features and enhancements, see our detailed 
 ### Quick Feature Highlights
 
 #### Immediate Priorities
-- [ ] **Multi-LLM Support**: Integration with OpenAI, Anthropic, and local models
-- [ ] **Failback Systems**: Automatic switching when LLM services are down
-- [ ] **Web Interface**: Gradio/FastAPI dashboard with file upload
-- [x] **Enhanced Testing**: ✅ **COMPLETED** - Comprehensive pytest framework with 150+ tests
-
+#### Immediate Priorities
+- [x] Multi-LLM Support: Groq, OpenAI, Anthropic, Gemini with YAML config
+- [x] Failover Systems: Automatic switching with circuit breakers and retries
+- [x] Web Interface: Gradio dashboard with single/batch processing
+- [x] Enhanced Testing: Comprehensive pytest framework with unit/integration/e2e
 #### Coming Soon
-- [ ] **MCP Extensions**: PDF, Word, Markdown support with edge case handling
-- [ ] **Advanced Analytics**: Student performance tracking and institutional reporting
-- [x] **Security Hardening**: ✅ **COMPLETED** - Enterprise-grade prompt injection protection & validation
-- [ ] **Human-in-the-Loop**: Teacher review and feedback integration
-
+#### Coming Soon
+- [ ] MCP Extensions: Additional tools and formats
+- [ ] Advanced Analytics: Student performance tracking and reporting
+- [x] Security Hardening: Enterprise-grade prompt injection protection & validation
+- [ ] Human-in-the-Loop: Teacher review and feedback integration
 ## 🤝 Contributing
 
 1. Fork the repository
