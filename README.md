@@ -614,7 +614,8 @@ For a comprehensive list of planned features and enhancements, see our detailed 
 - [x] Web Interface: Gradio dashboard with single/batch processing
 - [x] Enhanced Testing: Comprehensive pytest framework with unit/integration/e2e
 #### Coming Soon
-- [ ] MCP Extensions: Additional tools and formats
+- [x] MCP Integration: Base server and core tools (grammar_check, plagiarism_check, relevance_check, grade_assignment, summarize_assignment, process_assignment_parallel)
+- [ ] MCP Extensions: Additional tools and formats (e.g., more conversion tools, LMS integrations)
 - [ ] Advanced Analytics: Student performance tracking and reporting
 - [x] Security Hardening: Enterprise-grade prompt injection protection & validation
 - [ ] Human-in-the-Loop: Teacher review and feedback integration
