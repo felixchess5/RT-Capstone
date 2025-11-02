@@ -720,7 +720,7 @@ if __name__ == "__main__":
 
     # Run asynchronous tests
     async def run_async_tests():
-        nonlocal passed, failed
+        global passed, failed
         for test_method, test_name in async_test_methods:
             try:
                 await test_method()
