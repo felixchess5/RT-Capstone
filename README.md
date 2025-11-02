@@ -70,8 +70,11 @@ An advanced academic assignment grading system with subject-specific processing,
 ### Prerequisites
 
 - Python 3.8+
-- Groq API key (required)
-- Gemini API key (optional, for redundancy)
+- At least one LLM provider API key (configure in `config/llm_config.yaml`):
+  - Groq (recommended)
+  - OpenAI
+  - Anthropic
+  - Gemini
 - Tesseract OCR (for scanned documents)
 
 ### Installation
@@ -116,16 +119,13 @@ An advanced academic assignment grading system with subject-specific processing,
    cp .env.example .env
 
    # Edit .env file and add your API keys
-   ## Required:
+   ## Required (at least one provider; Groq recommended):
 GROQ_API_KEY=your_groq_api_key_here
 
-## Optional (enable providers in config/llm_config.yaml):
+## Optional providers (enable in config/llm_config.yaml and set keys)
 OPENAI_API_KEY=your_openai_api_key_here
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 GEMINI_API_KEY=your_gemini_api_key_here
-
-   # Optional (for LLM redundancy):
-   GEMINI_API_KEY=your_gemini_api_key_here
 
    # Optional (for LangSmith tracing):
    LANGCHAIN_TRACING_V2=true
@@ -134,7 +134,7 @@ GEMINI_API_KEY=your_gemini_api_key_here
    ```
 
 6. **Configure paths** (Optional)
-   -   - Edit `src/core/paths.py` to customize file locations
+   - Edit `src/core/paths.py` to customize file locations
    - Default folders will be created automatically
 
 ### Usage
