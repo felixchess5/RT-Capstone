@@ -1,0 +1,9 @@
+[run]
+# Limit coverage to core runtime code exercised by tests.
+# Exclude demo/UI entrypoints and the experimental agentic workflow
+# that are not part of the default tested runtime in CI integration jobs.
+omit =
+    src/gradio_app.py
+    src/main_agentic.py
+    src/workflows/agentic_workflow.py
+
