@@ -75,25 +75,18 @@ load_dotenv()
 @traceable(name="process_assignment_agentic_enhanced")
 async def process_assignment_agentic_enhanced(file_path: str, source_text: str) -> Dict:
     """Process assignment file with agentic workflow and enhanced file format support."""
-    # Step 1: Extract content using file processor
-    file_result = file_processor.extract_text_content(file_path)
+    # Step 1: Extract content using file processor (string-returning API)
+    content = file_processor.extract_text_content(file_path)
 
-    if not file_result.success:
-        # File was rejected - return detailed rejection info
-        rejection_message = (
-            file_processor.get_rejection_message(
-                file_result.rejection_reason, file_path
-            )
-            if file_result.rejection_reason
-            else file_result.error
-        )
-
+    if not isinstance(content, str) or not content.strip():
+        # File was rejected or empty content
+        detected_format, _ = file_processor.detect_file_format(file_path)
         return {
             "Student Name": os.path.splitext(os.path.basename(file_path))[0],
             "Date of Submission": "Unknown",
             "Class": "Unknown",
             "Subject": "Unknown",
-            "Summary": f"FILE REJECTED: {rejection_message}",
+            "Summary": "FILE REJECTED: Unable to extract readable content",
             "Grammar Errors": "N/A",
             "Plagiarism File": "N/A",
             "Content Relevance": "N/A",
@@ -102,17 +95,13 @@ async def process_assignment_agentic_enhanced(file_path: str, source_text: str) 
             "Letter Grade": "N/A",
             "Workflow Version": "agentic_v1",
             "Processing_Status": "rejected",
-            "File_Format": file_result.metadata.get("file_format", "unknown"),
-            "Rejection_Reason": (
-                file_result.rejection_reason.value
-                if file_result.rejection_reason
-                else "unknown"
-            ),
+            "File_Format": getattr(detected_format, "value", str(detected_format)) or "unknown",
+            "Rejection_Reason": "empty_content",
         }
 
     # Step 2: Extract metadata
     try:
-        metadata = extract_metadata_from_content(file_path, file_result.content)
+        metadata = extract_metadata_from_content(file_path, content)
     except Exception as e:
         metadata = {
             "name": os.path.splitext(os.path.basename(file_path))[0],
@@ -124,9 +113,7 @@ async def process_assignment_agentic_enhanced(file_path: str, source_text: str) 
     # Step 3: Process with agentic workflow
     try:
         # Support tests that patch run_agentic_workflow with a non-async mock
-        maybe_result = run_agentic_workflow(
-            file_result.content, metadata, source_text
-        )
+        maybe_result = run_agentic_workflow(content, metadata, source_text)
         result = (
             await maybe_result
             if inspect.isawaitable(maybe_result)
@@ -147,7 +134,7 @@ async def process_assignment_agentic_enhanced(file_path: str, source_text: str) 
             "Letter Grade": result.get("letter_grade", "N/A"),
             "Workflow Version": "agentic_v1",
             "Processing_Status": "completed",
-            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "File_Format": getattr(file_processor.detect_file_format(file_path)[0], "value", "unknown"),
             "Rejection_Reason": None,
         }
     except Exception as e:
@@ -166,7 +153,7 @@ async def process_assignment_agentic_enhanced(file_path: str, source_text: str) 
             "Letter Grade": "N/A",
             "Workflow Version": "agentic_v1",
             "Processing_Status": "error",
-            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "File_Format": getattr(file_processor.detect_file_format(file_path)[0], "value", "unknown"),
             "Rejection_Reason": None,
         }
 
@@ -176,25 +163,17 @@ async def process_assignment_with_mcp_enhanced(
     file_path: str, source_text: str
 ) -> Dict:
     """Process assignment file with MCP tools and enhanced file format support."""
-    # Step 1: Extract content using file processor
-    file_result = file_processor.extract_text_content(file_path)
+    # Step 1: Extract content using file processor (string-returning API)
+    content = file_processor.extract_text_content(file_path)
 
-    if not file_result.success:
-        # File was rejected - return detailed rejection info
-        rejection_message = (
-            file_processor.get_rejection_message(
-                file_result.rejection_reason, file_path
-            )
-            if file_result.rejection_reason
-            else file_result.error
-        )
-
+    if not isinstance(content, str) or not content.strip():
+        detected_format, _ = file_processor.detect_file_format(file_path)
         return {
             "Student Name": os.path.splitext(os.path.basename(file_path))[0],
             "Date of Submission": "Unknown",
             "Class": "Unknown",
             "Subject": "Unknown",
-            "Summary": f"FILE REJECTED: {rejection_message}",
+            "Summary": "FILE REJECTED: Unable to extract readable content",
             "Grammar Errors": "N/A",
             "Plagiarism File": "N/A",
             "Content Relevance": "N/A",
@@ -203,17 +182,13 @@ async def process_assignment_with_mcp_enhanced(
             "Letter Grade": "N/A",
             "Workflow Version": "mcp_v1",
             "Processing_Status": "rejected",
-            "File_Format": file_result.metadata.get("file_format", "unknown"),
-            "Rejection_Reason": (
-                file_result.rejection_reason.value
-                if file_result.rejection_reason
-                else "unknown"
-            ),
+            "File_Format": getattr(detected_format, "value", str(detected_format)) or "unknown",
+            "Rejection_Reason": "empty_content",
         }
 
     # Step 2: Extract metadata
     try:
-        metadata = extract_metadata_from_content(file_path, file_result.content)
+        metadata = extract_metadata_from_content(file_path, content)
     except Exception as e:
         metadata = {
             "name": os.path.splitext(os.path.basename(file_path))[0],
@@ -225,7 +200,7 @@ async def process_assignment_with_mcp_enhanced(
     # Step 3: Process with MCP tools
     try:
         result = await process_assignment_parallel(
-            file_result.content, source_text, metadata["name"]
+            content, source_text, metadata["name"]
         )
 
         return {
@@ -248,7 +223,7 @@ async def process_assignment_with_mcp_enhanced(
             "Letter Grade": "N/A",
             "Workflow Version": "mcp_v1",
             "Processing_Status": "completed",
-            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "File_Format": getattr(file_processor.detect_file_format(file_path)[0], "value", "unknown"),
             "Rejection_Reason": None,
         }
     except Exception as e:
@@ -267,7 +242,7 @@ async def process_assignment_with_mcp_enhanced(
             "Letter Grade": "N/A",
             "Workflow Version": "mcp_v1",
             "Processing_Status": "error",
-            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "File_Format": getattr(file_processor.detect_file_format(file_path)[0], "value", "unknown"),
             "Rejection_Reason": None,
         }
 
@@ -277,25 +252,17 @@ async def process_assignment_traditional_enhanced(
     file_path: str, source_text: str
 ) -> Dict:
     """Process assignment file with traditional processing and enhanced file format support."""
-    # Step 1: Extract content using file processor
-    file_result = file_processor.extract_text_content(file_path)
+    # Step 1: Extract content using file processor (string-returning API)
+    content = file_processor.extract_text_content(file_path)
 
-    if not file_result.success:
-        # File was rejected - return detailed rejection info
-        rejection_message = (
-            file_processor.get_rejection_message(
-                file_result.rejection_reason, file_path
-            )
-            if file_result.rejection_reason
-            else file_result.error
-        )
-
+    if not isinstance(content, str) or not content.strip():
+        detected_format, _ = file_processor.detect_file_format(file_path)
         return {
             "Student Name": os.path.splitext(os.path.basename(file_path))[0],
             "Date of Submission": "Unknown",
             "Class": "Unknown",
             "Subject": "Unknown",
-            "Summary": f"FILE REJECTED: {rejection_message}",
+            "Summary": "FILE REJECTED: Unable to extract readable content",
             "Grammar Errors": "N/A",
             "Plagiarism File": "N/A",
             "Content Relevance": "N/A",
@@ -304,17 +271,13 @@ async def process_assignment_traditional_enhanced(
             "Letter Grade": "N/A",
             "Workflow Version": "traditional_v1",
             "Processing_Status": "rejected",
-            "File_Format": file_result.metadata.get("file_format", "unknown"),
-            "Rejection_Reason": (
-                file_result.rejection_reason.value
-                if file_result.rejection_reason
-                else "unknown"
-            ),
+            "File_Format": getattr(detected_format, "value", str(detected_format)) or "unknown",
+            "Rejection_Reason": "empty_content",
         }
 
     # Step 2: Extract metadata
     try:
-        metadata = extract_metadata_from_content(file_path, file_result.content)
+        metadata = extract_metadata_from_content(file_path, content)
     except Exception as e:
         metadata = {
             "name": os.path.splitext(os.path.basename(file_path))[0],
@@ -328,7 +291,7 @@ async def process_assignment_traditional_enhanced(
         from workflows.nodes import orchestrator_node
 
         initial_state = {
-            "content": file_result.content,
+            "content": content,
             "metadata": metadata,
             "source_text": source_text,
         }
@@ -349,7 +312,7 @@ async def process_assignment_traditional_enhanced(
             "Letter Grade": "N/A",
             "Workflow Version": "traditional_v1",
             "Processing_Status": "completed",
-            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "File_Format": getattr(file_processor.detect_file_format(file_path)[0], "value", "unknown"),
             "Rejection_Reason": None,
         }
     except Exception as e:
@@ -368,7 +331,7 @@ async def process_assignment_traditional_enhanced(
             "Letter Grade": "N/A",
             "Workflow Version": "traditional_v1",
             "Processing_Status": "error",
-            "File_Format": file_result.metadata.get("file_format", "unknown"),
+            "File_Format": getattr(file_processor.detect_file_format(file_path)[0], "value", "unknown"),
             "Rejection_Reason": None,
         }
 

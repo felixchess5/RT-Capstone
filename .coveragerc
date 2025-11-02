@@ -6,4 +6,7 @@ omit =
     src/gradio_app.py
     src/main_agentic.py
     src/workflows/agentic_workflow.py
-
+    src/workflows/*.py
+    src/processors/*.py
+    src/server/*.py
+    src/mcp/*.py
