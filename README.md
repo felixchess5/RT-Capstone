@@ -597,7 +597,6 @@ Notes:
 - You can also customize runtime behavior in `src/core/llms.py`, but most setup is handled by the YAML.
 
 ## 📋 Feature Roadmap
-## Feature Roadmap
 For a comprehensive list of planned features and enhancements, see our detailed [Feature List](FEATURES.md). This document tracks all current capabilities and future development plans organized by category:
 
 - **Core Functionality**: Web interfaces, analytics, OCR/ICR, additional subjects
@@ -684,12 +683,12 @@ Visualize the agentic workflow
 - Combined demo: `python test_graph_visualization.py`
 
 ## Further Documentation
-- Code Inventory: [docs/code_inventory.md](docs/code_inventory.md)
-- Agentic Workflow Nodes: [docs/workflow_nodes.md](docs/workflow_nodes.md)
-- MCP Tools Reference: [docs/mcp_tools.md](docs/mcp_tools.md)
-- Gradio UI Guide: [GRADIO_README.md](GRADIO_README.md)
-- Testing Guide: [docs/testing.md](docs/testing.md)
- - Slides: [slides/Intelligent-Assignment-Grading-System-Demo.md](slides/Intelligent-Assignment-Grading-System-Demo.md)
+- Code Inventory: https://github.com/felixchess5/Intelligent-Assignment-Grading-System/blob/main/docs/code_inventory.md
+- Agentic Workflow Nodes: https://github.com/felixchess5/Intelligent-Assignment-Grading-System/blob/main/docs/workflow_nodes.md
+- MCP Tools Reference: https://github.com/felixchess5/Intelligent-Assignment-Grading-System/blob/main/docs/mcp_tools.md
+- Gradio UI Guide: https://github.com/felixchess5/Intelligent-Assignment-Grading-System/blob/main/GRADIO_README.md
+- Testing Guide: https://github.com/felixchess5/Intelligent-Assignment-Grading-System/blob/main/docs/testing.md
+- Slides: https://github.com/felixchess5/Intelligent-Assignment-Grading-System/blob/main/slides/Intelligent-Assignment-Grading-System-Demo.md
 
 ---
 
