@@ -2,6 +2,12 @@
 
 Educators are under growing pressure to grade large volumes of diverse assignments quickly while still providing fair, consistent, and meaningful feedback. Traditional manual grading is time-consuming and error-prone, and most automated tools lack subject awareness, multi-language support, or transparent evaluation criteria. This project presents the **Intelligent Assignment Grading System**, an AI-powered grading platform that combines subject-specific processing, multi-language understanding, and secure, auditable workflows to help instructors scale high-quality assessment across Math, Spanish, Science, History, and general writing tasks.
 
+![Intelligent Assignment Grading workflow](workflow_graph.png)
+
+[![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![Web UI](https://img.shields.io/badge/UI-Gradio-orange)](GRADIO_README.md)
+
 ##  ▶️ Demos 
 - ** Single Assignment Processing**: https://youtu.be/Vevqv8qYHDA
 - ** Batch Processing**: https://youtu.be/Rie9CbNSenc
@@ -623,6 +629,13 @@ For a comprehensive list of planned features and enhancements, see our detailed 
 - [ ] Advanced Analytics: Student performance tracking and reporting
 - [x] Security Hardening: Enterprise-grade prompt injection protection & validation
 - [ ] Human-in-the-Loop: Teacher review and feedback integration
+
+## ⚙️ Reliability & Safety
+
+- **Retry logic with exponential backoff**: Automatically retries transient failures (e.g., model or tool calls) with increasing delays to reduce overload and avoid hammering external services.
+- **Timeout handling**: Enforces strict time limits on long-running operations to keep the workflow responsive and prevent stalled requests.
+- **Loop limits and guards**: Caps iteration counts and enforces safety checks in agentic loops to avoid runaway or stuck workflows.
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -699,22 +712,3 @@ Visualize the agentic workflow
 ---
 
 **Built with ❤️ for educators and students**
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## ⚙️ Reliability & Safety
-
-- **Retry logic with exponential backoff**: Automatically retries transient failures (e.g., model or tool calls) with increasing delays to reduce overload and avoid hammering external services.
-- **Timeout handling**: Enforces strict time limits on long-running operations to keep the workflow responsive and prevent stalled requests.
-- **Loop limits and guards**: Caps iteration counts and enforces safety checks in agentic loops to avoid runaway or stuck workflows.

@@ -1,4 +1,15 @@
-TEST_DATA_PROMPT = """
+"""Prompt templates and constant strings used across the system.
+
+These are defined as module-level constants so they can be reused
+consistently from multiple components (workflows, MCP server, tests)
+without accidental modification at runtime.
+"""
+
+from __future__ import annotations
+
+from typing import Final
+
+TEST_DATA_PROMPT: Final[str] = """
     ### TEST DATA GENERATION
     you are a 6th grader student with an assignment to choose a topic and build a 1000 word essay of that subject. I want you to build 3 different essays with following: Essay 1 - should be concise and well written, Essay 2 - should contain some grammar errors but should be a passing grade essay, Essay 3 should be plagiarized and be less relevant to the source. Make sure to include different names for each essay. The output should look as follows:
     Name: John Doe
@@ -11,19 +22,19 @@ TEST_DATA_PROMPT = """
 ###
 """
 
-PLAGIARISM_CHECK = """
+PLAGIARISM_CHECK: Final[str] = """
     Analyze the following assignment for potential plagiarism.
     Identify any phrases or sections that appear copied or unoriginal.
-    Provide a brief summary of your findings and a plagiarism likelihood score (0–100).
+    Provide a brief summary of your findings and a plagiarism likelihood score (0-100).
 
     Assignment:
     {text}
     """
 
-GRAMMAR_CHECK = """Count grammatical errors in the following:
+GRAMMAR_CHECK: Final[str] = """Count grammatical errors in the following:
 {text}"""
 
-RELEVANCE_CHECK = """Analyze how well the assignment relates to the provided source material. Focus only on evaluation, not suggestions for improvement.
+RELEVANCE_CHECK: Final[str] = """Analyze how well the assignment relates to the provided source material. Focus only on evaluation, not suggestions for improvement.
 
 Evaluate the following aspects:
 1. Does the assignment address the main topics from the source?
@@ -38,7 +49,7 @@ Assignment:
 Source:
 {source}"""
 
-GRADING_PROMPT = """You are an academic evaluator. Grade the following student assignment based on four criteria:
+GRADING_PROMPT: Final[str] = """You are an academic evaluator. Grade the following student assignment based on four criteria:
 1. Factual Accuracy (0–10): How accurate is the content compared to the source?
 2. Relevance to Source (0–10): How well does the assignment relate to the source material?
 3. Coherence (0–10): How well-structured and logical is the writing?
@@ -59,6 +70,6 @@ Return your response as a JSON object like:
 }}
 Only return the JSON. Do not include any explanation or formatting."""
 
-SUMMARY_PROMPT = """Summarize this assignment in 2–3 sentences:
+SUMMARY_PROMPT: Final[str] = """Summarize this assignment in 2-3 sentences:
 
 {text}"""
