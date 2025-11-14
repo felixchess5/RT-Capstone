@@ -74,9 +74,19 @@ except ImportError:
 
 load_dotenv()
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+
+class LLMConfigurationError(Exception):
+    """Raised when the multi-LLM system is misconfigured or unavailable."""
+
+
+class LLMInvocationError(Exception):
+    """Raised when an LLM invocation fails after retries/failover."""
+
+
+# Configure logging (respect existing configuration if present)
 logger = logging.getLogger(__name__)
+if not logger.handlers:
+    logging.basicConfig(level=logging.INFO)
 
 # Configure LangSmith tracing if enabled
 if os.getenv("LANGCHAIN_TRACING_V2") == "true":
@@ -173,7 +183,7 @@ class GeminiWrapper:
     def invoke(self, prompt: str) -> LLMResponse:
         """Invoke the Gemini model with a prompt."""
         if not GOOGLE_AI_AVAILABLE:
-            raise Exception("Google AI client not available")
+            raise LLMConfigurationError("Google AI client not available")
 
         start_time = time.time()
         try:
@@ -197,7 +207,7 @@ class GeminiWrapper:
                 response_time=response_time,
             )
         except Exception as e:
-            raise Exception(f"Gemini API call failed: {e}")
+            raise LLMInvocationError(f"Gemini API call failed") from e
 
 
 class MultiLLMManager:
@@ -522,9 +532,12 @@ class MultiLLMManager:
             self._record_failure(provider_name)
 
         # All providers failed
-        error_msg = f"All LLM providers failed after {attempts} attempts. Last error: {last_error}"
+        error_msg = (
+            f"All LLM providers failed after {attempts} attempts. "
+            f"Last error: {last_error}"
+        )
         logger.error(error_msg)
-        raise Exception(error_msg)
+        raise LLMInvocationError(error_msg)
 
     def get_health_status(self) -> Dict[str, Dict]:
         """Get comprehensive health status of all providers."""
@@ -664,9 +677,9 @@ def invoke_with_fallback(prompt: str, primary_llm=None, fallback_llm=None):
             return type("Response", (), {"content": response.content})()
         except Exception as e:
             logger.error(f"Multi-LLM invoke failed: {e}")
-            raise
+            raise LLMInvocationError("Multi-LLM invoke_with_fallback failed") from e
     else:
-        raise Exception("Multi-LLM Manager not available")
+        raise LLMConfigurationError("Multi-LLM Manager not available")
 
 
 # Legacy LLM creation functions (for backward compatibility)
