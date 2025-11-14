@@ -712,9 +712,3 @@ Visualize the agentic workflow
 
 
 
-
-## ⚙️ Reliability & Safety
-
-- **Retry logic with exponential backoff**: Automatically retries transient failures (e.g., model or tool calls) with increasing delays to reduce overload and avoid hammering external services.
-- **Timeout handling**: Enforces strict time limits on long-running operations to keep the workflow responsive and prevent stalled requests.
-- **Loop limits and guards**: Caps iteration counts and enforces safety checks in agentic loops to avoid runaway or stuck workflows.
