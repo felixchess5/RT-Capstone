@@ -69,7 +69,6 @@ Thumbs.db
 
 # Project specific
 *.csv
-*.png
 reports/
 assignments/
 graph_output/
