@@ -6,7 +6,7 @@ Note (updated):
 - MCP server entry point is `src/mcp/mcp_server.py` (no `main_mcp.py` in this folder).
 - Web interface (Gradio) is implemented; see `launch_gradio.py` and `src/gradio_app.py`.
 
-This document tracks all features and functionality in the Capstone project.
+This document tracks all features and functionality in this project.
 
 ## Core Features
 

@@ -1,6 +1,6 @@
-# Capstone - Intelligent Assignment Grading System
+# Intelligent Assignment Grading System
 
-An advanced academic assignment grading system with subject-specific processing, multi-language support, and intelligent orchestration for comprehensive student evaluation.
+Educators are under growing pressure to grade large volumes of diverse assignments quickly while still providing fair, consistent, and meaningful feedback. Traditional manual grading is time-consuming and error-prone, and most automated tools lack subject awareness, multi-language support, or transparent evaluation criteria. This project presents the **Intelligent Assignment Grading System**, an AI-powered grading platform that combines subject-specific processing, multi-language understanding, and secure, auditable workflows to help instructors scale high-quality assessment across Math, Spanish, Science, History, and general writing tasks.
 
 ##  ▶️ Demos 
 - ** Single Assignment Processing**: https://youtu.be/Vevqv8qYHDA
