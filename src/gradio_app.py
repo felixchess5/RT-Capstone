@@ -725,6 +725,9 @@ class GradioAssignmentGrader:
 def create_interface():
     """Create and configure the Gradio interface."""
 
+    if gr is None:
+        raise RuntimeError("Gradio is not installed or failed to import. Install with: pip install -r requirements.txt")
+
     grader = GradioAssignmentGrader()
 
     # Custom CSS for better styling
@@ -1029,6 +1032,8 @@ def main():
     print("📊 Initializing Gradio interface...")
 
     try:
+        if gr is None:
+            raise RuntimeError("Gradio is not installed or failed to import. Install with: pip install -r requirements.txt")
         # Create interface
         interface = create_interface()
 
