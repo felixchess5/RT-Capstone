@@ -2,8 +2,7 @@
 
 Educators are under growing pressure to grade large volumes of diverse assignments quickly while still providing fair, consistent, and meaningful feedback. Traditional manual grading is time-consuming and error-prone, and most automated tools lack subject awareness, multi-language support, or transparent evaluation criteria. This project presents the **Intelligent Assignment Grading System**, an AI-powered grading platform that combines subject-specific processing, multi-language understanding, and secure, auditable workflows to help instructors scale high-quality assessment across Math, Spanish, Science, History, and general writing tasks.
 
-![Intelligent Assignment Grading workflow](./workflow_graph.png)
-
+![Intelligent Assignment Grading workflow](https://img.shields.io/badge/Workflow-Graph-blue)
 [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Web UI](https://img.shields.io/badge/UI-Gradio-orange)](GRADIO_README.md)
