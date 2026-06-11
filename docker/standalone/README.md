@@ -17,10 +17,13 @@ You can copy them from this repository's standalone templates:
 1. Create an empty folder.
 2. Place `docker-compose.yml` and `.env` in that folder.
 3. Edit `.env` and set at least one API key.
+4. Optional: set `APP_GIT_REF` in `.env` (default is `main`).
 
 ## Run
 
 docker compose up --build
+
+Note: This standalone mode clones the repository from GitHub at container startup for maximum compatibility across Docker/Windows setups.
 
 ## Stop
 

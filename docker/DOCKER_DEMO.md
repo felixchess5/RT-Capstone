@@ -45,7 +45,7 @@ See also: `docker/standalone/README.md`
 
 docker compose up --build
 
-This works because the compose file builds from GitHub URLs and uses only Docker named volumes.
+This works because the standalone compose file clones from GitHub at container startup and uses only Docker named volumes.
 
 Optional direct download (PowerShell):
 
@@ -54,7 +54,8 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/felixchess5/Intelligen
 
 Notes:
 
-- This mode builds from `https://github.com/felixchess5/Intelligent-Assignment-Grading-System.git#main`.
+- This mode clones from `https://github.com/felixchess5/Intelligent-Assignment-Grading-System.git`.
+- You can choose branch/tag via `APP_GIT_REF` in `.env` (default `main`).
 - Outputs are stored in Docker named volumes (not local folders).
 - You can still pass API keys from your shell environment the same way.
 
