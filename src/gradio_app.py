@@ -810,7 +810,6 @@ def create_interface():
                 interactive=False,
                 lines=8,
                 max_lines=15,
-                show_copy_button=True,
             )
             status_refresh = gr.Button("🔄 Refresh Status", size="sm")
 
@@ -861,7 +860,6 @@ def create_interface():
                             lines=20,
                             max_lines=50,
                             interactive=False,
-                            show_copy_button=True,
                         )
                         single_json = gr.JSON(label="Detailed Results")
                         single_download = gr.File(label="Download Results")

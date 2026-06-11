@@ -25,7 +25,7 @@ services:
       apt-get install -y --no-install-recommends git tesseract-ocr poppler-utils libmagic1;
       rm -rf /var/lib/apt/lists/*;
       rm -rf /opt/src/repo;
-      git clone --depth 1 --branch ${APP_GIT_REF} https://github.com/felixchess5/Intelligent-Assignment-Grading-System.git /opt/src/repo;
+      git clone --depth 1 --branch $${APP_GIT_REF} https://github.com/felixchess5/Intelligent-Assignment-Grading-System.git /opt/src/repo;
       pip install --upgrade pip;
       pip install -r /opt/src/repo/requirements-core.txt;
       python -m uvicorn --app-dir /opt/src/repo/src server.main:app --host 0.0.0.0 --port 8000
@@ -54,7 +54,7 @@ services:
       apt-get install -y --no-install-recommends git;
       rm -rf /var/lib/apt/lists/*;
       rm -rf /opt/src/repo;
-      git clone --depth 1 --branch ${APP_GIT_REF} https://github.com/felixchess5/Intelligent-Assignment-Grading-System.git /opt/src/repo;
+      git clone --depth 1 --branch $${APP_GIT_REF} https://github.com/felixchess5/Intelligent-Assignment-Grading-System.git /opt/src/repo;
       pip install --upgrade pip;
       pip install -r /opt/src/repo/requirements-demo.txt;
       python /opt/src/repo/launch_gradio.py
