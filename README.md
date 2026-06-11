@@ -77,6 +77,30 @@ Educators are under growing pressure to grade large volumes of diverse assignmen
 
 ## 🚀 Quick Start
 
+### Docker Demo (One Command)
+
+For a containerized demo setup (backend + Gradio UI), see `docker/DOCKER_DEMO.md`.
+
+Tip: Use `docker/.env` for API keys with `--env-file docker/.env` in compose commands.
+
+Start everything with:
+
+```bash
+docker compose --env-file docker/.env -f docker/docker-compose.yml up --build
+```
+
+Build directly from GitHub source:
+
+```bash
+docker compose --env-file docker/.env -f docker/docker-compose.git.yml up --build
+```
+
+Portable run from any empty folder:
+
+- Copy `docker/standalone/docker-compose.yml` and `docker/standalone/.env.example` (rename to `.env`) into that folder.
+- Run `docker compose up --build` in that folder.
+- Optional quick bootstrap instructions are in `docker/standalone/README.md`.
+
 ### Prerequisites
 
 - Python 3.8+

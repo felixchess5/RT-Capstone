@@ -1,0 +1,40 @@
+services:
+  backend:
+    build:
+      context: https://github.com/felixchess5/Intelligent-Assignment-Grading-System.git#main
+      dockerfile: docker/backend.Dockerfile
+    environment:
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-false}
+      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY:-}
+      LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT:-Assignment Grader}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:7860,http://127.0.0.1:7860}
+    ports:
+      - "8000:8000"
+    volumes:
+      - backend_output:/app/output
+      - backend_reports:/app/plagiarism_reports
+
+  demo:
+    build:
+      context: https://github.com/felixchess5/Intelligent-Assignment-Grading-System.git#main
+      dockerfile: docker/demo.Dockerfile
+    depends_on:
+      - backend
+    environment:
+      BACKEND_URL: http://backend:8000
+      GRADIO_SERVER_NAME: 0.0.0.0
+      GRADIO_SERVER_PORT: ${GRADIO_SERVER_PORT:-7860}
+      GRADIO_SHARE: ${GRADIO_SHARE:-false}
+    ports:
+      - "${GRADIO_SERVER_PORT:-7860}:${GRADIO_SERVER_PORT:-7860}"
+    volumes:
+      - demo_output:/app/demo_output
+
+volumes:
+  backend_output:
+  backend_reports:
+  demo_output:

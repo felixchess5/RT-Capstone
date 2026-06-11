@@ -27,18 +27,39 @@ except Exception:  # Make Gradio optional for non-UI test environments
 import httpx
 import pandas as pd
 
-from workflows.agentic_workflow import run_agentic_workflow
+try:
+    from workflows.agentic_workflow import run_agentic_workflow
+except Exception:
+    run_agentic_workflow = None
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 
-from core.llms import llm_manager, MultiLLMManager
-from core.paths import ASSIGNMENTS_FOLDER, OUTPUT_FOLDER
-from core.subject_output_manager import (
-    create_subject_output_manager,
-    OutputSubject,
-)
-from support.file_processor import FileProcessor
+try:
+    from core.llms import llm_manager, MultiLLMManager
+except Exception:
+    llm_manager = None
+    MultiLLMManager = None
+
+try:
+    from core.paths import ASSIGNMENTS_FOLDER, OUTPUT_FOLDER
+except Exception:
+    ASSIGNMENTS_FOLDER = "Assignments"
+    OUTPUT_FOLDER = "output"
+
+try:
+    from core.subject_output_manager import (
+        create_subject_output_manager,
+        OutputSubject,
+    )
+except Exception:
+    create_subject_output_manager = None
+    OutputSubject = None
+
+try:
+    from support.file_processor import FileProcessor
+except Exception:
+    FileProcessor = None
 
 
 class GradioAssignmentGrader:
@@ -46,11 +67,16 @@ class GradioAssignmentGrader:
 
     def __init__(self):
         """Initialize the Gradio interface."""
-        self.output_manager = create_subject_output_manager(OUTPUT_FOLDER)
+        self.output_manager = None
+        if create_subject_output_manager:
+            try:
+                self.output_manager = create_subject_output_manager(OUTPUT_FOLDER)
+            except Exception:
+                self.output_manager = None
         self.temp_dir = tempfile.mkdtemp()
         self.backend_url = os.getenv("BACKEND_URL", "").strip()
         self.max_upload_mb = int(os.getenv("DEMO_MAX_UPLOAD_MB", "20"))
-        self.file_processor = FileProcessor()
+        self.file_processor = FileProcessor() if FileProcessor else None
 
     def process_single_file(
         self, file_path: str, requirements: Dict[str, bool]
@@ -67,6 +93,14 @@ class GradioAssignmentGrader:
         """
         if not file_path:
             return "❌ No file uploaded", "", None, "No file provided"
+
+        if not self.file_processor or run_agentic_workflow is None:
+            return (
+                "❌ Local processing unavailable",
+                "",
+                None,
+                "Set BACKEND_URL and use backend-driven mode for this environment",
+            )
 
         try:
             # Read and process the file
@@ -577,16 +611,17 @@ class GradioAssignmentGrader:
                                 rows.append(item)
 
                         # Save English-only CSV/JSON using SubjectOutputManager
-                        try:
-                            mgr = create_subject_output_manager(batch_dir)
-                            eng_csv = mgr.export_subject_csv(assignments, OutputSubject.ENGLISH)
-                            eng_json = mgr.export_subject_json(assignments, OutputSubject.ENGLISH)
-                            if eng_csv:
-                                english_files.append(eng_csv)
-                            if eng_json:
-                                english_files.append(eng_json)
-                        except Exception as e:
-                            print(f"? Error exporting English subject files: {e}")
+                        if create_subject_output_manager and OutputSubject:
+                            try:
+                                mgr = create_subject_output_manager(batch_dir)
+                                eng_csv = mgr.export_subject_csv(assignments, OutputSubject.ENGLISH)
+                                eng_json = mgr.export_subject_json(assignments, OutputSubject.ENGLISH)
+                                if eng_csv:
+                                    english_files.append(eng_csv)
+                                if eng_json:
+                                    english_files.append(eng_json)
+                            except Exception as e:
+                                print(f"? Error exporting English subject files: {e}")
 
                         df = pd.DataFrame(rows)
                     else:
