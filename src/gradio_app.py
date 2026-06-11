@@ -76,6 +76,7 @@ class GradioAssignmentGrader:
         self.temp_dir = tempfile.mkdtemp()
         self.backend_url = os.getenv("BACKEND_URL", "").strip()
         self.max_upload_mb = int(os.getenv("DEMO_MAX_UPLOAD_MB", "20"))
+        self.backend_timeout = float(os.getenv("DEMO_BACKEND_TIMEOUT", "600"))
         self.file_processor = FileProcessor() if FileProcessor else None
 
     def process_single_file(
@@ -319,9 +320,15 @@ class GradioAssignmentGrader:
             mime, _ = mimetypes.guess_type(file_path)
             mime = mime or "application/octet-stream"
             data = {"requirements": json.dumps(requirements or {})}
+            timeout = httpx.Timeout(
+                connect=10.0,
+                read=self.backend_timeout,
+                write=60.0,
+                pool=60.0,
+            )
             with open(file_path, "rb") as fh:
                 files = {"file": (os.path.basename(file_path), fh, mime)}
-                with httpx.Client(timeout=60.0) as client:
+                with httpx.Client(timeout=timeout) as client:
                     resp = client.post(
                         f"{self.backend_url.rstrip('/')}/process_file",
                         files=files,
