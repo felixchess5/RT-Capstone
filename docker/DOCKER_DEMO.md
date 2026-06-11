@@ -45,7 +45,7 @@ See also: `docker/standalone/README.md`
 
 docker compose up --build
 
-This works because the standalone compose file clones from GitHub at container startup and uses only Docker named volumes.
+This works because the standalone compose file performs a fresh shallow clone from GitHub at container startup and uses only Docker named volumes.
 
 Optional direct download (PowerShell):
 

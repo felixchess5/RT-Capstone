@@ -23,7 +23,7 @@ You can copy them from this repository's standalone templates:
 
 docker compose up --build
 
-Note: This standalone mode clones the repository from GitHub at container startup for maximum compatibility across Docker/Windows setups.
+Note: This standalone mode performs a fresh shallow clone from GitHub at each container startup for maximum compatibility across Docker/Windows setups.
 
 ## Stop
 
